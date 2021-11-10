@@ -247,4 +247,54 @@ namespace kp
 
         return order_name;
     }
+
+    OrderType get_order_type(int order_id)
+    {
+        OrderType order_type;
+        switch (order_id)
+        {
+        case 1:
+            order_type = max_weight;
+            break;
+
+        case 2:
+            order_type = min_weight;
+            break;
+
+        case 3:
+            order_type = max_avg_value;
+            break;
+
+        case 4:
+            order_type = min_avg_value;
+            break;
+
+        case 5:
+            order_type = max_max_value;
+            break;
+
+        case 6:
+            order_type = min_max_value;
+            break;
+
+        case 7:
+            order_type = max_min_value;
+            break;
+
+        case 8:
+            order_type = min_min_value;
+            break;
+
+        case 9:
+            order_type = max_avg_value_by_weight;
+            break;
+
+        case 10:
+            order_type = max_max_value_by_weight;
+            break;
+        }
+
+        return order_type;
+    }
+
 }

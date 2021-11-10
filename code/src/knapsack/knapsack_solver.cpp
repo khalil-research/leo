@@ -1,10 +1,10 @@
 #include "knapsack_solver.hpp"
 
-KnapsackBDDSolver::KnapsackBDDSolver(char *instance_file,
-                                     char *output_file,
-                                     int (&seeds)[5]) : instance_file(instance_file),
-                                                        output_file(output_file),
-                                                        seeds(seeds)
+KnapsackBDDSolver::KnapsackBDDSolver(char *ifile,
+                                     char *ofile,
+                                     int oid) : instance_file(ifile),
+                                                output_file(ofile),
+                                                order_id(oid)
 {
     inst = new MultiObjKnapsackInstanceOrdered(instance_file);
 };
@@ -30,32 +30,16 @@ void KnapsackBDDSolver::generate_orders()
 {
     order_map.clear();
     int s_count = 0;
+    kp::OrderType order_type;
     string order_name;
 
-    // Generate random orders
-    for (const auto &s : seeds)
-    {
-        order_name = "rnd" + to_string(s_count);
-        order_map.insert({order_name, {}});
-        for (int i = 0; i < inst->n_vars; i++)
-        {
-            order_map[order_name].push_back(i);
-        }
-        shuffle(order_map[order_name].begin(),
-                order_map[order_name].end(),
-                std::default_random_engine((unsigned)s));
-        s_count++;
-    }
-
     // Generate heuristic orders
-    for (const auto &ot : kp::all_OrderType)
-    {
-        order_name = kp::get_order_name(ot);
-        order_map.insert({order_name,
-                          kp::get_order(ot,
-                                        inst->coeffs_canonical,
-                                        inst->obj_coeffs_canonical)});
-    }
+    order_type = kp::get_order_type(order_id);
+    order_name = kp::get_order_name(order_type);
+    order_map.insert({order_name,
+                      kp::get_order(order_type,
+                                    inst->coeffs_canonical,
+                                    inst->obj_coeffs_canonical)});
 }
 
 void KnapsackBDDSolver::solve()
