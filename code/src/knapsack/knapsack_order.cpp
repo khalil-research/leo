@@ -1,3 +1,4 @@
+#include <cstring>
 #include <vector>
 #include <algorithm>
 
@@ -205,6 +206,42 @@ namespace kp
             order = get_index(idx_val);
             break;
         }
+        return order;
+    }
+
+    vector<int> get_weighted_order(vector<float> &order_weights,
+                                   vector<int> wt,
+                                   vector<vector<int>> val)
+    {
+        int p = val.size();
+        int n = val[0].size();
+        int rank, item;
+
+        vector<int> order;
+        vector<float> new_rank;
+        vector<IndexValue> idx_val;
+
+        new_rank.resize(n);
+        memset(&new_rank[0], 0, new_rank.size() * sizeof new_rank[0]);
+
+        for (const auto &ot : all_OrderType)
+        {
+            order = get_order(ot, wt, val);
+            for (int i = 0; i < n; i++)
+            {
+                rank = n - i;
+                item = order[i];
+                new_rank[item] += (order_weights[ot] * rank);
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            idx_val.push_back(IndexValue(i, new_rank[i]));
+        }
+        sort(idx_val.begin(), idx_val.end(), descending);
+        order = get_index(idx_val);
+
         return order;
     }
 

@@ -4,18 +4,22 @@
 *.dat
 *.jpg
 *.pdf
+./*/.*
 
 */.vscode
+.ipynb_checkpoints
 
 ./data
 ./obj
 
 ./code/multiobj
 
-./scripts/graph_nodes
+./python/scripts/graph_nodes
 ./scripts/graph_nodes_edges
 ./scripts/kp
 
 ./scripts/out_final_3
 ./scripts/out_final_5
 ./scripts/out_final_7
+
+./code/multiobj

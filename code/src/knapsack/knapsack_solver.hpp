@@ -26,14 +26,14 @@ class KnapsackBDDSolver
 public:
     char *instance_file;
     char *output_file;
-    int order_id;
+    vector<float> &order_weights;
 
     MultiObjKnapsackInstanceOrdered *inst;
 
     map<string, vector<int>> order_map;
 
     // Constructor
-    KnapsackBDDSolver(char *instance_file, char *output_file, int order_id);
+    KnapsackBDDSolver(char *instance_file, char *output_file, vector<float> &order_weights);
 
     // Destructor
     ~KnapsackBDDSolver();

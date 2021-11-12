@@ -2,9 +2,9 @@
 
 KnapsackBDDSolver::KnapsackBDDSolver(char *ifile,
                                      char *ofile,
-                                     int oid) : instance_file(ifile),
-                                                output_file(ofile),
-                                                order_id(oid)
+                                     vector<float> &ows) : instance_file(ifile),
+                                                           output_file(ofile),
+                                                           order_weights(ows)
 {
     inst = new MultiObjKnapsackInstanceOrdered(instance_file);
 };
@@ -29,17 +29,11 @@ string KnapsackBDDSolver::vint_to_str(vector<int> order)
 void KnapsackBDDSolver::generate_orders()
 {
     order_map.clear();
-    int s_count = 0;
-    kp::OrderType order_type;
-    string order_name;
 
-    // Generate heuristic orders
-    order_type = kp::get_order_type(order_id);
-    order_name = kp::get_order_name(order_type);
-    order_map.insert({order_name,
-                      kp::get_order(order_type,
-                                    inst->coeffs_canonical,
-                                    inst->obj_coeffs_canonical)});
+    order_map.insert({"weighted",
+                      kp::get_weighted_order(order_weights,
+                                             inst->coeffs_canonical,
+                                             inst->obj_coeffs_canonical)});
 }
 
 void KnapsackBDDSolver::solve()
@@ -111,21 +105,21 @@ void KnapsackBDDSolver::solve()
         ////////////////////////////////////////////////////
 
         // log
-        output.open(output_file, ios::app);
-        output << instance_file << ", ";
-        output << om.first << ", ";
-        output << initial_width << ", ";
-        output << reduced_width << ", ";
-        output << initial_node_count << ", ";
-        output << reduced_node_count << ", ";
-        output << initial_arcs_count << ", ";
-        output << reduced_arcs_count << ", ";
-        output << timers.get_time(bdd_compilation_time) << ", ";
-        output << timers.get_time(bdd_reduction_time) << ", ";
-        output << timers.get_time(bdd_pareto_time) << ", ";
-        output << paretoSet->sols.size() << ", ";
-        output << vint_to_str(om.second) << endl;
-        output.close();
+        // output.open(output_file, ios::app);
+        // output << instance_file << ", ";
+        // output << om.first << ", ";
+        // output << initial_width << ", ";
+        // output << reduced_width << ", ";
+        // output << initial_node_count << ", ";
+        // output << reduced_node_count << ", ";
+        // output << initial_arcs_count << ", ";
+        // output << reduced_arcs_count << ", ";
+        // output << timers.get_time(bdd_compilation_time) << ", ";
+        // output << timers.get_time(bdd_reduction_time) << ", ";
+        // output << timers.get_time(bdd_pareto_time) << ", ";
+        // output << paretoSet->sols.size() << ", ";
+        // output << vint_to_str(om.second) << endl;
+        // output.close();
 
         delete bdd;
     }

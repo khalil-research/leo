@@ -44,6 +44,9 @@ namespace kp
     vector<int> get_order(OrderType,
                           vector<int>,
                           vector<vector<int>>);
+    vector<int> get_weighted_order(vector<float> &,
+                                   vector<int>,
+                                   vector<vector<int>>);
 
     string get_order_name(OrderType);
     OrderType get_order_type(int);
