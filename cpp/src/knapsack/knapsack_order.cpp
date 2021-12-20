@@ -10,18 +10,18 @@ namespace kp
 {
     IndexValue::IndexValue(int ival, float vval)
     {
-        i = ival;
-        v = vval;
+        idx = ival;
+        val = vval;
     }
 
-    bool descending(IndexValue &i, IndexValue &j)
+    bool descending(IndexValue a, IndexValue b)
     {
-        return (i.v > j.v);
+        return (a.val > b.val);
     }
 
-    bool ascending(IndexValue &i, IndexValue &j)
+    bool ascending(IndexValue a, IndexValue b)
     {
-        return (i.v < j.v);
+        return (a.val < b.val);
     }
 
     vector<int> get_index(vector<IndexValue> index_value)
@@ -29,7 +29,7 @@ namespace kp
         vector<int> index;
         for (const auto &iv : index_value)
         {
-            index.push_back(iv.i);
+            index.push_back(iv.idx);
         }
 
         return index;
@@ -53,7 +53,12 @@ namespace kp
                 idx_val.push_back(IndexValue(i, wt[i]));
             }
 
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
+            // for (int i = 0; i < wt.size(); i++)
+            // {
+            //     cout << i << " " << idx_val[i].idx << endl;
+            // }
+
             order = get_index(idx_val);
             break;
 
@@ -64,7 +69,7 @@ namespace kp
                 idx_val.push_back(IndexValue(i, wt[i]));
             }
 
-            sort(idx_val.begin(), idx_val.end(), ascending);
+            stable_sort(idx_val.begin(), idx_val.end(), ascending);
             order = get_index(idx_val);
             break;
 
@@ -81,7 +86,7 @@ namespace kp
                 avg /= p;
                 idx_val.push_back(IndexValue(i, avg));
             }
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
             order = get_index(idx_val);
             break;
 
@@ -98,7 +103,7 @@ namespace kp
                 avg /= p;
                 idx_val.push_back(IndexValue(i, avg));
             }
-            sort(idx_val.begin(), idx_val.end(), ascending);
+            stable_sort(idx_val.begin(), idx_val.end(), ascending);
             order = get_index(idx_val);
             break;
 
@@ -115,7 +120,7 @@ namespace kp
                 }
                 idx_val.push_back(IndexValue(i, maximum));
             }
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
             order = get_index(idx_val);
             break;
 
@@ -132,7 +137,7 @@ namespace kp
                 }
                 idx_val.push_back(IndexValue(i, maximum));
             }
-            sort(idx_val.begin(), idx_val.end(), ascending);
+            stable_sort(idx_val.begin(), idx_val.end(), ascending);
             order = get_index(idx_val);
             break;
 
@@ -149,7 +154,7 @@ namespace kp
                 }
                 idx_val.push_back(IndexValue(i, minimum));
             }
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
             order = get_index(idx_val);
             break;
 
@@ -166,7 +171,7 @@ namespace kp
                 }
                 idx_val.push_back(IndexValue(i, minimum));
             }
-            sort(idx_val.begin(), idx_val.end(), ascending);
+            stable_sort(idx_val.begin(), idx_val.end(), ascending);
             order = get_index(idx_val);
             break;
 
@@ -183,7 +188,7 @@ namespace kp
                 avg /= p;
                 idx_val.push_back(IndexValue(i, (float)avg / wt[i]));
             }
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
             order = get_index(idx_val);
             break;
 
@@ -202,7 +207,7 @@ namespace kp
                 idx_val.push_back(IndexValue(i, (float)maximum / wt[i]));
                 // cout << idx_val[idx_val.size() - 1].v << " :";
             }
-            sort(idx_val.begin(), idx_val.end(), descending);
+            stable_sort(idx_val.begin(), idx_val.end(), descending);
             order = get_index(idx_val);
             break;
         }
@@ -227,6 +232,13 @@ namespace kp
         for (const auto &ot : all_OrderType)
         {
             order = get_order(ot, wt, val);
+            // cout << ot << endl;
+            // for (int i = 0; i < n; i++)
+            // {
+            //     cout << order[i] << " ";
+            // }
+            // cout << endl;
+
             for (int i = 0; i < n; i++)
             {
                 rank = n - i;
@@ -235,11 +247,17 @@ namespace kp
             }
         }
 
+        // cout << "Scores";
+        // for (int i = 0; i < n; i++)
+        // {
+        //     cout << i << " " << new_rank[i] << endl;
+        // }
+
         for (int i = 0; i < n; i++)
         {
             idx_val.push_back(IndexValue(i, new_rank[i]));
         }
-        sort(idx_val.begin(), idx_val.end(), descending);
+        stable_sort(idx_val.begin(), idx_val.end(), descending);
         order = get_index(idx_val);
 
         return order;

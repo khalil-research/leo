@@ -33,13 +33,13 @@ namespace kp
 
     struct IndexValue
     {
-        int i;
-        float v;
+        int idx;
+        float val;
         IndexValue(int, float);
     };
 
-    bool descending(IndexValue &, IndexValue &);
-    bool ascending(IndexValue &, IndexValue &);
+    bool descending(IndexValue, IndexValue);
+    bool ascending(IndexValue, IndexValue);
     vector<int> get_index(vector<IndexValue>);
     vector<int> get_order(OrderType,
                           vector<int>,
