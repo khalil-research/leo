@@ -25,23 +25,20 @@ class KnapsackBDDSolver
 {
 public:
     char *instance_file;
-    char *output_file;
-    vector<float> &order_weights;
+    vector<float> feature_weights;
 
     MultiObjKnapsackInstanceOrdered *inst;
 
     map<string, vector<int>> order_map;
 
     // Constructor
-    KnapsackBDDSolver(char *instance_file, char *output_file, vector<float> &order_weights);
+    KnapsackBDDSolver(char *instance_file, vector<float> &feature_weights);
 
     // Destructor
     ~KnapsackBDDSolver();
 
     // Converts a vector of int to string
     string vint_to_str(vector<int> order);
-    // Generate random and heuristic orderings and stores it in order_map
-    void generate_orders();
     // Main loop to create bdds corresponding to different orderings
     // and computing the pareto frontier
     void solve();

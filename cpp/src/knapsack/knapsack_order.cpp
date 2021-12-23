@@ -1,355 +1,183 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
-
+#include <assert.h>
 #include "knapsack_order.hpp"
 
 using namespace std;
 
-namespace kp
+IndexValue::IndexValue(int ival, float vval)
 {
-    IndexValue::IndexValue(int ival, float vval)
+    idx = ival;
+    val = vval;
+}
+
+bool descending(IndexValue a, IndexValue b)
+{
+    return (a.val > b.val);
+}
+
+vector<int> get_index(vector<IndexValue> index_value)
+{
+    vector<int> index;
+    for (const auto &iv : index_value)
     {
-        idx = ival;
-        val = vval;
+        index.push_back(iv.idx);
     }
 
-    bool descending(IndexValue a, IndexValue b)
-    {
-        return (a.val > b.val);
-    }
+    return index;
+}
 
-    bool ascending(IndexValue a, IndexValue b)
-    {
-        return (a.val < b.val);
-    }
+vector<float> get_feature(int feature_type,
+                          vector<int> weight,
+                          vector<vector<int>> values)
+{
+    vector<float> feature;
+    int i, j;
+    float sum;
+    float max_val;
+    float min_val;
 
-    vector<int> get_index(vector<IndexValue> index_value)
+    switch (feature_type)
     {
-        vector<int> index;
-        for (const auto &iv : index_value)
+    case WEIGHT:
+        for (i = 0; i < weight.size(); i++)
         {
-            index.push_back(iv.idx);
+            feature.push_back(weight[i]);
         }
+        break;
 
-        return index;
+    case AVG_VALUE:
+        for (i = 0; i < weight.size(); i++)
+        {
+            sum = 0;
+            for (j = 0; j < values.size(); j++)
+            {
+                sum += values[j][i];
+            }
+            feature.push_back(sum / values.size());
+        }
+        break;
+
+    case MAX_VALUE:
+        for (i = 0; i < weight.size(); i++)
+        {
+            max_val = 0;
+            for (j = 0; j < values.size(); j++)
+            {
+                if (max_val < values[j][i])
+                {
+                    max_val = values[j][i];
+                }
+            }
+            feature.push_back(max_val);
+        }
+        break;
+
+    case MIN_VALUE:
+        for (i = 0; i < weight.size(); i++)
+        {
+            min_val = 1001;
+            for (j = 0; j < values.size(); j++)
+            {
+                if (min_val > values[j][i])
+                {
+                    min_val = values[j][i];
+                }
+            }
+            feature.push_back(min_val);
+        }
+        break;
+
+    case AVG_VALUE_BY_WEIGHT:
+        for (i = 0; i < weight.size(); i++)
+        {
+            sum = 0;
+            for (j = 0; j < values.size(); j++)
+            {
+                sum += values[j][i];
+            }
+            feature.push_back((sum / values.size()) / weight[i]);
+        }
+        break;
+
+    case MAX_VALUE_BY_WEIGHT:
+        for (i = 0; i < weight.size(); i++)
+        {
+            max_val = 0;
+            for (j = 0; j < values.size(); j++)
+            {
+                if (max_val < values[j][i])
+                {
+                    max_val = values[j][i];
+                }
+            }
+            feature.push_back(max_val / weight[i]);
+        }
+        break;
+
+    case MIN_VALUE_BY_WEIGHT:
+        for (i = 0; i < weight.size(); i++)
+        {
+            min_val = 1001;
+            for (j = 0; j < values.size(); j++)
+            {
+                if (min_val > values[j][i])
+                {
+                    min_val = values[j][i];
+                }
+            }
+            feature.push_back(min_val / weight[i]);
+        }
+        break;
     }
+    assert(feature.size() == weight.size());
+    // cout << feature_type << " ";
+    // for (int i = 0; i < feature.size(); i++)
+    // {
+    //     cout << feature[i] << " ";
+    // }
+    // cout << endl;
+    return feature;
+}
 
-    vector<int> get_order(OrderType order_type,
-                          vector<int> wt,
-                          vector<vector<int>> val)
+vector<int> get_order(vector<float> features_weights,
+                      vector<int> kp_weight,
+                      vector<vector<int>> kp_values)
+{
+    int p = kp_values.size();
+    int n = kp_values[0].size();
+
+    // cout << p << " " << n;
+
+    // Get features
+    vector<vector<float>> features;
+    for (const auto &feature_type : feature_types)
     {
-        vector<int> order;
-        vector<IndexValue> idx_val;
-        int p = val.size();
-        int n = val[0].size();
-
-        switch (order_type)
-        {
-        case max_weight:
-            // Select items based on descending order of weight
-            for (int i = 0; i < wt.size(); i++)
-            {
-                idx_val.push_back(IndexValue(i, wt[i]));
-            }
-
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            // for (int i = 0; i < wt.size(); i++)
-            // {
-            //     cout << i << " " << idx_val[i].idx << endl;
-            // }
-
-            order = get_index(idx_val);
-            break;
-
-        case min_weight:
-            // Select items based on ascending order of weight
-            for (int i = 0; i < wt.size(); i++)
-            {
-                idx_val.push_back(IndexValue(i, wt[i]));
-            }
-
-            stable_sort(idx_val.begin(), idx_val.end(), ascending);
-            order = get_index(idx_val);
-            break;
-
-        case max_avg_value:
-            // Calculate the average of value for each item and then select
-            // items based on the descending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                float avg = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    avg += val[j][i];
-                }
-                avg /= p;
-                idx_val.push_back(IndexValue(i, avg));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            order = get_index(idx_val);
-            break;
-
-        case min_avg_value:
-            // Calculate the average of value for each item and then select
-            // items based on the ascending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                float avg = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    avg += val[j][i];
-                }
-                avg /= p;
-                idx_val.push_back(IndexValue(i, avg));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), ascending);
-            order = get_index(idx_val);
-            break;
-
-        case max_max_value:
-            // Calculate the maximum of value for each item and then select
-            // items based on the descending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                int maximum = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    if (maximum < val[j][i])
-                        maximum = val[j][i];
-                }
-                idx_val.push_back(IndexValue(i, maximum));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            order = get_index(idx_val);
-            break;
-
-        case min_max_value:
-            // Calculate the maximum of value for each item and then select
-            // items based on the ascending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                int maximum = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    if (maximum < val[j][i])
-                        maximum = val[j][i];
-                }
-                idx_val.push_back(IndexValue(i, maximum));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), ascending);
-            order = get_index(idx_val);
-            break;
-
-        case max_min_value:
-            // Calculate the minimum of value for each item and then select
-            // items based on the descending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                int minimum = 1002;
-                for (int j = 0; j < p; j++)
-                {
-                    if (minimum > val[j][i])
-                        minimum = val[j][i];
-                }
-                idx_val.push_back(IndexValue(i, minimum));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            order = get_index(idx_val);
-            break;
-
-        case min_min_value:
-            // Calculate the minimum of value for each item and then select
-            // items based on the ascending order of it.
-            for (int i = 0; i < n; i++)
-            {
-                int minimum = 1002;
-                for (int j = 0; j < p; j++)
-                {
-                    if (minimum > val[j][i])
-                        minimum = val[j][i];
-                }
-                idx_val.push_back(IndexValue(i, minimum));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), ascending);
-            order = get_index(idx_val);
-            break;
-
-        case max_avg_value_by_weight:
-            // Calculate the average value and divide by weight.
-            // Select items based on the descending order of this ratio
-            for (int i = 0; i < n; i++)
-            {
-                float avg = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    avg += val[j][i];
-                }
-                avg /= p;
-                idx_val.push_back(IndexValue(i, (float)avg / wt[i]));
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            order = get_index(idx_val);
-            break;
-
-        case max_max_value_by_weight:
-            // Calculate the max value and divide by weight.
-            // Select items based on the descending order of this ratio
-            for (int i = 0; i < n; i++)
-            {
-                int maximum = 0;
-                for (int j = 0; j < p; j++)
-                {
-                    if (maximum < val[j][i])
-                        maximum = val[j][i];
-                }
-                // cout << maximum << " ";
-                idx_val.push_back(IndexValue(i, (float)maximum / wt[i]));
-                // cout << idx_val[idx_val.size() - 1].v << " :";
-            }
-            stable_sort(idx_val.begin(), idx_val.end(), descending);
-            order = get_index(idx_val);
-            break;
-        }
-        return order;
+        features.push_back(get_feature(feature_type, kp_weight, kp_values));
     }
 
-    vector<int> get_weighted_order(vector<float> &order_weights,
-                                   vector<int> wt,
-                                   vector<vector<int>> val)
+    // Calculate variables score
+    vector<IndexValue> scores;
+    for (int i = 0; i < n; i++)
     {
-        int p = val.size();
-        int n = val[0].size();
-        int rank, item;
-
-        vector<int> order;
-        vector<float> new_rank;
-        vector<IndexValue> idx_val;
-
-        new_rank.resize(n);
-        memset(&new_rank[0], 0, new_rank.size() * sizeof new_rank[0]);
-
-        for (const auto &ot : all_OrderType)
+        scores.push_back(IndexValue(i, 0));
+        for (int j = 0; j < features_weights.size(); j++)
         {
-            order = get_order(ot, wt, val);
-            // cout << ot << endl;
-            // for (int i = 0; i < n; i++)
-            // {
-            //     cout << order[i] << " ";
-            // }
-            // cout << endl;
-
-            for (int i = 0; i < n; i++)
-            {
-                rank = n - i;
-                item = order[i];
-                new_rank[item] += (order_weights[ot] * rank);
-            }
+            scores[i].val += (features_weights[j] * features[j][i]);
         }
-
-        // cout << "Scores";
-        // for (int i = 0; i < n; i++)
-        // {
-        //     cout << i << " " << new_rank[i] << endl;
-        // }
-
-        for (int i = 0; i < n; i++)
-        {
-            idx_val.push_back(IndexValue(i, new_rank[i]));
-        }
-        stable_sort(idx_val.begin(), idx_val.end(), descending);
-        order = get_index(idx_val);
-
-        return order;
+        // cout << scores[i].val << endl;
     }
 
-    string get_order_name(OrderType order_type)
+    // Sort descending based on scores
+    stable_sort(scores.begin(), scores.end(), descending);
+
+    // Fetch item ids
+    vector<int> order;
+    for (int i = 0; i < n; i++)
     {
-        string order_name;
-        switch (order_type)
-        {
-        case max_weight:
-            order_name = "max_weight";
-            break;
-        case min_weight:
-            order_name = "min_weight";
-            break;
-        case max_avg_value:
-            order_name = "max_avg_value";
-            break;
-        case min_avg_value:
-            order_name = "min_avg_value";
-            break;
-        case max_max_value:
-            order_name = "max_max_value";
-            break;
-        case min_max_value:
-            order_name = "min_max_value";
-            break;
-        case max_min_value:
-            order_name = "max_min_value";
-            break;
-        case min_min_value:
-            order_name = "min_min_value";
-            break;
-        case max_avg_value_by_weight:
-            order_name = "max_avg_value_by_weight";
-            break;
-        case max_max_value_by_weight:
-            order_name = "max_max_value_by_weight";
-            break;
-        }
-
-        return order_name;
+        order.push_back(scores[i].idx);
     }
 
-    OrderType get_order_type(int order_id)
-    {
-        OrderType order_type;
-        switch (order_id)
-        {
-        case 1:
-            order_type = max_weight;
-            break;
-
-        case 2:
-            order_type = min_weight;
-            break;
-
-        case 3:
-            order_type = max_avg_value;
-            break;
-
-        case 4:
-            order_type = min_avg_value;
-            break;
-
-        case 5:
-            order_type = max_max_value;
-            break;
-
-        case 6:
-            order_type = min_max_value;
-            break;
-
-        case 7:
-            order_type = max_min_value;
-            break;
-
-        case 8:
-            order_type = min_min_value;
-            break;
-
-        case 9:
-            order_type = max_avg_value_by_weight;
-            break;
-
-        case 10:
-            order_type = max_max_value_by_weight;
-            break;
-        }
-
-        return order_type;
-    }
-
+    return order;
 }
