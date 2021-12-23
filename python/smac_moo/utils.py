@@ -43,46 +43,34 @@ def get_config_space():
     # Define configuration space
     cs = ConfigurationSpace()
 
-    max_weight = UniformFloatHyperparameter(
-        "max_weight", 1e-7, 1, default_value=1e-7)
+    weight = UniformFloatHyperparameter(
+        "weight", -1, 1, default_value=-1)
 
-    min_weight = UniformFloatHyperparameter(
-        "min_weight", 1e-7, 1, default_value=1)
+    avg_value = UniformFloatHyperparameter(
+        "avg_value", -1, 1, default_value=0)
 
-    max_avg_value = UniformFloatHyperparameter(
-        "max_avg_value", 1e-7, 1, default_value=1e-7)
+    max_value = UniformFloatHyperparameter(
+        "max_value", -1, 1, default_value=0)
 
-    min_avg_value = UniformFloatHyperparameter(
-        "min_avg_value", 1e-7, 1, default_value=1e-7)
+    min_value = UniformFloatHyperparameter(
+        "min_value", -1, 1, default_value=0)
 
-    max_max_value = UniformFloatHyperparameter(
-        "max_max_value", 1e-7, 1, default_value=1e-7)
+    avg_value_by_weight = UniformFloatHyperparameter(
+        "avg_value_by_weight", -1, 1, default_value=0)
 
-    min_max_value = UniformFloatHyperparameter(
-        "min_max_value", 1e-7, 1, default_value=1e-7)
+    max_value_by_weight = UniformFloatHyperparameter(
+        "max_value_by_weight", -1, 1, default_value=0)
 
-    max_min_value = UniformFloatHyperparameter(
-        "max_min_value", 1e-7, 1, default_value=1e-7)
+    min_value_by_weight = UniformFloatHyperparameter(
+        "min_value_by_weight", -1, 1, default_value=0)
 
-    min_min_value = UniformFloatHyperparameter(
-        "min_min_value", 1e-7, 1, default_value=1e-7)
-
-    max_avg_value_by_weight = UniformFloatHyperparameter(
-        "max_avg_value_by_weight", 1e-7, 1, default_value=1e-7)
-
-    max_max_value_by_weight = UniformFloatHyperparameter(
-        "max_max_value_by_weight", 1e-7, 1, default_value=1e-7)
-
-    cs.add_hyperparameters([max_weight,
-                            min_weight,
-                            max_avg_value,
-                            min_avg_value,
-                            max_max_value,
-                            min_max_value,
-                            max_min_value,
-                            min_min_value,
-                            max_avg_value_by_weight,
-                            max_max_value_by_weight])
+    cs.add_hyperparameters([weight,
+                            avg_value,
+                            max_value,
+                            min_value,
+                            avg_value_by_weight,
+                            max_value_by_weight,
+                            min_value_by_weight])
 
     return cs
 

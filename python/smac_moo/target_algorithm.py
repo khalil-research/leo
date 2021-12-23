@@ -12,12 +12,14 @@ def run_target_algorithm(opts, log=True):
         logger.debug(opts.instance)
 
     # Prepare the call string to binary
-    cmd = f"./multiobj {opts.instance} ./dummy.csv 1"
-    cmd += f" {opts.max_weight} {opts.min_weight}" \
-           f" {opts.max_avg_value} {opts.min_avg_value}" \
-           f" {opts.max_max_value} {opts.min_max_value}" \
-           f" {opts.max_min_value} {opts.min_min_value}" \
-           f" {opts.max_avg_value_by_weight} {opts.max_max_value_by_weight}"
+    cmd = f"./multiobj {opts.instance}"
+    cmd += f" {opts.weight}" \
+           f" {opts.avg_value}" \
+           f" {opts.max_value}" \
+           f" {opts.min_value}" \
+           f" {opts.avg_value_by_weight}" \
+           f" {opts.max_value_by_weight}" \
+           f" {opts.min_value_by_weight}"
     if log:
         logging.debug(cmd)
 
@@ -27,6 +29,7 @@ def run_target_algorithm(opts, log=True):
         io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
         # Call target algorithm with cutoff time
         (stdout_, stderr_) = io.communicate(timeout=opts.cutoff)
+        logger.debug(stdout_)
 
         # Decode and parse output
         stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
@@ -58,16 +61,13 @@ if __name__ == '__main__':
     parser.add_argument('runlength', type=int, help='Runlength')
     parser.add_argument('seed', help='Random seed')
     # Solver Config. Always start with a `-` to their name
-    parser.add_argument('-max_weight', type=float, default=0)
-    parser.add_argument('-min_weight', type=float, default=1)
-    parser.add_argument('-max_avg_value', type=float, default=0)
-    parser.add_argument('-min_avg_value', type=float, default=0)
-    parser.add_argument('-max_max_value', type=float, default=0)
-    parser.add_argument('-min_max_value', type=float, default=0)
-    parser.add_argument('-max_min_value', type=float, default=0)
-    parser.add_argument('-min_min_value', type=float, default=0)
-    parser.add_argument('-max_avg_value_by_weight', type=float, default=0)
-    parser.add_argument('-max_max_value_by_weight', type=float, default=0)
+    parser.add_argument('-weight', type=float, default=-1)
+    parser.add_argument('-avg_value', type=float, default=0)
+    parser.add_argument('-max_value', type=float, default=0)
+    parser.add_argument('-min_value', type=float, default=0)
+    parser.add_argument('-avg_value_by_weight', type=float, default=0)
+    parser.add_argument('-max_value_by_weight', type=float, default=0)
+    parser.add_argument('-min_value_by_weight', type=float, default=0)
     opts = parser.parse_args()
 
     run_target_algorithm(opts)

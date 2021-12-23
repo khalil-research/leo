@@ -75,13 +75,8 @@ def main(opts):
     }
 
     # Run smac on single instance
-    if opts.mode == 'one':
-        for instance in dataset:
-            instances = [[instance]]
-            run_smac(instances, base_scenario_dict, opts)
-    else:
-        instances = [[file] for file in dataset]
-        run_smac(instances, base_scenario_dict, opts)
+    instances = [[file] for file in dataset]
+    run_smac(instances, base_scenario_dict, opts)
 
 
 if __name__ == "__main__":
