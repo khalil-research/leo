@@ -32,7 +32,7 @@ public:
     map<string, vector<int>> order_map;
 
     // Constructor
-    KnapsackBDDSolver(char *instance_file, vector<float> &feature_weights);
+    KnapsackBDDSolver(char *instance_file, vector<float> feature_weights);
 
     // Destructor
     ~KnapsackBDDSolver();

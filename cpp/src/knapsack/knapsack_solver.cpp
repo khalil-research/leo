@@ -1,8 +1,8 @@
 #include "knapsack_solver.hpp"
 
 KnapsackBDDSolver::KnapsackBDDSolver(char *ifile,
-                                     vector<float> &fws) : instance_file(ifile),
-                                                           feature_weights(fws)
+                                     vector<float> fws) : instance_file(ifile),
+                                                          feature_weights(fws)
 {
     inst = new MultiObjKnapsackInstanceOrdered(instance_file);
 };
