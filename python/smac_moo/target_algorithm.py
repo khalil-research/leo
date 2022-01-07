@@ -1,25 +1,26 @@
 import argparse
 import logging
+import sys
 from subprocess import PIPE, Popen, TimeoutExpired
 
 import numpy as np
 
 
-def run_target_algorithm(opts, log=True):
+def run_target_algorithm(instance, cutoff, opts, log=True):
     if log:
         logging.basicConfig(level=logging.DEBUG)
         logger = logging.getLogger(__file__)
-        logger.debug(opts.instance)
+        logger.debug(instance)
 
     # Prepare the call string to binary
-    cmd = f"./multiobj {opts.instance}"
-    cmd += f" {opts.weight}" \
-           f" {opts.avg_value}" \
-           f" {opts.max_value}" \
-           f" {opts.min_value}" \
-           f" {opts.avg_value_by_weight}" \
-           f" {opts.max_value_by_weight}" \
-           f" {opts.min_value_by_weight}"
+    cmd = f"./multiobj {instance}"
+    cmd += f' {opts["weight"]}' \
+           f' {opts["avg_value"]}' \
+           f' {opts["max_value"]}' \
+           f' {opts["min_value"]}' \
+           f' {opts["avg_value_by_weight"]}' \
+           f' {opts["max_value_by_weight"]}' \
+           f' {opts["min_value_by_weight"]}'
     if log:
         logging.debug(cmd)
 
@@ -28,7 +29,7 @@ def run_target_algorithm(opts, log=True):
     try:
         io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
         # Call target algorithm with cutoff time
-        (stdout_, stderr_) = io.communicate(timeout=opts.cutoff)
+        (stdout_, stderr_) = io.communicate(timeout=cutoff)
         logger.debug(stdout_)
 
         # Decode and parse output
@@ -45,29 +46,25 @@ def run_target_algorithm(opts, log=True):
             status = "ABORT"
     except TimeoutExpired:
         status = "TIMEOUT"
-        runtime = opts.cutoff
+        runtime = cutoff
 
     # Output result for SMAC.
-    print(f"Result for SMAC: {status}, {runtime}, 0, 0, {opts.seed}")
+    print(f"Result for SMAC: {status}, {runtime}, 0, 0, 0")
 
 
 # def tae_runner(cfg, seed, instance):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # Run config
-    parser.add_argument('instance', type=str, help='Path to the instance file')
-    parser.add_argument('specifics', type=str, help='Specifics')
-    parser.add_argument('cutoff', type=int, help='Cutoff runtime for the target algorithm')
-    parser.add_argument('runlength', type=int, help='Runlength')
-    parser.add_argument('seed', help='Random seed')
-    # Solver Config. Always start with a `-` to their name
-    parser.add_argument('-weight', type=float, default=-1)
-    parser.add_argument('-avg_value', type=float, default=0)
-    parser.add_argument('-max_value', type=float, default=0)
-    parser.add_argument('-min_value', type=float, default=0)
-    parser.add_argument('-avg_value_by_weight', type=float, default=0)
-    parser.add_argument('-max_value_by_weight', type=float, default=0)
-    parser.add_argument('-min_value_by_weight', type=float, default=0)
-    opts = parser.parse_args()
 
-    run_target_algorithm(opts)
+    # Read in first 5 arguments.
+    instance = sys.argv[1]
+    specifics = sys.argv[2]
+    cutoff = int(float(sys.argv[3]) + 1)
+    runlength = int(sys.argv[4])
+    seed = int(sys.argv[5])
+
+    # Read in parameter setting and build a dictionary mapping param_name to param_value.
+    params = sys.argv[6:]
+    opts = dict((name[1:], value) for name, value in zip(params[::2], params[1::2]))
+
+    run_target_algorithm(instance, cutoff, opts)
