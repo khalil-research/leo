@@ -27,36 +27,17 @@ using namespace std;
 //
 int main(int argc, char *argv[])
 {
-	/***
-	 * Usage
-	cout << endl;
-	cout << "Usage: multiobj "
-			"[input file] "
-			"[feature weight 1] ... [feature 7]\n";
-
-	Knapsack features
-	1. weight
-	2. avg_value
-	3. max_value
-	4. min_value
-	5. avg_value_by_weight
-	6. max_value_by_weight
-	7. min_value_by_weight
-	***/
-
 	// catch input filename
 	char *input_file = argv[1];
-
-	int num_features = 7;
-	vector<float> feature_weights;
-	feature_weights.resize(num_features);
-	// Catch weights
-	for (int i = 0; i < num_features; i++)
+	int num_items = atoi(argv[2]);
+	vector<int> new_order;
+	// Catch order
+	for (int i = 0; i < num_items; i++)
 	{
-		feature_weights[i] = atof(argv[2 + i]);
+		new_order.push_back(atoi(argv[3 + i]));
 	}
 
-	KnapsackBDDSolver solver(input_file, feature_weights);
+	KnapsackBDDSolver solver(input_file, new_order);
 	solver.solve();
 
 	return 0;

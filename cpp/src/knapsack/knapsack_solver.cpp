@@ -1,8 +1,8 @@
 #include "knapsack_solver.hpp"
 
 KnapsackBDDSolver::KnapsackBDDSolver(char *ifile,
-                                     vector<float> fws) : instance_file(ifile),
-                                                          feature_weights(fws)
+                                     vector<int> iorder) : instance_file(ifile),
+                                                           new_order(iorder)
 {
     inst = new MultiObjKnapsackInstanceOrdered(instance_file);
 };
@@ -39,9 +39,9 @@ void KnapsackBDDSolver::solve()
     int bdd_reduction_time = timers.register_name("BDD reduction time");
     int bdd_pareto_time = timers.register_name("Pareto time");
 
-    vector<int> new_order = get_order(feature_weights,
-                                      inst->coeffs_canonical,
-                                      inst->obj_coeffs_canonical);
+    // vector<int> new_order = get_order(feature_weights,
+    //                                   inst->coeffs_canonical,
+    //                                   inst->obj_coeffs_canonical);
 
     // cout << new_order.size() << endl;
 
