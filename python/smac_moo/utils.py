@@ -75,14 +75,14 @@ def get_config_space():
     return cs
 
 
-def read_from_file(p, filepath):
+def read_from_file(num_objectives, filepath):
     data = {'value': [], 'weight': [], 'capacity': 0}
 
     with open(filepath, 'r') as fp:
         fp.readline()
         fp.readline()
 
-        for _ in range(p):
+        for _ in range(num_objectives):
             data['value'].append(list(map(int, fp.readline().split())))
 
         data['weight'].extend(list(map(int, fp.readline().split())))
@@ -170,6 +170,67 @@ def get_orderings(data):
             order[o] = [i[0] for i in idx_profit_by_weight]
 
     return order
+
+
+def get_variable_score(data, feature_weights):
+    weight, value = np.asarray(data['weight']), np.asarray(data['value'])
+    n_items = weight.shape[0]
+    value_mean = np.mean(value, axis=0)
+    value_max = np.max(value, axis=0)
+    value_min = np.min(value, axis=0)
+    print(value_mean.shape, value_max.shape, value_min.shape)
+
+    scores = np.zeros(n_items)
+    for fk, fv in feature_weights.items():
+        if fk == 'weight':
+            scores += fv * weight
+        elif fk == 'avg_value':
+            scores += fv * value_mean
+        elif fk == 'max_value':
+            scores += fv * value_max
+        elif fk == 'min_value':
+            scores += fv * value_min
+        elif fk == 'avg_value_by_weight':
+            scores += fv * (value_mean / weight)
+        elif fk == 'max_value_by_weight':
+            scores += fv * (value_max / weight)
+        elif fk == 'min_value_by_weight':
+            scores += fv * (value_min / weight)
+
+    return scores
+
+
+def get_variable_order(data, feature_weights):
+    """Returns array of variable order
+    For example: [2, 1, 0]
+    Here 2 is the index of item which should be used first to create the BDD
+    """
+    n_items = len(data['weight'])
+    scores = get_variable_score(data, feature_weights)
+
+    idx_score = [(i, v) for i, v in zip(np.arange(n_items), scores)]
+    idx_score.sort(key=itemgetter(1), reverse=True)
+    print(idx_score)
+
+    order = [i for i, v in idx_score]
+
+    return order, idx_score
+
+
+def get_variable_rank(data, feature_weights):
+    """Returns array of variable ranks
+    For example: [2, 1, 0]
+    Item 0 must be used third to construct the BDD
+    """
+    n_items = len(data['weight'])
+
+    _, idx_score = get_variable_order(data, feature_weights)
+
+    variable_rank = np.zeros(n_items)
+    for rank, (i, _) in enumerate(idx_score):
+        variable_rank[i] = rank
+
+    return variable_rank
 
 
 def smac_factory(scenario_dict, output_dir, opts):

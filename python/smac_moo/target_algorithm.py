@@ -5,22 +5,22 @@ from subprocess import PIPE, Popen, TimeoutExpired
 
 import numpy as np
 
+from utils import read_from_file, get_variable_order
 
-def run_target_algorithm(instance, cutoff, opts, log=True):
+
+def run_target_algorithm(instance, cutoff, feature_weights, log=True):
     if log:
         logging.basicConfig(level=logging.DEBUG)
         logger = logging.getLogger(__file__)
         logger.debug(instance)
 
+    num_objectives = int(instance.split("/")[-1].split("_")[2])
+    data = read_from_file(num_objectives, instance)
+    order, _ = get_variable_order(data, feature_weights)
+    order_string = " ".join(map(str, order))
+
     # Prepare the call string to binary
-    cmd = f"./multiobj {instance}"
-    cmd += f' {opts["weight"]}' \
-           f' {opts["avg_value"]}' \
-           f' {opts["max_value"]}' \
-           f' {opts["min_value"]}' \
-           f' {opts["avg_value_by_weight"]}' \
-           f' {opts["max_value_by_weight"]}' \
-           f' {opts["min_value_by_weight"]}'
+    cmd = f"./multiobj {instance} {order_string}"
     if log:
         logging.debug(cmd)
 
@@ -65,6 +65,6 @@ if __name__ == '__main__':
 
     # Read in parameter setting and build a dictionary mapping param_name to param_value.
     params = sys.argv[6:]
-    opts = dict((name[1:], value) for name, value in zip(params[::2], params[1::2]))
+    feature_weights = dict((name[1:], float(value)) for name, value in zip(params[::2], params[1::2]))
 
-    run_target_algorithm(instance, cutoff, opts)
+    run_target_algorithm(instance, cutoff, feature_weights)
