@@ -66,6 +66,7 @@ def main(opts):
 
     # Prepare training dataset over which SMAC will optimize
     all_files = [p for p in opts.data_path.iterdir()]
+    # For arranging them from 0 to num_instances
     all_files_prefix = "_".join(all_files[0].stem.split("_")[:-1])
     files = [str(opts.data_path.joinpath(all_files_prefix + f"_{i}.dat"))
              for i in range(opts.num_instances)]
