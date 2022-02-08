@@ -1,3 +1,4 @@
+import os
 import random
 from argparse import ArgumentParser
 from pathlib import Path
@@ -11,10 +12,18 @@ from utils import run_bdd_builder
 
 def eval_static(args):
     random_seeds = [13, 444, 1212, 1003, 7517]
-    data_path = Path(args.dataset) / f"{args.num_objectives}_{args.num_items}" / "train"
+    data_path = Path(args.dataset) / f"{args.num_objectives}_{args.num_items}" / args.split
     assert data_path.exists()
 
-    for i in range(args.num_eval_instances):
+    # Total number of slurm workers detected
+    # Defaults to 1 if not running under SLURM
+    N_WORKERS = int(os.getenv("SLURM_ARRAY_TASK_COUNT", 1))
+
+    # This worker's array index. Assumes slurm array job is zero-indexed
+    # Defaults to zero if not running under SLURM
+    this_worker = int(os.getenv("SLURM_ARRAY_TASK_ID", 0))
+
+    for i in range(this_worker, args.num_eval_instances, N_WORKERS):
         instance_path = data_path / f"kp_7_{args.num_objectives}_{args.num_items}_{i}.dat"
 
         data = read_from_file(args.num_objectives, instance_path)
@@ -35,9 +44,7 @@ def eval_static(args):
                                               time_limit=args.time_limit,
                                               mem_limit=args.mem_limit)
             print(str(instance_path), f"rnd{ridx}", status, runtime)
-
-        break
-
+        
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -47,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_eval_instances', type=int, default=250)
     parser.add_argument('--num_objectives', type=int, default=3)
     parser.add_argument('--num_items', type=int, default=20)
+    parser.add_argument('--split', type=str, default='train')
     parser.add_argument('--time_limit', type=int, default=60,
                         help='Time limit in seconds')
     parser.add_argument('--mem_limit', type=int, default=16,
