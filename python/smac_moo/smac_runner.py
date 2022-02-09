@@ -69,7 +69,7 @@ def main(opts):
     # For arranging them from 0 to num_instances
     all_files_prefix = "_".join(all_files[0].stem.split("_")[:-1])
     files = [str(opts.data_path.joinpath(all_files_prefix + f"_{i}.dat"))
-             for i in range(opts.num_instances)]
+             for i in range(opts.from_pid, opts.from_pid + opts.num_instances)]
 
     if opts.mode == 'one':
         dataset = [[files[i]] for i in range(this_worker, opts.num_instances, N_WORKERS)]
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     parser.add_argument('--rwcl', type=int, default=20, help='Wallclock limit for restored run')
     parser.add_argument('--rods', type=str, default='+', help='Suffix of output dir for restored run')
     parser.add_argument('--verbose', type=int, default=1)
+    parser.add_argument('--from_pid', type=int, default=0)
 
     opts = parser.parse_args()
     main(opts)
