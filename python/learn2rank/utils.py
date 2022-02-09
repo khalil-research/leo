@@ -3,6 +3,8 @@ from operator import itemgetter
 from subprocess import Popen, PIPE, TimeoutExpired
 
 import numpy as np
+import scipy as sp
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 # Maximal virtual memory for subprocesses (in bytes).
 MAX_VIRTUAL_MEMORY = 1 * 1024 * 1024 * 1024  # 1 GB
@@ -160,3 +162,92 @@ def run_bdd_builder(instance, order, time_limit=60, mem_limit=2):
         runtime = time_limit
 
     return status, runtime
+
+
+def flatten_data(X, Y):
+    x_flat, y_flat = [], []
+    for _X, _Y in zip(X, Y):
+        for _sampleX, _sampleY in zip(_X, _Y):
+            for _itemX, _itemY in zip(_sampleX, _sampleY):
+                x_flat.append(_itemX)
+                y_flat.append(_itemY)
+    x_flat, y_flat = np.asarray(x_flat), np.asarray(y_flat)
+    print(x_flat.shape, y_flat.shape)
+
+    return x_flat, y_flat
+
+
+def unflatten_data(y, y_shape):
+    Y_out = []
+
+    if y is not None:
+        i = 0
+        for (num_samples, num_items) in y_shape:
+            y_out = []
+            for j in range(num_samples):
+                y_out.append(y[i: i + num_items])
+                i = i + num_items
+
+            Y_out.append(np.asarray(y_out))
+
+    return Y_out
+
+
+def get_unnormalized_variable_rank(y_norm):
+    unnorm_ranks = {}
+    for split in y_norm.keys():
+        if y_norm[split] is None:
+            continue
+
+        unnorm_ranks[split] = []
+        for _dataset in y_norm[split]:
+            unnorm_ranks_dataset = []
+            for _norm_pred in _dataset:
+                item_norm_rank = [(idx, pred) for idx, pred in enumerate(_norm_pred)]
+                # Sort ascending. Smaller the rank higher the precedence
+                item_norm_rank.sort(key=itemgetter(1))
+                variable_ranks = np.zeros_like(_norm_pred)
+                for rank, (item, _) in zip(range(_norm_pred.shape[0]), item_norm_rank):
+                    variable_ranks[item] = rank
+
+                unnorm_ranks_dataset.append(variable_ranks)
+
+            unnorm_ranks[split].append(np.asarray(unnorm_ranks_dataset))
+
+    return unnorm_ranks
+
+
+def eval_learning_metrics(orig, pred):
+    mse = mean_squared_error(orig, pred)
+    mae = mean_absolute_error(orig, pred)
+    r2 = r2_score(orig, pred)
+
+    print('MSE: ', mse)
+    print('MAE: ', mae)
+    print('R2: ', r2)
+
+    return {'MSE': mse, 'R2': r2, 'MAE': mae}
+
+
+def eval_rank_metrics(orig, pred):
+    for k in orig.keys():
+        if orig[k] is None:
+            continue
+
+        print(f'{k} rank metrics...')
+        corrs = []
+        ps = []
+        for odata, pdata in zip(orig[k], pred[k]):
+            # Spearman rank correlation
+            for oranks, pranks in zip(odata, pdata):
+                corr, p = sp.stats.spearmanr(oranks, pranks)
+                corrs.append(corr)
+                ps.append(p)
+
+            # Top 10 accuracy
+
+            # Top 5 accuracy
+
+        print('Correlation :', np.mean(corrs), np.std(corrs))
+        print('p-value     :', np.mean(ps), np.std(ps))
+        print()

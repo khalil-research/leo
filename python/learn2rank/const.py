@@ -15,6 +15,16 @@ datasets_dict = {
             'id': '3_60',
             'X': 'datasets/X_train_3_60_r1_c2_A_ta.npy',
             'Y': 'datasets/Y_train_3_60_r1_c2_A_ta.npy'
+        }],
+        'val': [{
+            'id': '3_60',
+            'X': 'datasets/X_val_3_60_r1_c2_A_ta.npy',
+            'Y': 'datasets/Y_val_3_60_r1_c2_A_ta.npy'
+        }],
+        'test': [{
+            'id': '3_60',
+            'X': 'datasets/X_test_3_60_r1_c2_A_ta.npy',
+            'Y': 'datasets/Y_test_3_60_r1_c2_A_ta.npy'
         }]
     }
 }
