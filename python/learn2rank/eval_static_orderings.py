@@ -40,7 +40,7 @@ def eval_static(args):
             random_order = list(np.arange(args.num_items))
             random.seed(rseed)
             random.shuffle(random_order)
-            status, runtime = run_bdd_builder(instance_path, order,
+            status, runtime = run_bdd_builder(instance_path, random_order,
                                               time_limit=args.time_limit,
                                               mem_limit=args.mem_limit)
             print(str(instance_path), f"rnd{ridx}", status, runtime)
