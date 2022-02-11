@@ -18,6 +18,17 @@ def get_rank(sorted_data):
     return idx_rank
 
 
+def get_order_from_rank(ranks):
+    idx_rank = []
+    for item, rank in enumerate(ranks):
+        idx_rank.append((item, rank))
+
+    idx_rank.sort(key=itemgetter(1))
+    order = [int(i[0]) for i in idx_rank]
+
+    return order
+
+
 def read_from_file(p, filepath):
     data = {'value': [], 'weight': [], 'capacity': 0}
 
@@ -237,6 +248,9 @@ def eval_rank_metrics(orig, pred):
         print(f'{k} rank metrics...')
         corrs = []
         ps = []
+        top_10_common, top_5_common = [], []
+        top_10_same, top_5_same = [], []
+        top_10_penalty, top_5_penalty = [], []
         for odata, pdata in zip(orig[k], pred[k]):
             # Spearman rank correlation
             for oranks, pranks in zip(odata, pdata):
@@ -244,10 +258,36 @@ def eval_rank_metrics(orig, pred):
                 corrs.append(corr)
                 ps.append(p)
 
-            # Top 10 accuracy
+                oorder = np.asarray(get_order_from_rank(oranks))
+                porder = np.asarray(get_order_from_rank(pranks))
 
-            # Top 5 accuracy
+                # Top 10 accuracy
+                top_10_common.append(len(set(oorder[:10]).intersection(set(porder[:10]))))
+                top_10_same.append(np.sum(oorder[:10] == porder[:10]))
 
-        print('Correlation :', np.mean(corrs), np.std(corrs))
-        print('p-value     :', np.mean(ps), np.std(ps))
+                _penalties = []
+                for j in range(10):
+                    _penalties.append(np.abs(j - np.where(porder == oorder[j])[0][0]))
+                top_10_penalty.append(np.mean(_penalties))
+
+                # Top 5 accuracy
+                top_5_common.append(len(set(oorder[:5]).intersection(set(porder[:5]))))
+                top_5_same.append(np.sum(oorder[:5] == porder[:5]))
+
+                _penalties = []
+                for j in range(5):
+                    _penalties.append(np.abs(j - np.where(porder == oorder[j])[0][0]))
+                top_5_penalty.append(np.mean(_penalties))
+
+        assert len(top_10_penalty) == len(top_5_penalty)
+
+        print('Correlation    :', np.mean(corrs), np.std(corrs))
+        print('p-value        :', np.mean(ps), np.std(ps))
+        print('Top 10 Common  :', np.mean(top_10_common))
+        print('Top 10 Same    :', np.mean(top_10_same))
+        print('Top 10 Penalty :', np.mean(top_10_penalty))
+        print('Top 5 Common   :', np.mean(top_5_common))
+        print('Top 5 Same     :', np.mean(top_5_same))
+        print('Top 5 Penalty  :', np.mean(top_5_penalty))
+
         print()
