@@ -2,6 +2,10 @@ from operator import itemgetter
 
 import numpy as np
 
+feature_names = ['weight', 'avg_value', 'max_value', 'min_value',
+                 'avg_value_by_weight', 'max_value_by_weight',
+                 'min_value_by_weight']
+
 
 def get_order(data):
     order = {
@@ -108,7 +112,7 @@ def get_weighted_order(opts, data, weighted_ordering_dict):
     return new_order
 
 
-def get_variable_score(data, feature_weights):
+def get_variable_score_from_weights(data, feature_weights):
     weight, value = np.asarray(data['weight']), np.asarray(data['value'])
     n_items = weight.shape[0]
     value_mean = np.mean(value, axis=0)
@@ -135,13 +139,13 @@ def get_variable_score(data, feature_weights):
     return scores
 
 
-def get_variable_order(data, feature_weights):
+def get_variable_order_from_weights(data, feature_weights):
     """Returns array of variable order
     For example: [2, 1, 0]
     Here 2 is the index of item which should be used first to create the BDD
     """
     n_items = len(data['weight'])
-    scores = get_variable_score(data, feature_weights)
+    scores = get_variable_score_from_weights(data, feature_weights)
 
     idx_score = [(i, v) for i, v in zip(np.arange(n_items), scores)]
     idx_score.sort(key=itemgetter(1), reverse=True)
@@ -151,14 +155,14 @@ def get_variable_order(data, feature_weights):
     return order, idx_score
 
 
-def get_variable_rank(data, feature_weights, normalized=True):
+def get_variable_rank_from_weights(data, feature_weights, normalized=True):
     """Returns array of variable ranks
     For example: [2, 1, 0]
     Item 0 must be used third to construct the BDD
     """
     n_items = len(data['weight'])
 
-    _, idx_score_desc = get_variable_order(data, feature_weights)
+    _, idx_score_desc = get_variable_order_from_weights(data, feature_weights)
 
     variable_rank = np.zeros(n_items)
     for rank, (i, _) in enumerate(idx_score_desc):
@@ -166,3 +170,7 @@ def get_variable_rank(data, feature_weights, normalized=True):
     variable_rank /= n_items
 
     return variable_rank
+
+
+def get_incumbent_lst(feature_weights):
+    return [feature_weights[fn] for fn in feature_names]
