@@ -5,10 +5,12 @@ from pathlib import Path
 
 import numpy as np
 
-from featurizer import get_features
-from featurizer import get_instance_features, get_item_features
-from utils import read_from_file
-from utils_order import get_variable_rank_from_weights, get_incumbent_lst
+from .utils import get_features
+from .utils import get_incumbent_lst
+from .utils import get_instance_features
+from .utils import get_item_features
+from .utils import get_variable_rank_from_weights
+from .utils import read_from_file
 
 
 def get_matrix_dataset(opts):
@@ -35,8 +37,12 @@ def get_matrix_dataset(opts):
 
     XX = np.asarray(XX)
     YY = np.asarray(YY)
-    np.save(f'datasets/X_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.npy', XX)
-    np.save(f'datasets/Y_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.npy', YY)
+
+    xpath = Path(__file__).parent.joinpath(f'resources/datasets/X_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.npy')
+    ypath = Path(__file__).parent.joinpath(f'resources/datasets/Y_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.npy')
+    np.save(str(xpath), XX)
+    np.save(str(ypath), YY)
+
     print(XX.shape, YY.shape)
 
 
@@ -71,9 +77,9 @@ def get_dict_dataset(opts, norm_const=1000):
             'weight': get_incumbent_lst(best_incumbent)
         }
 
-    pkl.dump(dataset,
-             open(f'datasets/dict_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.pkl',
-                  'wb'))
+    dataset_path = Path(__file__).parent.joinpath(
+        f'resources/datasets/dict_{opts.split}_{opts.p}_{opts.n}_r1_c2_A_ta.pkl')
+    pkl.dump(dataset, open(dataset_path, 'wb'))
 
 
 if __name__ == '__main__':
@@ -82,7 +88,7 @@ if __name__ == '__main__':
                         default='/home/rahul/Documents/PhD/projects/multiobjective_cp2016/data/knapsack_7/3_60')
     parser.add_argument('--output_dir', type=str,
                         default='/home/rahul/Documents/PhD/projects/multiobjective_cp2016/output/3_60_r1_c2_A_ta')
-    parser.add_argument('--n_instances', type=int, default=1)
+    parser.add_argument('--n_instances', type=int, default=1000)
     parser.add_argument('--p', type=int, default=3)
     parser.add_argument('--n', type=int, default=60)
     parser.add_argument('--p_max', type=int, default=7)

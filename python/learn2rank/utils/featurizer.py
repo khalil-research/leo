@@ -1,12 +1,25 @@
+from enum import Enum
 from operator import itemgetter
 
 import numpy as np
 
-from const import *
-from utils import get_rank
+from .utils import get_rank
 
 
-def calculate_instance_features(opts, norm_weight, norm_value):
+class StaticOrderings(Enum):
+    max_weight = 0
+    min_weight = 1
+    max_avg_value = 2
+    min_avg_value = 3
+    max_max_value = 4
+    min_max_value = 5
+    max_min_value = 6
+    min_min_value = 7
+    max_avg_value_by_weight = 8
+    max_max_value_by_weight = 9
+
+
+def get_instance_features(opts, norm_weight, norm_value):
     p, n = norm_value.shape
 
     features = [p / opts.p_max, n / opts.n_max,
@@ -27,7 +40,7 @@ def calculate_instance_features(opts, norm_weight, norm_value):
     return features
 
 
-def calculate_item_features(data, norm_weight, norm_value):
+def get_item_features(data, norm_weight, norm_value):
     item_features = np.vstack([norm_weight,
                                norm_value.mean(axis=0),
                                norm_value.min(axis=0),
@@ -38,61 +51,61 @@ def calculate_item_features(data, norm_weight, norm_value):
                                norm_value.min(axis=0) / norm_weight])
     n_items = len(data['weight'])
 
-    for o in ordering_lst:
-        if o == 'max_weight':
+    for o in StaticOrderings:
+        if o.name == 'max_weight':
             idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
             idx_weight.sort(key=itemgetter(1), reverse=True)
             idx_rank = get_rank(idx_weight)
 
-        elif o == 'min_weight':
+        elif o.name == 'min_weight':
             idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
             idx_weight.sort(key=itemgetter(1))
             idx_rank = get_rank(idx_weight)
 
-        elif o == 'max_avg_value':
+        elif o.name == 'max_avg_value':
             mean_profit = np.mean(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
             idx_profit.sort(key=itemgetter(1), reverse=True)
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'min_avg_value':
+        elif o.name == 'min_avg_value':
             mean_profit = np.mean(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
             idx_profit.sort(key=itemgetter(1))
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'max_max_value':
+        elif o.name == 'max_max_value':
             max_profit = np.max(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
             idx_profit.sort(key=itemgetter(1), reverse=True)
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'min_max_value':
+        elif o.name == 'min_max_value':
             max_profit = np.max(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
             idx_profit.sort(key=itemgetter(1))
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'max_min_value':
+        elif o.name == 'max_min_value':
             min_profit = np.min(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
             idx_profit.sort(key=itemgetter(1), reverse=True)
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'min_min_value':
+        elif o.name == 'min_min_value':
             min_profit = np.min(data['value'], 0)
             idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
             idx_profit.sort(key=itemgetter(1))
             idx_rank = get_rank(idx_profit)
 
-        elif o == 'max_avg_value_by_weight':
+        elif o.name == 'max_avg_value_by_weight':
             mean_profit = np.mean(data['value'], 0)
             profit_by_weight = [v / w for v, w in zip(mean_profit, data['weight'])]
             idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
             idx_profit_by_weight.sort(key=itemgetter(1), reverse=True)
             idx_rank = get_rank(idx_profit_by_weight)
 
-        elif o == 'max_max_value_by_weight':
+        elif o.name == 'max_max_value_by_weight':
             max_profit = np.max(data['value'], 0)
             profit_by_weight = [v / w for v, w in zip(max_profit, data['weight'])]
             idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
@@ -113,13 +126,13 @@ def get_features(opts, data, norm_const=1000):
     norm_weight = (1 / norm_const) * np.asarray(data['weight'])
 
     # Calculate instance features
-    inst_feat = calculate_instance_features(opts, norm_weight, norm_value)
+    inst_feat = get_instance_features(opts, norm_weight, norm_value)
     inst_feat = inst_feat.reshape((1, -1))
     inst_feat = np.repeat(inst_feat, opts.n, axis=0)
     # print(inst_feat.shape)
 
     # Calculate item features
-    item_feat = calculate_item_features(data, norm_weight, norm_value)
+    item_feat = get_item_features(data, norm_weight, norm_value)
     item_feat = item_feat.T
     # print(item_feat.shape)
 

@@ -1,10 +1,17 @@
+from enum import Enum
 from operator import itemgetter
 
 import numpy as np
 
-feature_names = ['weight', 'avg_value', 'max_value', 'min_value',
-                 'avg_value_by_weight', 'max_value_by_weight',
-                 'min_value_by_weight']
+
+class KnapsackPropertyWeights(Enum):
+    weight = 0
+    avg_value = 1
+    max_value = 2
+    min_value = 3
+    avg_value_by_weight = 4
+    max_value_by_weight = 5
+    min_value_by_weight = 6
 
 
 def get_order(data):
@@ -167,10 +174,15 @@ def get_variable_rank_from_weights(data, feature_weights, normalized=True):
     variable_rank = np.zeros(n_items)
     for rank, (i, _) in enumerate(idx_score_desc):
         variable_rank[i] = rank
-    variable_rank /= n_items
+    if normalized:
+        variable_rank /= n_items
 
     return variable_rank
 
 
 def get_incumbent_lst(feature_weights):
-    return [feature_weights[fn] for fn in feature_names]
+    lst = []
+    for i in range(len(KnapsackPropertyWeights)):
+        lst.append(feature_weights[KnapsackPropertyWeights(i).name])
+
+    return lst

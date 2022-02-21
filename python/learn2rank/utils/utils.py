@@ -1,13 +1,62 @@
+import pickle as pkl
 import resource
+from itertools import product
 from operator import itemgetter
 from subprocess import Popen, PIPE, TimeoutExpired
 
 import numpy as np
 import scipy as sp
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from torch.utils.data import Dataset, DataLoader
 
 # Maximal virtual memory for subprocesses (in bytes).
 MAX_VIRTUAL_MEMORY = 1 * 1024 * 1024 * 1024  # 1 GB
+
+
+class PointwiseVariableRankRegressionDataset(Dataset):
+    def __init__(self, dict_dataset_path, device):
+        self.dict_dataset_np = pkl.load(open(dict_dataset_path, 'rb'))
+
+        self.num_instances = len((self.dict_dataset.keys()))
+        # Var feat shape: Num features x Num items
+        self.num_items = self.dict_dataset[0]['var_feat'].shape[1]
+        self.idx2item = {idx: (inst, item)
+                         for idx, inst, item in enumerate(product(range(self.num_instances),
+                                                                  range(self.num_items)))}
+
+    def __len__(self):
+        return self.num_instances * self.num_items
+
+    def __getitem__(self, idx):
+        inst, item = self.idx2item[idx]
+
+        return 1
+
+
+class WeightRegressionDataset(Dataset):
+    def __len__(self):
+        return 1
+
+    def __getitem__(self, item):
+        return 1
+
+
+class VariableFeaturesDataset(Dataset):
+    def __init__(self, dict_dataset_path, device, usage=''):
+        dict_dataset = pkl.load(open(dict_dataset_path, 'rb'))
+        self.num_instances = len((dict_dataset.keys()))
+        # Var feat shape: Num features x Num items
+        self.num_items = dict_dataset[0]['var_feat'].shape[1]
+        self.inst_item_map = list(product(range(self.num_instances), range(self.num_items)))
+        self.usage
+
+    def __len__(self):
+        return self.num_instances * self.num_items
+
+    def __getitem__(self, idx):
+        inst, item = self.inst_item_map[idx]
+
+        return 1
 
 
 def get_rank(sorted_data):
@@ -175,17 +224,37 @@ def run_bdd_builder(instance, order, time_limit=60, mem_limit=2):
     return status, runtime
 
 
-def flatten_data(X, Y):
-    x_flat, y_flat = [], []
+def load_split(dataset, split='train'):
+    x = [np.load(_dataset['X']) for _dataset in dataset[split]]
+    y = [np.load(_dataset['Y']) for _dataset in dataset[split]]
+    y_shape = [_y.shape for _y in y]
+
+    return x, y, y_shape
+
+
+def flatten_data(X, Y, loss_weights_type=0):
+    x_flat, y_flat, weights_flat = [], [], []
     for _X, _Y in zip(X, Y):
         for _sampleX, _sampleY in zip(_X, _Y):
+            scale = np.max(_sampleY) - np.min(_sampleY)
             for _itemX, _itemY in zip(_sampleX, _sampleY):
+                _weight = 1
+                if loss_weights_type == 1:
+                    """Linearly decreasing"""
+                    _weight = 1 - (_itemY / scale)
+                elif loss_weights_type == 2:
+                    """Exponentially decreasing"""
+                    _weight = np.exp(-((_itemY / scale) * 5))
+                weights_flat.append(_weight)
+
                 x_flat.append(_itemX)
                 y_flat.append(_itemY)
+
     x_flat, y_flat = np.asarray(x_flat), np.asarray(y_flat)
+    weights_flat = np.asarray(weights_flat)
     print(x_flat.shape, y_flat.shape)
 
-    return x_flat, y_flat
+    return x_flat, y_flat, weights_flat
 
 
 def unflatten_data(y, y_shape):
@@ -228,10 +297,10 @@ def get_unnormalized_variable_rank(y_norm):
     return unnorm_ranks
 
 
-def eval_learning_metrics(orig, pred):
+def eval_learning_metrics(orig, pred, weights):
     mse = mean_squared_error(orig, pred)
     mae = mean_absolute_error(orig, pred)
-    r2 = r2_score(orig, pred)
+    r2 = r2_score(orig, pred, sample_weight=weights)
 
     print('MSE: ', mse)
     print('MAE: ', mae)
@@ -291,3 +360,17 @@ def eval_rank_metrics(orig, pred):
         print('Top 5 Penalty  :', np.mean(top_5_penalty))
 
         print()
+
+
+def get_tensor_datasets(args, dataset_paths, device):
+    tr_dataset = VariableFeaturesDataset(dataset_paths['train'], device)
+    val_dataset = VariableFeaturesDataset(dataset_paths['val'], device)
+    test_dataset = VariableFeaturesDataset(dataset_paths['test'], device)
+
+
+def get_dataloaders(args, tr_dataset, val_dataset, test_dataset):
+    tr_loader = DataLoader(tr_dataset, shuffle=True, batch_size=args.bs)
+    val_loader = DataLoader(val_dataset, shuffle=False, batch_size=len(val_dataset))
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=len(test_dataset))
+
+    return tr_loader, val_loader, test_loader
