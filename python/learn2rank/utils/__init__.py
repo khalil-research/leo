@@ -239,67 +239,53 @@ def load_split(dataset, split='train'):
     return x, y, y_shape
 
 
-def flatten_data(X, Y, loss_weights_type=0):
-    x_flat, y_flat, weights_flat = [], [], []
-    for _X, _Y in zip(X, Y):
-        for _sampleX, _sampleY in zip(_X, _Y):
-            scale = np.max(_sampleY) - np.min(_sampleY)
-            for _itemX, _itemY in zip(_sampleX, _sampleY):
-                _weight = 1
-                if loss_weights_type == 1:
-                    """Linearly decreasing"""
-                    _weight = 1 - (_itemY / scale)
-                elif loss_weights_type == 2:
-                    """Exponentially decreasing"""
-                    _weight = np.exp(-((_itemY / scale) * 5))
-                weights_flat.append(_weight)
+def flatten_data(X, Y, weighted_loss=0):
+    X_flat, Y_flat, weights_flat = [], [], []
+    for x, y in zip(X, Y):
+        scale_y = np.max(y) - np.min(y)
+        for item_x, item_y in zip(x, y):
+            weight = 1
+            if weighted_loss == 1:
+                """Linearly decreasing"""
+                weight = 1 - (item_y / scale_y)
+            elif weighted_loss == 2:
+                """Exponentially decreasing"""
+                weight = np.exp(-((item_y / scale_y) * 5))
+            weights_flat.append(weight)
 
-                x_flat.append(_itemX)
-                y_flat.append(_itemY)
+            X_flat.append(item_x)
+            Y_flat.append(item_y)
 
-    x_flat, y_flat = np.asarray(x_flat), np.asarray(y_flat)
+    X_flat, Y_flat = np.asarray(X_flat), np.asarray(Y_flat)
     weights_flat = np.asarray(weights_flat)
-    print(x_flat.shape, y_flat.shape)
+    print(X_flat.shape, Y_flat.shape)
 
-    return x_flat, y_flat, weights_flat
+    return X_flat, Y_flat, weights_flat
 
 
-def unflatten_data(y, y_shape):
+def unflatten_data(Y, num_items):
     Y_out = []
-
-    if y is not None:
+    num_samples = int(Y.shape[0] / num_items)
+    if Y is not None:
         i = 0
-        for (num_samples, num_items) in y_shape:
-            y_out = []
-            for j in range(num_samples):
-                y_out.append(y[i: i + num_items])
-                i = i + num_items
-
-            Y_out.append(np.asarray(y_out))
+        for j in range(num_samples):
+            Y_out.append(Y[i: i + num_items])
+            i += num_items
 
     return Y_out
 
 
 def get_unnormalized_variable_rank(y_norm):
-    unnorm_ranks = {}
-    for split in y_norm.keys():
-        if y_norm[split] is None:
-            continue
+    unnorm_ranks = []
 
-        unnorm_ranks[split] = []
-        for _dataset in y_norm[split]:
-            unnorm_ranks_dataset = []
-            for _norm_pred in _dataset:
-                item_norm_rank = [(idx, pred) for idx, pred in enumerate(_norm_pred)]
-                # Sort ascending. Smaller the rank higher the precedence
-                item_norm_rank.sort(key=itemgetter(1))
-                variable_ranks = np.zeros_like(_norm_pred)
-                for rank, (item, _) in zip(range(_norm_pred.shape[0]), item_norm_rank):
-                    variable_ranks[item] = rank
-
-                unnorm_ranks_dataset.append(variable_ranks)
-
-            unnorm_ranks[split].append(np.asarray(unnorm_ranks_dataset))
+    for norm_pred in y_norm:
+        item_norm_rank = [(idx, pred) for idx, pred in enumerate(norm_pred)]
+        # Sort ascending. Smaller the rank higher the precedence
+        item_norm_rank.sort(key=itemgetter(1))
+        variable_ranks = np.zeros_like(norm_pred)
+        for rank, (item, _) in zip(range(norm_pred.shape[0]), item_norm_rank):
+            variable_ranks[item] = rank
+        unnorm_ranks.append(variable_ranks)
 
     return unnorm_ranks
 

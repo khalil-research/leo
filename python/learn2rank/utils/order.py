@@ -1,17 +1,8 @@
-from enum import Enum
 from operator import itemgetter
 
 import numpy as np
 
-
-class KnapsackPropertyWeights(Enum):
-    weight = 0
-    avg_value = 1
-    max_value = 2
-    min_value = 3
-    avg_value_by_weight = 4
-    max_value_by_weight = 5
-    min_value_by_weight = 6
+from .const import KnapsackPropertyWeights
 
 
 def get_order(data):
