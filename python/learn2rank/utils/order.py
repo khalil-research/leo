@@ -171,10 +171,13 @@ def get_variable_rank_from_weights(data, feature_weights, normalized=True):
     return variable_rank
 
 
-def get_incumbent_lst(feature_weights):
+def property_weight_dict2array(pw_dict, cast_to_numpy=False):
     lst = []
     for i in range(len(KnapsackPropertyWeights)):
-        lst.append(feature_weights[KnapsackPropertyWeights(i).name])
+        lst.append(pw_dict[KnapsackPropertyWeights(i).name])
+
+    if cast_to_numpy:
+        lst = np.asarray(lst)
 
     return lst
 

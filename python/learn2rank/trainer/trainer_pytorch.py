@@ -24,7 +24,7 @@ class RankingDataset(Dataset):
 
     def __getitem__(self, index) -> T_co:
         return {'x': self.x[index],
-                'y_weight': self.y[index]['fwt'],
+                'y_weight': self.y[index]['pwt'],
                 'y_time': self.y[index]['cost'],
                 'y_rank': self.y[index]['rank']}
 

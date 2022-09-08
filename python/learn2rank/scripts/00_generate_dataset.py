@@ -7,8 +7,8 @@ import numpy as np
 from omegaconf import DictConfig
 
 from learn2rank.featurizer.factory import featurizer_factory
-from learn2rank.utils import get_incumbent_lst
 from learn2rank.utils import get_variable_rank_from_weights
+from learn2rank.utils import property_weight_dict2array
 from learn2rank.utils import read_data_from_file
 
 
@@ -45,10 +45,11 @@ def main(cfg: DictConfig):
             for data_file in dfs.iterdir():
                 data = read_data_from_file(data_file)
                 dataset[dfs.name][data_file.stem] = {'x': {}, 'y': []}
+                _dataset = dataset[dfs.name][data_file.stem]
 
                 featurizer = featurizer_factory.create(cfg.name, cfg=cfg, data=data)
                 features = featurizer.get()
-                dataset[dfs.name][data_file.stem]['x'] = features
+                _dataset['x'] = features
 
                 # Load incumbent config
                 smac_out_dir = of.joinpath(dfs.name).joinpath(data_file.stem).joinpath(f'run_{cfg.seed.smac}')
@@ -57,10 +58,10 @@ def main(cfg: DictConfig):
                     lines = fp.readlines()
                     for line in lines[1:]:
                         run = json.loads(line)
-                        dataset[dfs.name][data_file.stem]['y'].append({'cost': np.asarray(run['cost']).reshape(1, 1),
-                                                                       'fwt': np.asarray(
-                                                                           get_incumbent_lst(run['incumbent']))})
-                    dataset[dfs.name][data_file.stem]['y'][-1]['rank'] = get_variable_rank_from_weights(
+                        _dataset['y'].append({'cost': np.asarray(run['cost']).reshape(1, 1),
+                                              'pwt': property_weight_dict2array(run['incumbent'],
+                                                                                cast_to_numpy=True)})
+                    _dataset['y'][-1]['rank'] = get_variable_rank_from_weights(
                         data, run['incumbent'])
 
     with open(Path(cfg.paths.dataset) / 'knapsack.pkl', 'wb') as fp:
