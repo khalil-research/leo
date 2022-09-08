@@ -1,278 +1,37 @@
-import pickle as pkl
-import resource
-from itertools import product
+import random
 from operator import itemgetter
-from subprocess import Popen, PIPE, TimeoutExpired
 
 import numpy as np
-import scipy as sp
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from torch.utils.data import Dataset, DataLoader
+import torch
 
 from .const import numpy_dataset_paths
-from .featurizer import get_features
-from .featurizer import get_instance_features
-from .featurizer import get_item_features
+from .data import read_data_from_file
+from .metrics import eval_learning_metrics, eval_rank_metrics
+from .order import get_incumbent_lst
 from .order import get_incumbent_lst
 from .order import get_variable_rank_from_weights
 
-# Maximal virtual memory for subprocesses (in bytes).
-MAX_VIRTUAL_MEMORY = 1 * 1024 * 1024 * 1024  # 1 GB
+
+class Factory:
+    def __init__(self):
+        self._members = {}
+
+    def register_member(self, key, member_cls):
+        self._members[key] = member_cls
+
+    def create(self, key, **kwargs):
+        member_cls = self._members.get(key)
+        if member_cls is None:
+            raise ValueError(key)
+
+        return member_cls(**kwargs)
 
 
-class PointwiseVariableRankRegressionDataset(Dataset):
-    def __init__(self, dict_dataset_path, device):
-        self.dict_dataset_np = pkl.load(open(dict_dataset_path, 'rb'))
-
-        self.num_instances = len((self.dict_dataset.keys()))
-        # Var feat shape: Num features x Num items
-        self.num_items = self.dict_dataset[0]['var_feat'].shape[1]
-        self.idx2item = {idx: (inst, item)
-                         for idx, inst, item in enumerate(product(range(self.num_instances),
-                                                                  range(self.num_items)))}
-
-    def __len__(self):
-        return self.num_instances * self.num_items
-
-    def __getitem__(self, idx):
-        inst, item = self.idx2item[idx]
-
-        return 1
-
-
-class WeightRegressionDataset(Dataset):
-    def __len__(self):
-        return 1
-
-    def __getitem__(self, item):
-        return 1
-
-
-class VariableFeaturesDataset(Dataset):
-    def __init__(self, dict_dataset_path, device, usage=''):
-        dict_dataset = pkl.load(open(dict_dataset_path, 'rb'))
-        self.num_instances = len((dict_dataset.keys()))
-        # Var feat shape: Num features x Num items
-        self.num_items = dict_dataset[0]['var_feat'].shape[1]
-        self.inst_item_map = list(product(range(self.num_instances), range(self.num_items)))
-        self.usage
-
-    def __len__(self):
-        return self.num_instances * self.num_items
-
-    def __getitem__(self, idx):
-        inst, item = self.inst_item_map[idx]
-
-        return 1
-
-
-def get_rank(sorted_data):
-    idx_rank = {}
-    for rank, item in enumerate(sorted_data):
-        idx_rank[item[0]] = rank
-
-    return idx_rank
-
-
-def get_order_from_rank(ranks):
-    idx_rank = []
-    for item, rank in enumerate(ranks):
-        idx_rank.append((item, rank))
-
-    idx_rank.sort(key=itemgetter(1))
-    order = [int(i[0]) for i in idx_rank]
-
-    return order
-
-
-def read_from_file(p, filepath):
-    data = {'value': [], 'weight': [], 'capacity': 0}
-
-    with open(filepath, 'r') as fp:
-        fp.readline()
-        fp.readline()
-
-        for _ in range(p):
-            data['value'].append(list(map(int, fp.readline().split())))
-
-        data['weight'].extend(list(map(int, fp.readline().split())))
-
-        data['capacity'] = int(fp.readline().split()[0])
-
-    return data
-
-
-def get_static_orders(data):
-    order = {
-        'max_weight': None,
-        'min_weight': None,
-        'max_avg_profit': None,
-        'min_avg_profit': None,
-        'max_max_profit': None,
-        'min_max_profit': None,
-        'max_min_profit': None,
-        'min_min_profit': None,
-        'max_avg_profit_by_weight': None,
-        'max_max_profit_by_weight': None,
-    }
-
-    n_items = len(data['weight'])
-    for o in order.keys():
-        if o == 'max_weight':
-            idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
-            # print(o, idx_weight)
-            idx_weight.sort(key=itemgetter(1), reverse=True)
-            order[o] = [i[0] for i in idx_weight]
-
-        elif o == 'min_weight':
-            idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
-            idx_weight.sort(key=itemgetter(1))
-            order[o] = [i[0] for i in idx_weight]
-
-        elif o == 'max_avg_profit':
-            mean_profit = np.mean(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
-            idx_profit.sort(key=itemgetter(1), reverse=True)
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'min_avg_profit':
-            mean_profit = np.mean(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
-            idx_profit.sort(key=itemgetter(1))
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'max_max_profit':
-            max_profit = np.max(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
-            idx_profit.sort(key=itemgetter(1), reverse=True)
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'min_max_profit':
-            max_profit = np.max(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
-            idx_profit.sort(key=itemgetter(1))
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'max_min_profit':
-            min_profit = np.min(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
-            idx_profit.sort(key=itemgetter(1), reverse=True)
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'min_min_profit':
-            min_profit = np.min(data['value'], 0)
-            idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
-            idx_profit.sort(key=itemgetter(1))
-            order[o] = [i[0] for i in idx_profit]
-
-        elif o == 'max_avg_profit_by_weight':
-            mean_profit = np.mean(data['value'], 0)
-            profit_by_weight = [v / w for v, w in zip(mean_profit, data['weight'])]
-            idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
-            idx_profit_by_weight.sort(key=itemgetter(1), reverse=True)
-            # print(idx_profit_by_weight)
-            order[o] = [i[0] for i in idx_profit_by_weight]
-
-        elif o == 'max_max_profit_by_weight':
-            max_profit = np.max(data['value'], 0)
-            profit_by_weight = [v / w for v, w in zip(max_profit, data['weight'])]
-            idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
-            idx_profit_by_weight.sort(key=itemgetter(1), reverse=True)
-            # print(idx_profit_by_weight)
-            order[o] = [i[0] for i in idx_profit_by_weight]
-
-    return order
-
-
-def limit_virtual_memory():
-    # Maximal virtual memory for subprocesses (in bytes).
-    # MAX_VIRTUAL_MEMORY = 1 * 1024 * 1024 * 1024  # 1 GB
-    global MAX_VIRTUAL_MEMORY
-
-    # The tuple below is of the form (soft limit, hard limit). Limit only
-    # the soft part so that the limit can be increased later (setting also
-    # the hard limit would prevent that).
-    # When the limit cannot be changed, setrlimit() raises ValueError.
-    resource.setrlimit(resource.RLIMIT_AS, (MAX_VIRTUAL_MEMORY, MAX_VIRTUAL_MEMORY))
-
-
-def run_bdd_builder(instance, order, time_limit=60, mem_limit=2):
-    # Prepare the call string to binary
-    order_string = " ".join(map(str, order))
-    cmd = f"./multiobj {instance} {len(order)} {order_string}"
-    # Maximal virtual memory for subprocesses (in bytes).
-    global MAX_VIRTUAL_MEMORY
-    MAX_VIRTUAL_MEMORY = mem_limit * (1024 ** 3)
-
-    status = "SUCCESS"
-    runtime = 0
-    try:
-        io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE, preexec_fn=limit_virtual_memory)
-        # Call target algorithm with cutoff time
-        (stdout_, stderr_) = io.communicate(timeout=time_limit)
-
-        # Decode and parse output
-        stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
-        if len(stdout) and "Solved" in stdout:
-            # Sum the last three floating points to calculate the total time
-            # This is binary dependent and can change
-            runtime = np.sum(list(map(float, stdout.strip().split(',')[-3:])))
-        else:
-            # If the instance is not solved successfully on the cluster, we either hit the
-            # runtime limit or memory limit. In either of the two cases, we will not be
-            # allowed to run more instances. Hence, we stop the parameter optimization
-            # process using the ABORT signal
-            status = "ABORT"
-            runtime = time_limit
-    except TimeoutExpired:
-        status = "TIMEOUT"
-        runtime = time_limit
-
-    return status, runtime
-
-
-def load_split(dataset, split='train'):
-    x = [np.load(_dataset['X']) for _dataset in dataset[split]]
-    y = [np.load(_dataset['Y']) for _dataset in dataset[split]]
-    y_shape = [_y.shape for _y in y]
-
-    return x, y, y_shape
-
-
-def flatten_data(X, Y, weighted_loss=0):
-    X_flat, Y_flat, weights_flat = [], [], []
-    for x, y in zip(X, Y):
-        scale_y = np.max(y) - np.min(y)
-        for item_x, item_y in zip(x, y):
-            weight = 1
-            if weighted_loss == 1:
-                """Linearly decreasing"""
-                weight = 1 - (item_y / scale_y)
-            elif weighted_loss == 2:
-                """Exponentially decreasing"""
-                weight = np.exp(-((item_y / scale_y) * 5))
-            weights_flat.append(weight)
-
-            X_flat.append(item_x)
-            Y_flat.append(item_y)
-
-    X_flat, Y_flat = np.asarray(X_flat), np.asarray(Y_flat)
-    weights_flat = np.asarray(weights_flat)
-    print(X_flat.shape, Y_flat.shape)
-
-    return X_flat, Y_flat, weights_flat
-
-
-def unflatten_data(Y, num_items):
-    Y_out = []
-    num_samples = int(Y.shape[0] / num_items)
-    if Y is not None:
-        i = 0
-        for j in range(num_samples):
-            Y_out.append(Y[i: i + num_items])
-            i += num_items
-
-    return Y_out
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    random.seed(seed)
 
 
 def get_unnormalized_variable_rank(y_norm):
@@ -288,6 +47,7 @@ def get_unnormalized_variable_rank(y_norm):
         unnorm_ranks.append(variable_ranks)
 
     return unnorm_ranks
+<<<<<<< Updated upstream
 
 
 def eval_learning_metrics(orig, pred, weights):
@@ -367,3 +127,5 @@ def get_dataloaders(args, tr_dataset, val_dataset, test_dataset):
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=len(test_dataset))
 
     return tr_loader, val_loader, test_loader
+=======
+>>>>>>> Stashed changes

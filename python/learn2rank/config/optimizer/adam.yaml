@@ -1,0 +1,4 @@
+# Optimizer used for learning
+name: Adam
+# Learning rate
+lr: 5e-4

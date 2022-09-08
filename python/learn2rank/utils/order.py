@@ -177,3 +177,96 @@ def get_incumbent_lst(feature_weights):
         lst.append(feature_weights[KnapsackPropertyWeights(i).name])
 
     return lst
+
+
+def get_order_from_rank(ranks):
+    idx_rank = []
+    for item, rank in enumerate(ranks):
+        idx_rank.append((item, rank))
+
+    idx_rank.sort(key=itemgetter(1))
+    order = [int(i[0]) for i in idx_rank]
+
+    return order
+
+
+def get_static_orders(data):
+    order = {
+        'max_weight': None,
+        'min_weight': None,
+        'max_avg_profit': None,
+        'min_avg_profit': None,
+        'max_max_profit': None,
+        'min_max_profit': None,
+        'max_min_profit': None,
+        'min_min_profit': None,
+        'max_avg_profit_by_weight': None,
+        'max_max_profit_by_weight': None,
+    }
+
+    n_items = len(data['weight'])
+    for o in order.keys():
+        if o == 'max_weight':
+            idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
+            # print(o, idx_weight)
+            idx_weight.sort(key=itemgetter(1), reverse=True)
+            order[o] = [i[0] for i in idx_weight]
+
+        elif o == 'min_weight':
+            idx_weight = [(i, w) for i, w in enumerate(data['weight'])]
+            idx_weight.sort(key=itemgetter(1))
+            order[o] = [i[0] for i in idx_weight]
+
+        elif o == 'max_avg_profit':
+            mean_profit = np.mean(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
+            idx_profit.sort(key=itemgetter(1), reverse=True)
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'min_avg_profit':
+            mean_profit = np.mean(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(mean_profit)]
+            idx_profit.sort(key=itemgetter(1))
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'max_max_profit':
+            max_profit = np.max(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
+            idx_profit.sort(key=itemgetter(1), reverse=True)
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'min_max_profit':
+            max_profit = np.max(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(max_profit)]
+            idx_profit.sort(key=itemgetter(1))
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'max_min_profit':
+            min_profit = np.min(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
+            idx_profit.sort(key=itemgetter(1), reverse=True)
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'min_min_profit':
+            min_profit = np.min(data['value'], 0)
+            idx_profit = [(i, mp) for i, mp in enumerate(min_profit)]
+            idx_profit.sort(key=itemgetter(1))
+            order[o] = [i[0] for i in idx_profit]
+
+        elif o == 'max_avg_profit_by_weight':
+            mean_profit = np.mean(data['value'], 0)
+            profit_by_weight = [v / w for v, w in zip(mean_profit, data['weight'])]
+            idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
+            idx_profit_by_weight.sort(key=itemgetter(1), reverse=True)
+            # print(idx_profit_by_weight)
+            order[o] = [i[0] for i in idx_profit_by_weight]
+
+        elif o == 'max_max_profit_by_weight':
+            max_profit = np.max(data['value'], 0)
+            profit_by_weight = [v / w for v, w in zip(max_profit, data['weight'])]
+            idx_profit_by_weight = [(i, f) for i, f in enumerate(profit_by_weight)]
+            idx_profit_by_weight.sort(key=itemgetter(1), reverse=True)
+            # print(idx_profit_by_weight)
+            order[o] = [i[0] for i in idx_profit_by_weight]
+
+    return order

@@ -1,0 +1,5 @@
+name: knapsack
+n_max_vars: 60
+n_max_objs: 3
+n_features: 37
+n_weights: 7

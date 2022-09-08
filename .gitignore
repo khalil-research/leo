@@ -10,16 +10,19 @@
 .ipynb_checkpoints
 
 ./data
-./obj
+./cpp/obj
 
-./code/multiobj
+./cpp/multiobj
 
 ./python/scripts/graph_nodes
 ./scripts/graph_nodes_edges
 ./scripts/kp
 
-./scripts/out_final_3
-./scripts/out_final_5
-./scripts/out_final_7
+.*/out_final_3
+.*/out_final_5
+.*/out_final_7
 
 ./code/multiobj
+
+python/SMAC3-master
+python/scripts

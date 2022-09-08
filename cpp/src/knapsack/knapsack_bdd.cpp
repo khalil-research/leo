@@ -90,10 +90,10 @@ BDD *KnapsackBDDConstructor::generate_exact()
 	}
 
 	// reduce BDD
-	//cout << "\twidth = " << bdd->get_width() << endl;
-	//cout << "\tremoving dangling nodes..." << endl;
+	// cout << "\twidth = " << bdd->get_width() << endl;
+	// cout << "\tremoving dangling nodes..." << endl;
 	BDDAlg::remove_dangling_nodes(bdd);
 	bdd->repair_node_indices();
-	//cout << "\twidth = " << bdd->get_width() << endl;
+	// cout << "\twidth = " << bdd->get_width() << endl;
 	return bdd;
 };

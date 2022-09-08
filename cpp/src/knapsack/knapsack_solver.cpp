@@ -88,6 +88,8 @@ void KnapsackBDDSolver::solve()
 
     ////////////////////////////////////////////////////
 
+    bdd->print();
+
     // Generate pareto set
     timers.start_timer(bdd_pareto_time);
     paretoSet = BDDAlg::pareto_set(bdd, obj_coefficients);
