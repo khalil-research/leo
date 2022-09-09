@@ -62,7 +62,7 @@ def main(cfg: DictConfig):
                                               'pwt': property_weight_dict2array(run['incumbent'],
                                                                                 cast_to_numpy=True)})
                     _dataset['y'][-1]['rank'] = get_variable_rank_from_weights(
-                        data, run['incumbent'])
+                        data, run['incumbent'], normalized=False)
 
     with open(Path(cfg.paths.dataset) / 'knapsack.pkl', 'wb') as fp:
         pkl.dump(dataset, fp)

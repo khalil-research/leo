@@ -10,12 +10,13 @@ class PointwiseRMSELoss(Loss):
 
         mask = y_true == self.padded_value_indicator
         valid_mask = (y_true != self.padded_value_indicator).type(torch.float32)
-        # no_of_levels = valid_mask - 1
+        no_of_levels = valid_mask.sum(-1, keepdim=True) - 1
+        no_of_levels = no_of_levels.repeat(1, y_pred.shape[-1])
 
         y_true[mask] = 0
         y_pred[mask] = 0
 
-        errors = (y_true - y_pred)
+        errors = (y_true - (no_of_levels * y_pred))
 
         squared_errors = errors ** 2
 
