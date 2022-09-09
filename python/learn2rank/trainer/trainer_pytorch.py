@@ -33,6 +33,7 @@ class PyTorchTrainer(Trainer):
     def __init__(self, model=None, data=None, cfg=None):
         super(PyTorchTrainer, self).__init__(data, model, cfg)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
 
         # Data
         self.tensors = None
@@ -199,7 +200,11 @@ class PyTorchTrainer(Trainer):
 
     def _get_loss(self, y_rank, y_weight, y_time, yp_rank=None, yp_weight=None, yp_time=None, no_grad=False):
         """ Get loss for different tasks """
-        loss_dict = {'rank': torch.zeros(1), 'weight': torch.zeros(1), 'time': torch.zeros(1), 'total': torch.zeros(1)}
+        loss_dict = {'rank': torch.zeros(1).to(self.device),
+                     'weight': torch.zeros(1).to(self.device),
+                     'time': torch.zeros(1).to(self.device),
+                     'total': None}
+
         if yp_rank is not None:
             loss_dict['rank'] = self.loss_fn['rank'].compute(yp_rank, y_rank)
         if yp_weight is not None:
@@ -208,8 +213,8 @@ class PyTorchTrainer(Trainer):
             loss_dict['time'] = self.loss_fn['time'].compute(yp_time, y_time)
 
         if no_grad:
-            for k in loss_dict.keys():
-                loss_dict[k] = loss_dict[k].cpu().item()
+            loss_dict = {k: v.cpu().item() if v is not None else None
+                         for k, v in loss_dict.items()}
 
         loss_dict['total'] = self.w['rank'] * loss_dict['rank'] + \
                              self.w['weight'] * loss_dict['weight'] + \
