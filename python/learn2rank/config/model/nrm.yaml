@@ -5,11 +5,10 @@ trainer: PyTorchTrainer
 
 # Feature encoder network params
 feat_enc:
-  layers:
-    - 37
-    - 128
+  layers: 37,128
   act: ReLU
   dp: 0
+  dp_last: off
 
 
 # Transformer-encoder params
@@ -25,33 +24,30 @@ tf_enc:
 # Set-encoder params
 set_enc:
   mlp:
-    layers:
-      - 128
-      - 256
+    layers: 128,256
     act: ReLU
     dp: 0.1
+    dp_last: off
   agg_type: sum
 
 # Rank predictor network params
 rp:
   switch: True
   mlp:
-    layers:
-      - 128
-      - 1
+    layers: 128,1
     act: Sigmoid
     dp: 0
+    dp_last: off
   loss_fn: PointwiseRMSELoss
 
 # Weight predictor network params
 wp:
   switch: False
   mlp:
-    layers:
-      - 256
-      - 18
+    layers: 256,18
     act: Tanh
     dp: 0
+    dp_last: off
   loss_fn: RMSE
 
 
@@ -59,9 +55,8 @@ wp:
 tp:
   switch: False
   mlp:
-    layers:
-      - 256
-      - 1
+    layers: 256,1
     act: Sigmoid
     dp: 0
+    dp_last: off
   loss_fn: RMSE

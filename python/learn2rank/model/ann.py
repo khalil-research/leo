@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 import torch
 import torch.nn as nn
@@ -7,9 +6,10 @@ import torch.nn as nn
 
 @dataclass
 class MLPConfig:
-    layers: List[int]
+    layers: str
     act: str
     dp: float
+    dp_last: bool
 
 
 @dataclass
@@ -40,18 +40,19 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
 
         self.cfg = cfg
+        self.cfg.layers = list(map(int, self.cfg.layers.split(',')))
         self.activation = getattr(nn, self.cfg.act)()
         self.dropout = nn.Dropout(p=self.cfg.dp)
 
         self.layers_lst = nn.ModuleList()
         for i in range(len(self.cfg.layers) - 1):
-            if i == len(self.cfg.layers) - 2:
-                self.layers_lst.append(nn.Linear(self.cfg.layers[i], self.cfg.layers[i + 1]))
-                self.layers_lst.append(self.activation)
-            else:
+            if i < len(self.cfg.layers) - 2 or self.cfg.dp_last:
                 self.layers_lst.append(nn.Linear(self.cfg.layers[i], self.cfg.layers[i + 1]))
                 self.layers_lst.append(self.activation)
                 self.layers_lst.append(self.dropout)
+            else:
+                self.layers_lst.append(nn.Linear(self.cfg.layers[i], self.cfg.layers[i + 1]))
+                self.layers_lst.append(self.activation)
 
         self.mlp = nn.Sequential(*self.layers_lst)
 
