@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 
 import torch
 import torch.nn as nn
@@ -6,7 +7,9 @@ import torch.nn as nn
 
 @dataclass
 class MLPConfig:
-    layers: str
+    inp: int
+    out: int
+    layers: Union[str, None]
     act: str
     dp: float
     dp_last: bool
@@ -38,9 +41,14 @@ class TFEncoderConfig:
 class MLP(nn.Module):
     def __init__(self, cfg: MLPConfig):
         super(MLP, self).__init__()
-
         self.cfg = cfg
-        self.cfg.layers = list(map(int, self.cfg.layers.split(',')))
+        assert self.cfg.inp > 0 and self.cfg.out > 0
+
+        # Create network layers config
+        self.cfg.layers = [] if self.cfg.layers is None else list(map(int, self.cfg.layers.split(',')))
+        self.cfg.layers.insert(0, self.cfg.inp)
+        self.cfg.layers.insert(len(self.cfg.layers), self.cfg.out)
+
         self.activation = getattr(nn, self.cfg.act)()
         self.dropout = nn.Dropout(p=self.cfg.dp)
 
@@ -83,12 +91,11 @@ class SetEncoder(nn.Module):
         x = self.mlp(x)
 
         # bs x ft1_layers[-1]
-        if self.cfg.agg_type == 'sum':
-            x = torch.sum(x, 1)
-        elif self.cfg.agg_type == 'mean':
-            x = torch.mean(x, 1)
-        else:
+        aggregator = getattr(torch, self.cfg.agg_type)
+        if aggregator is None:
             raise ValueError(self.agg_type)
+
+        x = aggregator(x, 1)
 
         return x
 

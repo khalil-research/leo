@@ -5,7 +5,9 @@ trainer: PyTorchTrainer
 
 # Feature encoder network params
 feat_enc:
-  layers: 37,128
+  inp: 37
+  out: 128
+  layers:
   act: ReLU
   dp: 0
   dp_last: off
@@ -14,7 +16,7 @@ feat_enc:
 # Transformer-encoder params
 tf_enc:
   switch: True
-  d_model: 128
+  d_model: ${model.feat_enc.out}
   n_heads: 4
   d_ff: 256
   dp: 0.1
@@ -24,7 +26,9 @@ tf_enc:
 # Set-encoder params
 set_enc:
   mlp:
-    layers: 128,256
+    inp: ${model.feat_enc.out}
+    out: 256
+    layers:
     act: ReLU
     dp: 0.1
     dp_last: off
@@ -34,7 +38,9 @@ set_enc:
 rp:
   switch: True
   mlp:
-    layers: 128,1
+    inp: ${model.feat_enc.out}
+    out: 1
+    layers:
     act: Sigmoid
     dp: 0
     dp_last: off
@@ -44,7 +50,9 @@ rp:
 wp:
   switch: False
   mlp:
-    layers: 256,18
+    inp: ${model.set_enc.mlp.out}
+    out: 18
+    layers:
     act: Tanh
     dp: 0
     dp_last: off
@@ -55,7 +63,9 @@ wp:
 tp:
   switch: False
   mlp:
-    layers: 256,1
+    inp: ${model.set_enc.mlp.out}
+    out: 1
+    layers:
     act: Sigmoid
     dp: 0
     dp_last: off
