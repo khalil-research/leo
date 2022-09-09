@@ -4,6 +4,7 @@ from pathlib import Path
 
 import hydra
 import numpy as np
+from hydra.utils import get_original_cwd
 from omegaconf import DictConfig
 
 from learn2rank.featurizer.factory import featurizer_factory
@@ -25,14 +26,14 @@ def main(cfg: DictConfig):
 
     """
     cfg = cfg.featurizer
-
-    dp = Path(cfg.paths.data)
+    res_path = Path(get_original_cwd()).joinpath('learn2rank/resources')
+    dp = res_path / 'instances' / cfg.problem
     assert dp.exists(), "Invalid dataset path!"
     dataset = {}
 
     # For each data folder
     for df in dp.iterdir():
-        of = Path(cfg.paths.output).joinpath(df.name)
+        of = res_path / 'smac_output' / cfg.problem
         if not of.exists():
             continue
 
