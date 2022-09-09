@@ -1,6 +1,8 @@
 import pickle as pkl
+from pathlib import Path
 
 import hydra
+from hydra.utils import get_original_cwd
 from omegaconf import DictConfig, OmegaConf
 
 from learn2rank.model.factory import model_factory
@@ -23,25 +25,17 @@ def main(cfg: DictConfig):
     print()
 
     print(f'* Loading data...')
-    with open(cfg.paths.dataset, 'rb') as fp:
+    # Dataset path
+
+    dp = Path(get_original_cwd()) / 'learn2rank/resources/datasets' / f"{cfg.problem.name}.pkl"
+    with open(dp, 'rb') as fp:
         data = pkl.load(fp)
-    print(cfg.paths.dataset)
+    print(dp)
     print()
 
     print(f'* Starting trainer...')
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
     trainer.run()
-
-
-# def test(cfg: DictConfig):
-#     # Load model
-#     model = load_model(cfg.model.path)
-#     data = get_dummy_data(cfg.problem)
-#     trainer = trainer_factory(cfg.model, model=model, data=data, cfg=cfg)
-#
-#     preds = trainer.predict()
-#
-#     # save preds
 
 
 if __name__ == '__main__':

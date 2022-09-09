@@ -4,13 +4,6 @@ defaults:
   - model: nrm
   - optimizer: adam
 
-
-# Dataset parameters
-paths:
-  res: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources
-  dataset: ${paths.res}/datasets/knapsack.pkl
-
-
 # Trainer parameters
 run:
   # Number of training epochs
