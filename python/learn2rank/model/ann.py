@@ -45,7 +45,8 @@ class MLP(nn.Module):
         assert self.cfg.inp > 0 and self.cfg.out > 0
 
         # Create network layers config
-        self.cfg.layers = [] if self.cfg.layers is None else list(map(int, self.cfg.layers.split(',')))
+        self.cfg.layers = '' if self.cfg.layers is None else self.cfg.layers
+        self.cfg.layers = list(map(int, self.cfg.layers.split(','))) if len(self.cfg.layers.strip()) else []
         self.cfg.layers.insert(0, self.cfg.inp)
         self.cfg.layers.insert(len(self.cfg.layers), self.cfg.out)
 
