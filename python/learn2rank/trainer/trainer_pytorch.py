@@ -56,8 +56,11 @@ class PyTorchTrainer(Trainer):
         self.model_clone.eval()
 
         # initialize wandb
-        wandb.init(**self.cfg.wandb,
-                   config=OmegaConf.to_container(self.cfg, resolve=True))
+        config_dict = OmegaConf.to_container(self.cfg, resolve=True)
+        config_dict = nesteddict_list2str(config_dict)
+        wandb.init(project=self.cfg.wandb.project,
+                   mode=self.cfg.wandb.mode,
+                   config=config_dict)
 
         # Result store
         self.rs = self._get_results_store()
@@ -75,6 +78,7 @@ class PyTorchTrainer(Trainer):
         self.rs['time']['train'] = _time
 
         self._save(epoch)
+        wandb.finish()
 
         log.info('  Finished Training')
         log.info(f'  Neural Network train time: {_time:.4f}')
@@ -88,6 +92,11 @@ class PyTorchTrainer(Trainer):
     def _save(self, epoch):
         self._save_model(epoch)
         self._save_results()
+        wandb.run.summary['best_loss_total'] = self.rs['best']['loss']['total']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['rank']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['weight']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['time']
+        wandb.run.summary['best_epoch'] = self.rs['best']['epoch']
 
     def _save_model(self, epoch):
         torch.save({
@@ -248,3 +257,13 @@ class PyTorchTrainer(Trainer):
                 'eval': 0.0
             }
         }
+
+
+def nesteddict_list2str(d):
+    for k, v in d.items():
+        if type(v) == dict:
+            nesteddict_list2str(v)
+        elif type(v) == list:
+            d[k] = ",".join(map(str, v))
+
+    return d
