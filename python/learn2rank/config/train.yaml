@@ -4,6 +4,13 @@ defaults:
   - model: nrm
   - optimizer: adam
 
+case: 0
+output_dir: ${hydra:runtime.output_dir}
+
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
+
 # Trainer parameters
 run:
   # Number of training epochs
