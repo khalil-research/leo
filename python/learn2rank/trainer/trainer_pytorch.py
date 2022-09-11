@@ -82,6 +82,8 @@ class PyTorchTrainer(Trainer):
 
         log.info('  Finished Training')
         log.info(f'  Neural Network train time: {_time:.4f}')
+        log.info(f"  Best validation loss: {self.rs['best']['loss']['total']}")
+        log.info(f"  Best validation epoch: {self.rs['best']['epoch']}")
 
     def predict(self, split='test'):
         pass
