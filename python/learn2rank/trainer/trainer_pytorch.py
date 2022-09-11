@@ -1,4 +1,5 @@
 import copy
+import logging
 import pickle
 import time
 
@@ -12,6 +13,9 @@ from torch.utils.data.dataset import T_co
 
 from learn2rank.losses.factory import loss_factory
 from .trainer import Trainer
+
+# A logger for this file
+log = logging.getLogger(__name__)
 
 
 class RankingDataset(Dataset):
@@ -63,7 +67,7 @@ class PyTorchTrainer(Trainer):
 
         _time = time.time()
         for epoch in range(self.cfg.run.n_epochs):
-            print(f"** Epoch {epoch + 1}/{self.cfg.run.n_epochs}")
+            log.info(f"** Epoch {epoch + 1}/{self.cfg.run.n_epochs}")
             self._train_epoch()
             self._val_epoch(epoch)
 
@@ -72,8 +76,8 @@ class PyTorchTrainer(Trainer):
 
         self._save(epoch)
 
-        print('  Finished Training')
-        print('  Neural Network train time:', _time)
+        log.info('  Finished Training')
+        log.info(f'  Neural Network train time: {_time:.4f}')
 
     def predict(self, split='test'):
         pass
@@ -129,7 +133,7 @@ class PyTorchTrainer(Trainer):
                    'tr_weight': self.rs['tr']['loss'][-1]['weight'],
                    'tr_time': self.rs['tr']['loss'][-1]['time']})
 
-        print(f"\tTrain loss: {self.rs['tr']['loss'][-1]['total']}")
+        log.info(f"\tTrain loss: {self.rs['tr']['loss'][-1]['total']:.4f}")
 
     def _val_epoch(self, epoch, split='val'):
         """ Validate model """
@@ -148,7 +152,7 @@ class PyTorchTrainer(Trainer):
                                    no_grad=True)
 
         # for k in loss_dict.keys():
-        #     print(k, loss_dict[k], type(loss_dict[k]))
+        #     log.info(k, loss_dict[k], type(loss_dict[k]))
         #     loss_dict[k] = loss_dict[k].numpy()
         self.rs[split]['loss'].append(loss_dict)
         wandb.log({f'{split}_total': self.rs[split]['loss'][-1]['total'],
@@ -156,11 +160,11 @@ class PyTorchTrainer(Trainer):
                    f'{split}_weight': self.rs[split]['loss'][-1]['weight'],
                    f'{split}_time': self.rs[split]['loss'][-1]['time']})
 
-        print(f"\tVal loss: {self.rs['val']['loss'][-1]['total']}")
+        log.info(f"\tVal loss: {self.rs['val']['loss'][-1]['total']:.4f}")
         # Save best
         if split == 'val' and loss_dict['total'] < self.rs['best']['loss']['total']:
-            print(f"*** Better model found: epoch {epoch}, old loss {self.rs['best']['loss']['total']}, "
-                  f"new loss {loss_dict['total']}")
+            log.info(f"*** Better model found: epoch {epoch}, old loss {self.rs['best']['loss']['total']:.4f}, "
+                     f"new loss {loss_dict['total']:.4f}")
             self.rs['best']['epoch'] = epoch
             self.rs['best']['loss'] = loss_dict
             self.model_clone.load_state_dict(self.model.state_dict())

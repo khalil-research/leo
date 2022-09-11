@@ -1,3 +1,4 @@
+import logging
 import pickle as pkl
 from pathlib import Path
 
@@ -9,31 +10,34 @@ from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
 from learn2rank.utils import set_seed
 
+# A logger for this file
+log = logging.getLogger(__name__)
+
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='train.yaml')
 def main(cfg: DictConfig):
-    print(f'* Learn2rank BDD: problem {cfg.problem.name}, '
-          f'max objectives {cfg.problem.n_max_objs}, '
-          f'max variables {cfg.problem.n_max_vars}\n')
+    log.info(f'* Learn2rank BDD: problem {cfg.problem.name}, '
+             f'max objectives {cfg.problem.n_max_objs}, '
+             f'max variables {cfg.problem.n_max_vars}\n')
 
-    print(f'* Setting seed to {cfg.run.seed} for reproducibility \n')
+    log.info(f'* Setting seed to {cfg.run.seed} for reproducibility \n')
     set_seed(cfg.run.seed)
 
-    print(f'* Building model...')
+    log.info(f'* Building model...')
     model = model_factory.create(cfg.model.name, cfg=cfg.model)
-    print(OmegaConf.to_yaml(cfg.model, resolve=True))
-    print()
+    log.info(OmegaConf.to_yaml(cfg.model, resolve=True))
+    log.info('')
 
-    print(f'* Loading data...')
+    log.info(f'* Loading data...')
     # Dataset path
 
     dp = Path(get_original_cwd()) / 'learn2rank/resources/datasets' / f"{cfg.problem.name}.pkl"
     with open(dp, 'rb') as fp:
         data = pkl.load(fp)
-    print(dp)
-    print()
+    log.info(dp)
+    log.info('')
 
-    print(f'* Starting trainer...')
+    log.info(f'* Starting trainer...')
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
     trainer.run()
 
