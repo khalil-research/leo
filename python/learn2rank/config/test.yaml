@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - hydra: test
+  - problem: knapsack
+  - model: nrm
+  - wandb: default
+
+pretrained_dir: nn__vri
+map_location: cpu

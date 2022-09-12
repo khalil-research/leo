@@ -1,0 +1,12 @@
+# Trainer parameters
+
+# Number of training epochs
+n_epochs: 2
+# Batch size used for training model
+batch_size: 32
+# Lasso penalty weight
+wt_lasso: 0
+# Ridge penalty weight
+wt_ridge: 0
+# Seeds for reproducibility
+seed: 1501

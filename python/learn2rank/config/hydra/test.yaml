@@ -1,0 +1,2 @@
+run:
+  dir: ./learn2rank/resources/pretrained/${pretrained_dir}
