@@ -69,9 +69,10 @@ def get_te_config():
     config = get_basic_config()
     config.update(
         {
-            'tfe_n_heads': DiscreteSampler([3, 4, 5, 6, 7, 8]),
+            'feo': DiscreteSampler([64, 128]),
+            'tfe_n_heads': DiscreteSampler([1, 2, 4, 8]),
             'tfe_dp': ContinuousValueSampler(0.1, 0.6, prob_zero=0.1),
-            'tfe_n_layers': DiscreteSampler([2, 3, 4, 5, 6]),
+            'tfe_n_layers': DiscreteSampler([2, 3, 4]),
             'tfe_act': DiscreteSampler(['gelu', 'relu'])
         }
     )
@@ -91,7 +92,7 @@ def get_config(model_type):
 
 def sample_config(model_type, config):
     """ Samples a confiuration for nn_single_cut. """
-    config_cmd = f"python -m learn2rank.scripts.train_model " \
+    config_cmd = f"python -m learn2rank.scripts.train " \
                  f"wandb.mode=offline " \
                  f"run.n_epochs={config['n_epochs'].sample()} " \
                  f"run.batch_size={config['batch_size'].sample()} " \
@@ -108,11 +109,15 @@ def sample_config(model_type, config):
                       f"model.feat_enc.dp={config['dropout'].sample()} " \
                       f"model.feat_enc.dp_last=on"
 
-    if model_type == 'te':
-        config_cmd += f"model.tf_enc.n_heads={config['tfe_n_heads'].sample()} " \
+    elif model_type == 'te':
+        config_cmd += f"model.feat_enc.out={config['feo'].sample()} " \
+                      f"model.tf_enc.n_heads={config['tfe_n_heads'].sample()} " \
                       f"model.tf_enc.dp={config['tfe_dp'].sample()} " \
                       f"model.tf_enc.act={config['tfe_act'].sample()} " \
                       f"model.tf_enc.n_layers={config['tfe_n_layers'].sample()}"
+
+    else:
+        raise ValueError
 
     return config_cmd
 
@@ -121,9 +126,11 @@ def main(args):
     set_seed(1501)
     cmds = []
 
-    config = get_config(args.model_type)
-    for _ in range(args.n_configs):
-        cmds.append(sample_config(args.model_type, config))
+    model_types = args.model_type.split('.')
+    for mt in model_types:
+        config = get_config(mt)
+        for _ in range(args.n_configs):
+            cmds.append(sample_config(mt, config))
 
     # write to text file
     textfile = open(args.file_name, "w")
