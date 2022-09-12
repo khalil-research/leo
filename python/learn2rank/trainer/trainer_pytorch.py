@@ -52,8 +52,7 @@ class PyTorchTrainer(Trainer):
         # Optimizer
         optimizer_cls = getattr(torch.optim, self.cfg.optimizer.name)
         self.optimizer = optimizer_cls(params=self.model.parameters(), lr=self.cfg.optimizer.lr)
-        self.model_clone = copy.deepcopy(self.model)
-        self.model_clone.eval()
+        self.model_clone = None
 
         # initialize wandb
         config_dict = OmegaConf.to_container(self.cfg, resolve=True)
@@ -67,6 +66,9 @@ class PyTorchTrainer(Trainer):
 
     def run(self):
         # Check for checkpoint if available
+        # Model clone to hold the best weights during training
+        self.model_clone = copy.deepcopy(self.model)
+        self.model_clone.eval()
 
         _time = time.time()
         for epoch in range(self.cfg.run.n_epochs):
@@ -77,7 +79,13 @@ class PyTorchTrainer(Trainer):
         _time = time.time() - _time
         self.rs['time']['train'] = _time
 
-        self._save(epoch)
+        self._save_model(epoch)
+        self._save_results()
+        wandb.run.summary['best_loss_total'] = self.rs['best']['loss']['total']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['rank']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['weight']
+        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['time']
+        wandb.run.summary['best_epoch'] = self.rs['best']['epoch']
         wandb.finish()
 
         log.info('  Finished Training')
@@ -86,19 +94,12 @@ class PyTorchTrainer(Trainer):
         log.info(f"  Best validation epoch: {self.rs['best']['epoch']}")
 
     def predict(self, split='test'):
-        pass
-        # self.model.eval()
-        # with torch.no_grad:
-        #     yp_rank, yp_weight, yp_time = self.model(x)
+        _time = time.time()
+        self._val_epoch(0, split='test')
+        _time = time.time() - _time
 
-    def _save(self, epoch):
-        self._save_model(epoch)
+        self.rs['time']['test'] = _time
         self._save_results()
-        wandb.run.summary['best_loss_total'] = self.rs['best']['loss']['total']
-        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['rank']
-        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['weight']
-        wandb.run.summary['best_loss_rank'] = self.rs['best']['loss']['time']
-        wandb.run.summary['best_epoch'] = self.rs['best']['epoch']
 
     def _save_model(self, epoch):
         torch.save({
@@ -148,6 +149,7 @@ class PyTorchTrainer(Trainer):
 
     def _val_epoch(self, epoch, split='val'):
         """ Validate model """
+        assert split in ['val', 'test']
 
         # Put the model in eval model. Necessary when using dropout
         self.model.eval()
@@ -162,23 +164,21 @@ class PyTorchTrainer(Trainer):
                                    yp_rank=yp_rank, yp_weight=yp_weight, yp_time=yp_time,
                                    no_grad=True)
 
-        # for k in loss_dict.keys():
-        #     log.info(k, loss_dict[k], type(loss_dict[k]))
-        #     loss_dict[k] = loss_dict[k].numpy()
         self.rs[split]['loss'].append(loss_dict)
-        wandb.log({f'{split}_total': self.rs[split]['loss'][-1]['total'],
-                   f'{split}_rank': self.rs[split]['loss'][-1]['rank'],
-                   f'{split}_weight': self.rs[split]['loss'][-1]['weight'],
-                   f'{split}_time': self.rs[split]['loss'][-1]['time']})
-
-        log.info(f"\tVal loss: {self.rs['val']['loss'][-1]['total']:.4f}")
-        # Save best
+        # Update best. Only applicable for val split
         if split == 'val' and loss_dict['total'] < self.rs['best']['loss']['total']:
             log.info(f"*** Better model found: epoch {epoch}, old loss {self.rs['best']['loss']['total']:.4f}, "
                      f"new loss {loss_dict['total']:.4f}")
             self.rs['best']['epoch'] = epoch
             self.rs['best']['loss'] = loss_dict
             self.model_clone.load_state_dict(self.model.state_dict())
+
+        # Log
+        wandb.log({f'{split}_total': self.rs[split]['loss'][-1]['total'],
+                   f'{split}_rank': self.rs[split]['loss'][-1]['rank'],
+                   f'{split}_weight': self.rs[split]['loss'][-1]['weight'],
+                   f'{split}_time': self.rs[split]['loss'][-1]['time']})
+        log.info(f"\t{split} loss: {self.rs[split]['loss'][-1]['total']:.4f}")
 
     def _get_split_data(self, split='train'):
         x, y = [], []
