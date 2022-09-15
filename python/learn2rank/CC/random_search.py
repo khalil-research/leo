@@ -91,7 +91,7 @@ def get_config(model_type):
 
 
 def sample_config(model_type, config):
-    """ Samples a confiuration for nn_single_cut. """
+    """ Samples a configuration for nn_single_cut. """
     config_cmd = f"python -m learn2rank.scripts.train " \
                  f"wandb.mode=offline " \
                  f"run.n_epochs={config['n_epochs'].sample()} " \
@@ -102,7 +102,7 @@ def sample_config(model_type, config):
         layers = config['layers'].sample()
         layers = '' if layers is None else layers
         layers = '\\\'' + layers + '\\\''
-        config_cmd += f"model.tf_enc.switch=off " \
+        config_cmd += f"model.tf_enc.switch=False " \
                       f"model.feat_enc.inp={config['inp'].sample()} " \
                       f"model.feat_enc.out={config['out'].sample()} " \
                       f"model.feat_enc.layers={layers} " \

@@ -131,21 +131,23 @@ class NeuralRankingMachine(nn.Module):
         # Step 1: Simple linear embedding
         self.feature_encoder = MLP(self.cfg.feat_enc)
         # Step 2: Apply TransformerEncoder on the linear embedding (Optional)
-        self.tf_enc = TFEncoder(self.cfg.tf_enc) if self.cfg.tf_enc.switch else None
+        self.tf_enc = TFEncoder(self.cfg.tf_enc) if self.cfg.tf_enc.switch is True else None
 
         # The learned encoding can be used for multiple tasks
         # Task 1: Rank prediction
         self.rank_predictor = MLP(self.cfg.rp.mlp)
-        self.set_encoder = SetEncoder(self.cfg.set_enc) if self.cfg.wp.switch or self.cfg.tp.switch else None
+
+        self.set_enc_switch = self.cfg.wp.switch is True or self.cfg.tp.switch is True
+        self.set_encoder = SetEncoder(self.cfg.set_enc) if self.set_enc_switch else None
         # Task 2: SMAC Weight prediction (Optional)
-        self.weight_predictor = MLP(self.cfg.wp.mlp) if self.cfg.wp.switch else None
+        self.weight_predictor = MLP(self.cfg.wp.mlp) if self.cfg.wp.switch is True else None
         # Task 3: SMAC Time prediction (Optional)
-        self.time_predictor = MLP(self.cfg.tp.mlp) if self.cfg.tp.switch else None
+        self.time_predictor = MLP(self.cfg.tp.mlp) if self.cfg.tp.switch is True else None
 
     def forward(self, var_feat):
         # Variable feature encoding
         var_enc = self.feature_encoder(var_feat)
-        var_enc = self.tf_enc(var_enc) if self.cfg.tf_enc.switch else var_enc
+        var_enc = self.tf_enc(var_enc) if self.cfg.tf_enc.switch is True else var_enc
 
         # Rank prediction
         yp_rank = self.rank_predictor(var_enc)
@@ -153,9 +155,9 @@ class NeuralRankingMachine(nn.Module):
 
         # Weight and time prediction
         yp_weight, yp_time = None, None
-        inst_enc = self.set_encoder(var_enc) if self.cfg.wp.switch or self.cfg.tp.switch else None
+        inst_enc = self.set_encoder(var_enc) if self.set_enc_switch is True else None
         if inst_enc is not None:
-            yp_weight = self.weight_predictor(inst_enc) if self.cfg.wp.switch else None
-            yp_time = self.time_predictor(inst_enc) if self.cfg.tp.switch else None
+            yp_weight = self.weight_predictor(inst_enc) if self.cfg.wp.switch is True else None
+            yp_time = self.time_predictor(inst_enc) if self.cfg.tp.switch is True else None
 
         return yp_rank, yp_weight, yp_time
