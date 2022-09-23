@@ -1,0 +1,36 @@
+# seed used by smac
+seed: 777
+# Process all the problems in [first_pid, last_pid)
+from_pid: 100
+# Last problem id to process
+to_pid: 101
+# Number of times to repeat a config evaluation
+n_repeat: 1
+# Case id of the meta-farm run
+case: 0
+
+save_results: 1
+
+# Customize output directory creation
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
+
+# Config of problem to process
+problem:
+  name: knapsack
+  size: '3_60'
+  split: train
+
+
+perturb:
+  # Type of perturbation to introduce in the orderings.
+  # Can be "adjacent" or "any"
+  type: reverse
+  # Number of times to perturb the ordering
+  times: 1
+  # Perturb any two indices between in [start_idx, end_idx)
+  start_idx: 0
+  end_idx: 50
+
+
