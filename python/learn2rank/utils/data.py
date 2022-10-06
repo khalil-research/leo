@@ -43,40 +43,100 @@ def read_data_from_file(filepath):
     return data
 
 
-def flatten_data(X, Y, weighted_loss=0):
-    X_flat, Y_flat, weights_flat = [], [], []
-    for x, y in zip(X, Y):
-        scale_y = np.max(y) - np.min(y)
-        for item_x, item_y in zip(x, y):
-            weight = 1
-            if weighted_loss == 1:
-                """Linearly decreasing"""
-                weight = 1 - (item_y / scale_y)
-            elif weighted_loss == 2:
-                """Exponentially decreasing"""
-                weight = np.exp(-((item_y / scale_y) * 5))
-            weights_flat.append(weight)
+def normalize_labels(Y, n_max_vars, padded_value=-1):
+    assert len(Y.shape) == 2
 
-            X_flat.append(item_x)
-            Y_flat.append(item_y)
+    pads = Y == padded_value
+    divs = np.ones_like(Y) / n_max_vars
+    divs = divs * (~pads)
 
-    X_flat, Y_flat = np.asarray(X_flat), np.asarray(Y_flat)
-    weights_flat = np.asarray(weights_flat)
-    print(X_flat.shape, Y_flat.shape)
+    Y = Y * divs
 
-    return X_flat, Y_flat, weights_flat
+    return Y
 
 
-def unflatten_data(Y, num_items):
-    Y_out = []
-    num_samples = int(Y.shape[0] / num_items)
-    if Y is not None:
+def flatten_data(nested_lists):
+    flattened_lists = []
+    for nested_list in nested_lists:
+        _flattened_list = []
+        for item in nested_list:
+            _flattened_list.extend(item)
+
+        _flattened_list = np.asarray(_flattened_list)
+        flattened_lists.append(_flattened_list)
+
+    return flattened_lists
+
+
+def get_n_items(y, padded_value=-1):
+    if type(y) == list:
+        y = np.asarray(y)
+
+    assert len(y.shape) <= 2
+    if len(y.shape) == 1:
+        y = y.reshape(1, -1)
+
+    # True where -1
+    mask = y == padded_value
+    # False where -1
+    mask = ~mask
+
+    n_items = np.sum(mask, axis=1)
+    assert n_items.shape[0] == y.shape[0]
+
+    return n_items
+
+
+def get_sample_weight(y, weighted_loss, padded_value=-1):
+    if type(y) == list:
+        y = np.asarray(y)
+
+    assert len(y.shape) <= 2
+    if len(y.shape) == 1:
+        y = y.reshape(1, -1)
+
+    weights = []
+    for i in range(y.shape[0]):
+        _weights = []
+
+        y_min = np.min(y[i])
+        y_min = y_min if y_min != padded_value else 0
+        scale_y = np.max(y[i]) - y_min
+
+        for _y in y[i]:
+            wt = 1
+            if _y != padded_value:
+                if weighted_loss == 1:
+                    """Linearly decreasing"""
+                    wt = 1 - (_y / scale_y)
+                elif weighted_loss == 2:
+                    """Exponentially decreasing"""
+                    wt = np.exp(-((_y / scale_y) * 5))
+            else:
+                wt = 0
+
+            _weights.append(wt)
+
+        weights.append(_weights)
+
+    return np.asarray(weights)
+
+
+def unflatten_data(flattened_lists, n_max_vars):
+    unflattened_list = []
+    for flattened_list in flattened_lists:
+        _unflattened_list = []
+
+        num_samples = int(flattened_list.shape[0] / n_max_vars)
         i = 0
-        for j in range(num_samples):
-            Y_out.append(Y[i: i + num_items])
-            i += num_items
+        for _ in range(num_samples):
+            _unflattened_list.append(flattened_list[i: i + n_max_vars])
+            i += n_max_vars
 
-    return Y_out
+        _unflattened_list = np.asarray(_unflattened_list)
+        unflattened_list.append(_unflattened_list)
+
+    return unflattened_list
 
 
 # def get_dataloaders(args, tr_dataset, val_dataset, test_dataset):

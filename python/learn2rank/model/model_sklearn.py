@@ -1,9 +1,19 @@
-from sklearn.linear_model import LinearRegression
+import pickle as pkl
+
+import sklearn.linear_model as sklm
 
 
-class LinReg:
-    def __init__(self):
-        self.model = LinearRegression()
+class LinearRegression:
+    def __init__(self, cfg=None):
+        self.cfg = cfg
+        self.model = sklm.LinearRegression()
 
-    def __call__(self, *args, **kwargs):
-        pass
+    def train(self, x, y, sample_weight=None):
+        self.model.fit(x, y, sample_weight=sample_weight)
+
+    def __call__(self, x):
+        return self.model.predict(x)
+
+    def save(self):
+        with open('./model.pkl', 'wb') as p:
+            pkl.dump(self.model, p)

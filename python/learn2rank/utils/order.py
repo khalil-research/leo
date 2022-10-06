@@ -182,15 +182,25 @@ def property_weight_dict2array(pw_dict, cast_to_numpy=False):
     return lst
 
 
-def get_order_from_rank(ranks):
-    idx_rank = []
-    for item, rank in enumerate(ranks):
-        idx_rank.append((item, rank))
+def score2order(scores):
+    if type(scores) == list:
+        scores = np.asarray(scores)
 
-    idx_rank.sort(key=itemgetter(1))
-    order = [int(i[0]) for i in idx_rank]
+    assert len(scores.shape) <= 2
+    if len(scores.shape) == 1:
+        scores = scores.reshape(1, -1)
 
-    return order
+    orders = []
+    for _scores in scores:
+        idx_rank = []
+        for item, score in enumerate(_scores):
+            idx_rank.append((item, score))
+
+        idx_rank.sort(key=itemgetter(1))
+        order = [int(i[0]) for i in idx_rank]
+        orders.append(order)
+
+    return np.asarray(orders)
 
 
 def get_static_orders(data):

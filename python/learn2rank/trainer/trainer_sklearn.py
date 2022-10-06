@@ -1,54 +1,137 @@
+import logging
 import pickle
 import time
 
-from sklearn.metrics import mean_absolute_error as MAE
-from sklearn.metrics import mean_absolute_percentage_error as MAPE
-from sklearn.metrics import mean_squared_error as MSE
+import numpy as np
 
+from learn2rank.utils.data import flatten_data, unflatten_data
+from learn2rank.utils.data import get_n_items, get_sample_weight
+from learn2rank.utils.metrics import eval_learning_metrics
+from learn2rank.utils.metrics import eval_order_metrics
+from learn2rank.utils.order import score2order
 from .trainer import Trainer
+
+log = logging.getLogger(__name__)
 
 
 class SklearnTrainer(Trainer):
-    def __init__(self, data=None, model=None, config=None):
-        super().__init__(data, model, config)
+    def __init__(self, data=None, model=None, cfg=None):
+        super().__init__(data, model, cfg)
 
-        self.rs = {}
+        self.rs = self._get_results_store()
+        self.ps = self._get_preds_store()
 
-    def fit(self):
+    def run(self):
+        x_tr, y_tr, self.ps['tr']['names'] = self._get_split_data(split='train')
+        x_val, y_val, self.ps['val']['names'] = self._get_split_data(split='val')
+
+        self.ps['tr']['n_items'] = get_n_items(y_tr)
+        self.ps['val']['n_items'] = get_n_items(y_val)
+        wt_tr = get_sample_weight(y_tr, self.cfg.model.weights)
+        wt_val = get_sample_weight(y_val, self.cfg.model.weights)
+        _data = flatten_data([x_tr, y_tr, wt_tr, x_val, y_val, wt_val])
+        [x_tr, y_tr, wt_tr, x_val, y_val, wt_val] = _data
+
+        # Train
         _time = time.time()
-        self.model.fit(self.data['x_tr'], self.data['y_tr'])
+        self.model.train(x_tr, y_tr, sample_weight=wt_tr)
         _time = time.time() - _time
+        self.rs['time']['train'] = _time
 
-        self.results['time'] = _time
-        self.results.update({
-            'tr_mse': MSE(self.data['y_tr'], self.model.predict(self.data['x_tr'])),
-            'tr_mae': MAE(self.data['y_tr'], self.model.predict(self.data['x_tr'])),
-            'tr_mape': MAPE(self.data['y_tr'], self.model.predict(self.data['x_tr'])),
-            'val_mse': MSE(self.data['y_val'], self.model.predict(self.data['x_val'])),
-            'val_mae': MAE(self.data['y_val'], self.model.predict(self.data['x_val'])),
-            'val_mape': MAPE(self.data['y_val'], self.model.predict(self.data['x_val'])),
-        })
+        # Predict
+        self.ps['tr']['score'] = self.model(x_tr)
+        self.ps['val']['score'] = self.model(x_val)
 
-        print("* Linear Regression Results")
-        print("** Train Scores:")
-        print(f"      MSE:  {self.results['tr_mse']}")
-        print(f"      MAE:  {self.results['tr_mae']}")
-        print(f"      MAPE: {self.results['tr_mape']}")
+        # Eval learning metrics
+        log.info("* Linear Regression Results")
+        log.info("** Train learning metrics:")
+        self.rs['tr']['learning'] = eval_learning_metrics(y_tr, self.ps['tr']['score'], sample_weight=wt_tr)
+        log.info("** Validation learning metrics:")
+        self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['score'], sample_weight=wt_val)
 
-        print("** Validation Scores:")
-        print(f"      MSE:  {self.results['val_mse']}")
-        print(f"      MAE:  {self.results['val_mae']}")
-        print(f"      MAPE: {self.results['val_mape']}")
+        # Unflatten data
+        _data = unflatten_data([y_tr, self.ps['tr']['score'], y_val, self.ps['val']['score']],
+                               self.cfg.problem.n_max_vars)
+        [y_tr, self.ps['tr']['score'], y_val, self.ps['val']['score']] = _data
 
-        print("  Linear regression train time:", self.results['time'], "\n")
+        # Transform scores to order
+        y_tr_order = score2order(y_tr)
+        self.ps['tr']['order'] = score2order(self.ps['tr']['score'])
+        y_val_order = score2order(y_val)
+        self.ps['val']['order'] = score2order(self.ps['val']['score'])
 
-    def predict(self, x):
+        # Eval rank predictions
+        log.info("** Train order metrics:")
+        self.rs['tr']['ranking'] = eval_order_metrics(y_tr_order, self.ps['tr']['order'], self.ps['tr']['n_items'])
+        log.info("** Val order metrics:")
+        self.rs['val']['ranking'] = eval_order_metrics(y_val_order, self.ps['val']['order'], self.ps['val']['n_items'])
+
+        log.info(f"  Linear regression train time: {self.rs['time']['train']} \n")
+
+        self._save_model()
+        self._save_predictions()
+        self._save_results()
+
+    def predict(self, split='test'):
         pass
 
-    def save_model(self, fp):
-        with open(fp, 'wb') as p:
-            pickle.dump(self.model, p)
+    def _save_model(self):
+        self.model.save()
 
-    def save_results(self, fp):
-        with open(fp, 'wb') as p:
-            pickle.dump(self.results, p)
+    def _save_predictions(self):
+        with open('./predictions.pkl', 'wb') as p:
+            pickle.dump(self.ps, p)
+
+    def _save_results(self):
+        with open('./results.pkl', 'wb') as p:
+            pickle.dump(self.rs, p)
+
+    def _get_split_data(self, split='train'):
+        x, y, names = [], [], []
+        for name, v in self.data[split].items():
+            _x, _y = v['x'], v['y'][-1]
+
+            names.append(name)
+            x.append(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
+            y.append(_y['rank'])
+
+        return np.asarray(x), np.asarray(y), names
+
+    @staticmethod
+    def _get_results_store():
+        return {
+            'tr': {
+                'learning': {},
+                'ranking': {},
+            },
+            'val': {
+                'learning': {},
+                'ranking': {}
+            },
+            'test': {
+                'learning': {},
+                'ranking': {}
+            },
+            'time': {
+                'train': 0.0,
+                'test': 0.0,
+                'eval': 0.0
+            }
+        }
+
+    @staticmethod
+    def _get_preds_store():
+        return {
+            'tr': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'order': []
+            },
+            'val': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'order': []
+            }
+        }
