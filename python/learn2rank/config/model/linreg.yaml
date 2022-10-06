@@ -1,0 +1,3 @@
+name: LinearRegression
+trainer: SklearnTrainer
+weights: False
