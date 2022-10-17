@@ -1,0 +1,29 @@
+problem:
+  name: knapsack
+
+from_pid: 0
+to_pid: 1
+# train | val
+split: train
+case: 0
+
+pred:
+  switch: 1
+  name: linreg_predictions.pkl
+
+random:
+  switch: 0
+  seed:
+    - 13
+    - 444
+    - 1212
+    - 1003
+    - 7517
+
+bdd:
+  timelimit: 60
+  memlimit: 32
+
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
