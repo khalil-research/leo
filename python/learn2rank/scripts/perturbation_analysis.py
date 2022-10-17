@@ -1,6 +1,7 @@
 import json
 import logging
 import pickle as pkl
+import random
 import zipfile
 from operator import itemgetter
 from pathlib import Path
@@ -85,19 +86,20 @@ def run_bdd_builder(instance, order, binary, time_limit=60):
         if len(stdout) and "Solved" in stdout:
             # Sum the last three floating points to calculate the total time
             # This is binary dependent and can change
-            runtime = np.sum(list(map(float, stdout.strip().split(',')[-3:])))
+            result = stdout.split(':')[1]
+            result = list(map(float, result.split(',')))
         else:
             # If the instance is not solved successfully on the cluster, we either hit the
             # runtime limit or memory limit. In either of the two cases, we will not be
             # allowed to run more instances. Hence, we stop the parameter optimization
             # process using the ABORT signal
             status = "ABORT"
-            runtime = time_limit
+            result = [-1] * 10
     except TimeoutExpired:
         status = "TIMEOUT"
-        runtime = time_limit
+        result = [60] * 10
 
-    return status, runtime
+    return status, result
 
 
 def perturb_variable_ordering(order,
@@ -105,14 +107,22 @@ def perturb_variable_ordering(order,
                               end_idx,
                               rng,
                               n_perturbations=1,
-                              perturb_type='adjacent'):
+                              perturb_type='adjacent',
+                              random_seed=100):
     new_order = order.copy()
 
+    log.info(f'{perturb_type}, Start: {start_idx}, End: {end_idx}')
     if perturb_type == 'reverse':
         new_order[:end_idx] = new_order[:end_idx][::-1]
-        log.info(f'{perturb_type}')
 
         return new_order
+
+    if perturb_type == 'random':
+        random_order = list(np.arange(end_idx))
+        random.seed(random_seed)
+        random.shuffle(random_order)
+
+        return random_order
 
     for _ in range(n_perturbations):
         i, j = 0, 1
@@ -141,7 +151,7 @@ def perturb_variable_ordering(order,
 def main(cfg):
     # rng = np.random.RandomState(cfg.seed)
     rng = np.random.RandomState()
-    result = {}
+    result_store = []
 
     resource_path = Path(__file__).parent.parent / 'resources'
     # inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
@@ -169,17 +179,6 @@ def main(cfg):
                             continue
 
                         log.info(f'Processing: {inst.name}')
-                        result[inst.name] = {}
-
-                        traj_path = inst.joinpath(f'run_{cfg.seed}/traj.json')
-                        if not traj_path.exists():
-                            print(traj_path, ' does not exist')
-                            continue
-
-                        # Get property weight
-                        traj = traj_path.open('r')
-                        lines = traj.readlines()
-                        property_weight = json.loads(lines[-1])
 
                         # Get instance
                         dat_path = inst_zip_path.joinpath(f'{size.name}/{split.name}/{inst.name}.dat')
@@ -187,32 +186,45 @@ def main(cfg):
                         raw_data = open(str(dat_path), 'r')
                         inst_data = parse_instance_data(raw_data)
 
-                        # Get runtime of best order
-                        runtime_orig = []
+                        traj_path = inst.joinpath(f'run_{cfg.seed}/traj.json')
+                        if not traj_path.exists():
+                            log.info(traj_path, ' does not exist')
+                            continue
+                        # Get property weight
+                        traj = traj_path.open('r')
+                        lines = traj.readlines()
+                        property_weight = json.loads(lines[-1])
                         order, _ = get_variable_order(inst_data, property_weight['incumbent'])
-                        for _ in range(cfg.n_repeat):
-                            status, runtime = run_bdd_builder(str(dat_path), order, str(resource_path))
-                            runtime_orig.append(runtime)
 
-                        # Get runtime of perturbed order
-                        runtime_pert = []
+                        """
+                        # Get runtime of best order
+                        result_orig = []
+                        for _ in range(cfg.n_repeat):
+                            status, result = run_bdd_builder(str(dat_path), order, str(resource_path))
+                            result_orig.append(result)
+                        """
+
+                        # Get result of perturbed order
                         new_order = perturb_variable_ordering(order, cfg.perturb.start_idx, cfg.perturb.end_idx, rng,
                                                               n_perturbations=cfg.perturb.times,
-                                                              perturb_type=cfg.perturb.type)
-                        for _ in range(cfg.n_repeat):
-                            status, runtime = run_bdd_builder(str(dat_path), new_order, str(resource_path))
-                            runtime_pert.append(runtime)
+                                                              perturb_type=cfg.perturb.type,
+                                                              random_seed=cfg.random_seed)
 
-                        result[inst.name] = {
-                            'smac': {'order': order, 'time': runtime_orig, 'ot': property_weight['cost']},
-                            'perturb': {'order': new_order, 'time': runtime_pert}}
-                        log.info(f'{inst.name}: {np.mean(runtime_orig):.2f} +/- {np.std(runtime_orig):.2f},'
-                                 f'{np.mean(runtime_pert):.2f} +/- {np.std(runtime_pert):.2f}\n')
+                        for rid in range(cfg.n_repeat):
+                            status, result = run_bdd_builder(str(dat_path), new_order, str(resource_path))
+                            temp = [inst.name, rid, cfg.perturb.type, cfg.perturb.times, cfg.perturb.start_idx,
+                                    cfg.perturb.end_idx, cfg.random_seed]
+                            temp.extend(result)
+                            temp.extend([property_weight['cost'], ",".join((map(str, order))),
+                                         ",".join((map(str, new_order)))])
+
+                            result_store.append(temp)
 
     if cfg.save_results:
-        pkl.dump(result, open(f'pa_{cfg.problem.name}_'
-                              f'_{cfg.perturb.type}_{cfg.perturb.times}_{cfg.perturb.start_idx}'
-                              f'_{cfg.perturb.end_idx}_{cfg.n_repeat}_{cfg.from_pid}_{cfg.to_pid}.pkl', 'wb'))
+        pkl.dump(result_store,
+                 open(f'pa_{cfg.problem.name}_{cfg.random_seed}'
+                      f'_{cfg.perturb.type}_{cfg.perturb.times}_{cfg.perturb.start_idx}'
+                      f'_{cfg.perturb.end_idx}_{cfg.n_repeat}_{cfg.from_pid}_{cfg.to_pid}.pkl', 'wb'))
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ to_pid: 101
 n_repeat: 1
 # Case id of the meta-farm run
 case: 0
+random_seed: 0
 
 save_results: 1
 
