@@ -27,13 +27,13 @@ def main(cfg: DictConfig):
     """
     cfg = cfg.featurizer
     res_path = Path(get_original_cwd()).joinpath('learn2rank/resources')
-    dp = res_path / 'instances' / cfg.problem
+    dp = res_path / 'instances' / cfg.problem.name
     assert dp.exists(), "Invalid dataset path!"
     dataset = {}
 
     # For each data folder
     for df in dp.iterdir():
-        of = res_path / 'smac_output' / cfg.problem
+        of = res_path / 'smac_output' / cfg.problem.name
         if not of.exists():
             continue
 
@@ -44,16 +44,20 @@ def main(cfg: DictConfig):
                 dataset[dfs.name] = {}
 
             for data_file in dfs.iterdir():
-                data = read_data_from_file(data_file)
-                dataset[dfs.name][data_file.stem] = {'x': {}, 'y': []}
-                _dataset = dataset[dfs.name][data_file.stem]
+                iname = data_file.stem
+                split = data_file.parent.stem
+                ptype = data_file.parent.parent.stem
 
-                featurizer = featurizer_factory.create(cfg.name, cfg=cfg, data=data)
+                data = read_data_from_file(data_file)
+                dataset[split][iname] = {'x': {}, 'y': []}
+                _dataset = dataset[dfs.name][iname]
+
+                featurizer = featurizer_factory.create(cfg.problem.name, cfg=cfg, data=data)
                 features = featurizer.get()
                 _dataset['x'] = features
 
                 # Load incumbent config
-                smac_out_dir = of.joinpath(dfs.name).joinpath(data_file.stem).joinpath(f'run_{cfg.seed.smac}')
+                smac_out_dir = of / ptype / split / iname / f'run_{cfg.seed.smac}'
                 traj = smac_out_dir.joinpath('traj.json')
                 with open(traj, 'r') as fp:
                     lines = fp.readlines()
@@ -65,7 +69,7 @@ def main(cfg: DictConfig):
                     _dataset['y'][-1]['rank'] = get_variable_rank_from_weights(
                         data, run['incumbent'], normalized=False)
 
-    with open(Path(cfg.paths.dataset) / 'knapsack.pkl', 'wb') as fp:
+    with open(res_path / f'datasets/{cfg.problem.name}.pkl', 'wb') as fp:
         pkl.dump(dataset, fp)
 
 
