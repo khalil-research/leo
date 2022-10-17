@@ -126,5 +126,7 @@ void KnapsackBDDSolver::solve()
     cout << timers.get_time(bdd_reduction_time) << ", ";
     cout << timers.get_time(bdd_pareto_time) << endl;
 
+    // Clean memory
     delete bdd;
+    delete paretoSet;
 }

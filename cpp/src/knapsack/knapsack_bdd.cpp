@@ -97,3 +97,8 @@ BDD *KnapsackBDDConstructor::generate_exact()
 	// cout << "\twidth = " << bdd->get_width() << endl;
 	return bdd;
 };
+
+KnapsackBDDConstructor::~KnapsackBDDConstructor()
+{
+	delete inst;
+}
