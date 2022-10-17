@@ -1,0 +1,29 @@
+problem:
+  name: knapsack
+  size: '7_20'
+  split: train
+
+verbose: 1
+# one | all
+mode: one
+seed: 777
+# Maximum time to evaluate one config
+cutoff_time: 60
+# Total time
+wallclock_limit: 300
+
+from_pid: 0
+num_instances: 10
+split: train
+restore_run: 0
+
+case: 0
+# Customize output directory creation
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
+
+# Should be more than the wallclock limit of the last run
+#    parser.add_argument('--rwcl', type=int, default=20, help='Wallclock limit for restored run')
+#    parser.add_argument('--rods', type=str, default='+', help='Suffix of output dir for restored run')
+#    parser.add_argument('--verbose', type=int, default=1)

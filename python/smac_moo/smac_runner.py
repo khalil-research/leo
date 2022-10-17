@@ -2,6 +2,8 @@ import argparse
 import os
 from pathlib import Path
 
+import hydra
+
 from utils import get_config_space, smac_factory
 
 
@@ -35,6 +37,7 @@ def run_smac(instances, base_scenario_dict, opts):
     print("Optimized configuration %s" % str(incumbent))
 
 
+@hydra.main(config_path='./config', config_name='smac_runner.yaml')
 def main(opts):
     logger = get_logger(opts.verbose) if opts.verbose else None
 
