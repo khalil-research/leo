@@ -10,11 +10,14 @@ to_pid: 1
 split: train
 case: 0
 
+# canonical: default ordering [0, ..., n-1]
+# rand: random ordering based on fixed seeds
+# min_weight: Ascending order of weight
 order_type: canonical
 
 bdd:
   timelimit: 300
-  memlimit: 32
+  memlimit:
 
 hydra:
   run:

@@ -2,13 +2,14 @@ import logging
 import os
 import pickle as pkl
 from pathlib import Path
-from subprocess import Popen, PIPE, TimeoutExpired
 
 import hydra
 import numpy as np
 from omegaconf import DictConfig
 
+from learn2rank.utils.bdd import run_bdd_builder
 from learn2rank.utils.order import get_static_order
+from learn2rank.utils.order import make_result_column
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -29,51 +30,7 @@ def parse_instance_data(raw_data):
     return data
 
 
-def run_bdd_builder(instance, order, binary, time_limit=60):
-    # Prepare the call string to binary
-    order_string = " ".join(map(str, order))
-    print(order_string)
-
-    cmd = f"{binary}/multiobj {instance} {len(order)} {order_string}"
-    print(cmd)
-    status = "SUCCESS"
-    try:
-        io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
-        # Call target algorithm with cutoff time
-        (stdout_, stderr_) = io.communicate(timeout=time_limit)
-
-        # Decode and parse output
-        stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
-        if len(stdout) and "Solved" in stdout:
-            # Sum the last three floating points to calculate the total time
-            # This is binary dependent and can change
-            result = stdout.split(':')[1]
-            result = list(map(float, result.split(',')))
-        else:
-            # If the instance is not solved successfully on the cluster, we either hit the
-            # runtime limit or memory limit. In either of the two cases, we will not be
-            # allowed to run more instances. Hence, we stop the parameter optimization
-            # process using the ABORT signal
-            status = "ABORT"
-            log.info("ABORT")
-
-            result = [-1] * 10
-    except TimeoutExpired:
-        log.info("TIMEOUT")
-        status = "TIMEOUT"
-        result = [60] * 10
-
-    return status, result
-
-
-def make_result_column(split, pid, result, order_type, run_id=0):
-    col = [split, pid, order_type, run_id]
-    col.extend(result)
-
-    return col
-
-
-@hydra.main(version_base='1.1', config_path='../config', config_name='eval_static_ordering.yaml')
+@hydra.main(version_base='1.1', config_path='../config', config_name='eval_static_orderings.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(__file__).parent.parent / 'resources'
     inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
@@ -90,15 +47,23 @@ def main(cfg: DictConfig):
         log.info(f'Order type: {cfg.order_type}')
         raw_data = open(dat_path, 'r')
         data = parse_instance_data(raw_data)
-        order = get_static_order(data, cfg.order_type)
+        orders = get_static_order(data, cfg.order_type)
 
-        status, result = run_bdd_builder(str(dat_path), order, str(resource_path),
-                                         time_limit=cfg.bdd.timelimit)
-        log.info(f'Status: {status}')
-        if status == 'SUCCESS':
-            log.info(f'Solving time: {np.sum(result[-3:])}')
+        for run_id, order in enumerate(orders):
+            print(type(cfg.bdd.memlimit), cfg.bdd.memlimit)
+            status, result = run_bdd_builder(str(dat_path), order, str(resource_path),
+                                             time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
+            log.info(f'Status: {status}')
+            if status == 'SUCCESS':
+                log.info(f'Solving time: {np.sum(result[-3:]):.3f}')
 
-        results.append(make_result_column(cfg.split, pid, result, cfg.order_type))
+            results.append(make_result_column(cfg.problem.name,
+                                              cfg.problem.size,
+                                              cfg.split,
+                                              pid,
+                                              cfg.order_type,
+                                              result,
+                                              run_id=run_id))
 
     with open(f"eval_static_{cfg.problem.size}_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.pkl", 'wb') as fp:
         pkl.dump(results, fp)

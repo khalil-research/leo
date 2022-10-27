@@ -1,3 +1,4 @@
+import random
 from operator import itemgetter
 
 import numpy as np
@@ -292,8 +293,27 @@ def get_static_orders(data, order_type=None):
 
 
 def get_static_order(data, order_type):
+    orders = []
     if order_type == 'min_weight':
         order = get_static_orders(data, order_type='min_weight')
-        return order['min_weight']
+        orders.append(order['min_weight'])
+
     elif order_type == 'canonical':
-        return list(range(len(data['weight'])))
+        orders.append(list(range(len(data['weight']))))
+
+    elif order_type == 'rand':
+        seeds = [13, 444, 1212, 1003, 7517]
+        for s in seeds:
+            random_order = list(range(len(data['weight'])))
+            random.seed(s)
+            random.shuffle(random_order)
+            orders.append(random_order)
+
+    return orders
+
+
+def make_result_column(problem, size, split, pid, order_type, result, run_id=0):
+    col = [problem, size, split, pid, order_type, run_id]
+    col.extend(result)
+
+    return col
