@@ -203,19 +203,25 @@ def score2order(scores):
     return np.asarray(orders)
 
 
-def get_static_orders(data):
-    order = {
-        'max_weight': None,
-        'min_weight': None,
-        'max_avg_profit': None,
-        'min_avg_profit': None,
-        'max_max_profit': None,
-        'min_max_profit': None,
-        'max_min_profit': None,
-        'min_min_profit': None,
-        'max_avg_profit_by_weight': None,
-        'max_max_profit_by_weight': None,
-    }
+def get_static_orders(data, order_type=None):
+    if order_type == None:
+        order = {
+            'max_weight': None,
+            'min_weight': None,
+            'max_avg_profit': None,
+            'min_avg_profit': None,
+            'max_max_profit': None,
+            'min_max_profit': None,
+            'max_min_profit': None,
+            'min_min_profit': None,
+            'max_avg_profit_by_weight': None,
+            'max_max_profit_by_weight': None,
+        }
+    else:
+        if type(order_type) == str:
+            order = {order_type: None}
+        elif type(order_type) == list:
+            order = {ot: None for ot in order_type}
 
     n_items = len(data['weight'])
     for o in order.keys():
@@ -283,3 +289,11 @@ def get_static_orders(data):
             order[o] = [i[0] for i in idx_profit_by_weight]
 
     return order
+
+
+def get_static_order(data, order_type):
+    if order_type == 'min_weight':
+        order = get_static_orders(data, order_type='min_weight')
+        return order['min_weight']
+    elif order_type == 'canonical':
+        return list(range(len(data['weight'])))
