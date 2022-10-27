@@ -1,16 +1,10 @@
-problem:
-  name: knapsack
-
-paths:
-  data: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/data/knapsack_7
-  output: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/output/
-  dataset: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources/datasets
+name: knapsack
+size:
+  - '5_40'
+n_max_vars: 40
+n_max_objs: 5
+norm_const: 1000
 
 seed:
   opt: 7
   smac: 777
-
-n_max_vars: 60
-n_max_objs: 3
-
-norm_const: 1000
