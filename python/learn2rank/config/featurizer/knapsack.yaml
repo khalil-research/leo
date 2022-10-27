@@ -1,4 +1,5 @@
-name: knapsack
+problem:
+  name: knapsack
 
 paths:
   data: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/data/knapsack_7
