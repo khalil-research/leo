@@ -7,5 +7,11 @@ defaults:
   - wandb: default
   - _self_
 
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources/
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+  laptop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+
+machine: desktop
 case: 0
 output_dir: ${hydra:runtime.output_dir}

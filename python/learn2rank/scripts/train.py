@@ -3,7 +3,6 @@ import pickle as pkl
 from pathlib import Path
 
 import hydra
-from hydra.utils import get_original_cwd
 from omegaconf import DictConfig, OmegaConf
 
 from learn2rank.model.factory import model_factory
@@ -31,9 +30,10 @@ def main(cfg: DictConfig):
     log.info(f'* Loading data...')
     # Dataset path
 
-    dp = Path(get_original_cwd()) / 'learn2rank/resources/datasets' / f"{cfg.problem.name}.pkl"
+    dp = Path(cfg.res_path[cfg.machine]) / f"datasets/{cfg.problem.name}/{cfg.problem.name}_dataset_5_40.pkl"
     with open(dp, 'rb') as fp:
         data = pkl.load(fp)
+        data = data['5_40']
     log.info(dp)
     log.info('')
 
