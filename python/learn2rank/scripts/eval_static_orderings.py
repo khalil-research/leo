@@ -1,64 +1,108 @@
+import logging
 import os
-import random
-from argparse import ArgumentParser
+import pickle as pkl
 from pathlib import Path
+from subprocess import Popen, PIPE, TimeoutExpired
 
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 
-from utils import get_static_orders
-from utils import read_from_file
-from utils import run_bdd_builder
+from learn2rank.utils.order import get_static_order
+
+# A logger for this file
+log = logging.getLogger(__name__)
+
+print(os.getcwd())
 
 
-def eval_static(args):
-    random_seeds = [13, 444, 1212, 1003, 7517]
-    data_path = Path(args.dataset) / f"{args.num_objectives}_{args.num_items}" / args.split
-    assert data_path.exists()
+def parse_instance_data(raw_data):
+    data = {'value': [], 'weight': [], 'capacity': 0}
 
-    # Total number of slurm workers detected
-    # Defaults to 1 if not running under SLURM
-    N_WORKERS = int(os.getenv("SLURM_ARRAY_TASK_COUNT", 1))
+    n_vars = int(raw_data.readline())
+    n_objs = int(raw_data.readline())
+    for _ in range(n_objs):
+        data['value'].append(list(map(int, raw_data.readline().split())))
+    data['weight'].extend(list(map(int, raw_data.readline().split())))
+    data['capacity'] = int(raw_data.readline().split()[0])
 
-    # This worker's array index. Assumes slurm array job is zero-indexed
-    # Defaults to zero if not running under SLURM
-    this_worker = int(os.getenv("SLURM_ARRAY_TASK_ID", 0))
+    return data
 
-    for i in range(this_worker, args.num_eval_instances, N_WORKERS):
-        instance_path = data_path / f"kp_7_{args.num_objectives}_{args.num_items}_{i}.dat"
 
-        data = read_from_file(args.num_objectives, instance_path)
-        static_orders = get_static_orders(data)
-        for ordering in static_orders.keys():
-            order = static_orders[ordering]
+def run_bdd_builder(instance, order, binary, time_limit=60):
+    # Prepare the call string to binary
+    order_string = " ".join(map(str, order))
+    print(order_string)
 
-            status, runtime = run_bdd_builder(instance_path, order,
-                                              time_limit=args.time_limit,
-                                              mem_limit=args.mem_limit)
-            print(str(instance_path), ordering, status, runtime)
+    cmd = f"{binary}/multiobj {instance} {len(order)} {order_string}"
+    print(cmd)
+    status = "SUCCESS"
+    try:
+        io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
+        # Call target algorithm with cutoff time
+        (stdout_, stderr_) = io.communicate(timeout=time_limit)
 
-        for ridx, rseed in enumerate(random_seeds):
-            random_order = list(np.arange(args.num_items))
-            random.seed(rseed)
-            random.shuffle(random_order)
-            status, runtime = run_bdd_builder(instance_path, random_order,
-                                              time_limit=args.time_limit,
-                                              mem_limit=args.mem_limit)
-            print(str(instance_path), f"rnd{ridx}", status, runtime)
-        
+        # Decode and parse output
+        stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
+        if len(stdout) and "Solved" in stdout:
+            # Sum the last three floating points to calculate the total time
+            # This is binary dependent and can change
+            result = stdout.split(':')[1]
+            result = list(map(float, result.split(',')))
+        else:
+            # If the instance is not solved successfully on the cluster, we either hit the
+            # runtime limit or memory limit. In either of the two cases, we will not be
+            # allowed to run more instances. Hence, we stop the parameter optimization
+            # process using the ABORT signal
+            status = "ABORT"
+            log.info("ABORT")
+
+            result = [-1] * 10
+    except TimeoutExpired:
+        log.info("TIMEOUT")
+        status = "TIMEOUT"
+        result = [60] * 10
+
+    return status, result
+
+
+def make_result_column(split, pid, result, order_type, run_id=0):
+    col = [split, pid, order_type, run_id]
+    col.extend(result)
+
+    return col
+
+
+@hydra.main(version_base='1.1', config_path='../config', config_name='eval_static_ordering.yaml')
+def main(cfg: DictConfig):
+    resource_path = Path(__file__).parent.parent / 'resources'
+    inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
+    # preds = preds['val'] if cfg.split is None else preds[cfg.split]
+    results = []
+
+    inst_path = inst_path / cfg.problem.size / cfg.split
+    for dat_path in inst_path.rglob('*.dat'):
+        pid = int(dat_path.stem.split('_')[-1])
+        if pid < cfg.from_pid or pid >= cfg.to_pid:
+            continue
+
+        log.info(f'Processing: {dat_path.name}')
+        log.info(f'Order type: {cfg.order_type}')
+        raw_data = open(dat_path, 'r')
+        data = parse_instance_data(raw_data)
+        order = get_static_order(data, cfg.order_type)
+
+        status, result = run_bdd_builder(str(dat_path), order, str(resource_path),
+                                         time_limit=cfg.bdd.timelimit)
+        log.info(f'Status: {status}')
+        if status == 'SUCCESS':
+            log.info(f'Solving time: {np.sum(result[-3:])}')
+
+        results.append(make_result_column(cfg.split, pid, result, cfg.order_type))
+
+    with open(f"eval_static_{cfg.problem.size}_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.pkl", 'wb') as fp:
+        pkl.dump(results, fp)
+
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    # parser.add_argument('--dataset', type=str, default='/scratch/rahulpat/knapsack_7')
-    parser.add_argument('--dataset', type=str,
-                        default='/home/rahul/Documents/PhD/projects/multiobjective_cp2016/data/knapsack_7/')
-    parser.add_argument('--num_eval_instances', type=int, default=250)
-    parser.add_argument('--num_objectives', type=int, default=3)
-    parser.add_argument('--num_items', type=int, default=20)
-    parser.add_argument('--split', type=str, default='train')
-    parser.add_argument('--time_limit', type=int, default=60,
-                        help='Time limit in seconds')
-    parser.add_argument('--mem_limit', type=int, default=16,
-                        help='Memory limit in GB')
-    args = parser.parse_args()
-
-    eval_static(args)
+    main()
