@@ -1,7 +1,8 @@
 problem:
   name: knapsack
-  size: '7_20'
-  split: train
+  n_objs: 7
+  n_vars: 40
+  size: ${problem.n_objs}_${problem.n_vars}
 
 verbose: 1
 # one | all

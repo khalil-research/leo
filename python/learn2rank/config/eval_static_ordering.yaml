@@ -1,0 +1,21 @@
+problem:
+  name: knapsack
+  n_objs: 3
+  n_vars: 60
+  size: ${problem.n_objs}_${problem.n_vars}
+
+from_pid: 0
+to_pid: 1
+# train | val
+split: train
+case: 0
+
+order_type: canonical
+
+bdd:
+  timelimit: 300
+  memlimit: 32
+
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
