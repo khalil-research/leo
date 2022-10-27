@@ -7,11 +7,18 @@ to_pid: 1
 split: train
 case: 0
 
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources/
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+  laptop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+
+machine: desktop
+
 pred:
-  name: linreg_predictions.pkl
+  name: linreg_predictions_5_40.pkl
 
 bdd:
-  timelimit: 60
+  timelimit: 300
   memlimit:
 
 hydra:

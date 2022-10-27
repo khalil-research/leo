@@ -30,7 +30,7 @@ def parse_instance_data(raw_data):
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_ordering.yaml')
 def main(cfg: DictConfig):
-    resource_path = Path(__file__).parent.parent / 'resources'
+    resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
     preds_path = resource_path.joinpath(f'predictions/{cfg.pred.name}')
     preds = pkl.load(open(str(preds_path), 'rb'))
