@@ -28,7 +28,7 @@ def parse_instance_data(raw_data):
     return data
 
 
-@hydra.main(version_base='1.1', config_path='../config', config_name='eval_ordering.yaml')
+@hydra.main(version_base='1.1', config_path='../config', config_name='eval_pred_ordering.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
