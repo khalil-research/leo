@@ -41,12 +41,13 @@ struct MultiobjResult{
 	~MultiobjResult(){
 		// Free memory
 		delete pareto_set;
-		delete num_pareto_sol;
+		delete[] num_pareto_sol;
 	}
 
 	void print_num_pareto_sol(){
-		for (int i=0; i<num_layers; i++){
-			cout << " " << i << ":" << num_pareto_sol[i];
+		cout << " # " << num_pareto_sol[0];
+		for (int i=1; i<num_layers; i++){
+			cout << ", " << num_pareto_sol[i];			
 		}
 		cout << endl;
 	}

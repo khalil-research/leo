@@ -125,7 +125,7 @@ void KnapsackBDDSolver::solve()
     cout << reduced_arcs_count << ", ";
     cout << timers.get_time(bdd_compilation_time) << ", ";
     cout << timers.get_time(bdd_reduction_time) << ", ";
-    cout << timers.get_time(bdd_pareto_time) << " ###";
+    cout << timers.get_time(bdd_pareto_time);
     mo_result->print_num_pareto_sol();
     
 
