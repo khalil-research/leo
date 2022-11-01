@@ -59,8 +59,7 @@ def run_bdd_builder(instance, order, binary=None, time_limit=60, get_runtime=Fal
             if get_runtime:
                 result = np.sum(result[-3:])
             else:
-                num_pareto_sol = list(map(int, blob[1].split(',')))
-                result.append(num_pareto_sol)
+                result.append(blob[1])
 
         else:
             # If the instance is not solved successfully on the cluster, we either hit the

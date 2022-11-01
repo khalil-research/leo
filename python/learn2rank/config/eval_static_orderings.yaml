@@ -19,6 +19,13 @@ bdd:
   timelimit: 300
   memlimit:
 
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources/
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources
+
+machine: desktop
+
 hydra:
   run:
     dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}

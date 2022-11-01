@@ -32,7 +32,7 @@ def parse_instance_data(raw_data):
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_static_orderings.yaml')
 def main(cfg: DictConfig):
-    resource_path = Path(__file__).parent.parent / 'resources'
+    resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
     # preds = preds['val'] if cfg.split is None else preds[cfg.split]
     results = []
@@ -50,12 +50,12 @@ def main(cfg: DictConfig):
         orders = get_static_order(data, cfg.order_type)
 
         for run_id, order in enumerate(orders):
-            print(type(cfg.bdd.memlimit), cfg.bdd.memlimit)
             status, result = run_bdd_builder(str(dat_path), order, binary=str(resource_path),
                                              time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
             log.info(f'Status: {status}')
             if status == 'SUCCESS':
-                log.info(f'Solving time: {np.sum(result[-3:]):.3f}')
+                log.info(f'Solving time: {np.sum(result[-4:-1]):.3f}')
+                log.info(f'Result: {result}')
 
             results.append(make_result_column(cfg.problem.name,
                                               cfg.problem.size,
