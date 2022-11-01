@@ -53,7 +53,7 @@ def main(cfg: DictConfig):
         size = f'{n_objs}_{n_vars}'
         dat_path = inst_path / size / f'{cfg.split}/{_name}.dat'
 
-        status, result = run_bdd_builder(str(dat_path), _order[:_n_item], str(resource_path),
+        status, result = run_bdd_builder(str(dat_path), _order[:_n_item], binary=str(resource_path),
                                          time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
         results.append(make_result_column(cfg.problem.name,
                                           size,

@@ -211,7 +211,7 @@ def main(cfg):
                                                               random_seed=cfg.random_seed)
 
                         for rid in range(cfg.n_repeat):
-                            status, result = run_bdd_builder(str(dat_path), new_order, str(resource_path))
+                            status, result = run_bdd_builder(str(dat_path), new_order, binary=str(resource_path))
                             temp = [inst.name, rid, cfg.perturb.type, cfg.perturb.times, cfg.perturb.start_idx,
                                     cfg.perturb.end_idx, cfg.random_seed]
                             temp.extend(result)

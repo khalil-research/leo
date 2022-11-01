@@ -51,7 +51,7 @@ def main(cfg: DictConfig):
 
         for run_id, order in enumerate(orders):
             print(type(cfg.bdd.memlimit), cfg.bdd.memlimit)
-            status, result = run_bdd_builder(str(dat_path), order, str(resource_path),
+            status, result = run_bdd_builder(str(dat_path), order, binary=str(resource_path),
                                              time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
             log.info(f'Status: {status}')
             if status == 'SUCCESS':
