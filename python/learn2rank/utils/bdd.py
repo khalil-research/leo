@@ -1,5 +1,6 @@
 import logging
 import resource
+from pathlib import Path
 from subprocess import Popen, PIPE, TimeoutExpired
 
 import numpy as np
@@ -21,10 +22,16 @@ def limit_virtual_memory():
     resource.setrlimit(resource.RLIMIT_AS, (MAX_VIRTUAL_MEMORY, MAX_VIRTUAL_MEMORY))
 
 
-def run_bdd_builder(instance, order, binary, time_limit=60, mem_limit=None):
+def run_bdd_builder(instance, order, binary=None, time_limit=60, get_runtime=False, mem_limit=None):
     # Prepare the call string to binary
     order_string = " ".join(map(str, order))
+
+    # Set default binary directory
+    if binary is None:
+        binary = Path(__file__).parent.parent / 'resources/'
+
     cmd = f"{binary}/multiobj {instance} {len(order)} {order_string}"
+
     # Maximal virtual memory for subprocesses (in bytes).
     if mem_limit is not None:
         global MAX_VIRTUAL_MEMORY
@@ -47,10 +54,14 @@ def run_bdd_builder(instance, order, binary, time_limit=60, mem_limit=None):
         if len(stdout) and "Solved" in stdout:
             # Sum the last three floating points to calculate the total time
             # This is binary dependent and can change
-            result = stdout.split(':')[1]
-            result = list(map(float, result.split(',')))
+            blob = stdout[7:].split("#")
+            result = list(map(float, blob[0].split(',')))
+            if get_runtime:
+                result = np.sum(result[-3:])
+            else:
+                num_pareto_sol = list(map(int, blob[1].split(',')))
+                result.append(num_pareto_sol)
 
-            runtime = np.sum(list(map(float, stdout.strip().split(',')[-3:])))
         else:
             # If the instance is not solved successfully on the cluster, we either hit the
             # runtime limit or memory limit. In either of the two cases, we will not be
@@ -58,13 +69,12 @@ def run_bdd_builder(instance, order, binary, time_limit=60, mem_limit=None):
             # process using the ABORT signal
             status = "ABORT"
             log.info("ABORT")
-
-            result = [-1] * 10
+            result = -1 if get_runtime else [-1] * 11
 
     except TimeoutExpired:
         log.info("TIMEOUT")
 
         status = "TIMEOUT"
-        result = [time_limit] * 10
+        result = time_limit if get_runtime else [time_limit] * 10
 
     return status, result
