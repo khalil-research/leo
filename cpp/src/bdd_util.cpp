@@ -866,7 +866,8 @@ inline vector<int> BDDAlg::longest_path_multi_obj_from_node(BDD* bdd, int obj, c
 // Compute pareto-set solution of BDD given 'n' objective functions
 // Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
 //
-ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
+// ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
+MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
 {
 	// cout << "\nComputing Pareto Set...\n";
 
@@ -885,6 +886,8 @@ ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
 		}
 	}
 
+	MultiobjResult* mo_result = new MultiobjResult(bdd->num_layers);
+
 	int bef = 0, cur = 1; // 'before' and 'current' pareto set indices
 	vector<int> shift_zero(num_objs, 0);
 	vector<int> shift_one(num_objs, 0);
@@ -895,6 +898,8 @@ ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
 
 	Solution rootSolution(x, shift_zero);
 	sets[bef][0]->add(rootSolution);
+	// Record the number of pareto solutions at layer 0
+	mo_result->num_pareto_sol[0] = (unsigned long int) sets[bef][0]->sols.size();
 
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
@@ -931,8 +936,12 @@ ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
 
 			avg_size += sets[cur][id]->sols.size();
 		}
-		avg_size /= bdd->layers[l].size();
+		// Record the number of pareto solutions at layer l
+		mo_result->num_pareto_sol[l] = (unsigned long int) avg_size;
 
+		// Find average number of pareto solutions at layer l
+		avg_size /= bdd->layers[l].size();
+		
 		// swap sets
 		bef = !bef;
 		cur = !cur;
@@ -949,7 +958,10 @@ ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
 	// cout << "\tdone." << endl;
 	// cout << endl;
 
-	return sets[bef][0];
+	mo_result->pareto_set = sets[bef][0];
+
+	// return sets[bef][0];
+	return mo_result;
 }
 
 //

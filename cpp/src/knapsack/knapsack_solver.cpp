@@ -31,7 +31,8 @@ void KnapsackBDDSolver::solve()
 
     long int initial_width, initial_node_count, initial_arcs_count;
     long int reduced_width, reduced_node_count, reduced_arcs_count;
-    ParetoSet *paretoSet = NULL;
+    // ParetoSet *paretoSet = NULL;
+    MultiobjResult *mo_result = NULL;
 
     ofstream output;
     Stats timers;
@@ -88,11 +89,11 @@ void KnapsackBDDSolver::solve()
 
     ////////////////////////////////////////////////////
 
-    bdd->print();
+    // bdd->print();
 
     // Generate pareto set
     timers.start_timer(bdd_pareto_time);
-    paretoSet = BDDAlg::pareto_set(bdd, obj_coefficients);
+    mo_result = BDDAlg::pareto_set(bdd, obj_coefficients);
     timers.end_timer(bdd_pareto_time);
 
     // ////////////////////////////////////////////////////
@@ -115,7 +116,7 @@ void KnapsackBDDSolver::solve()
     // output.close();
 
     cout << "Solved:";
-    cout << paretoSet->sols.size() << ", ";
+    cout << mo_result->pareto_set->sols.size() << ", ";
     cout << initial_width << ", ";
     cout << reduced_width << ", ";
     cout << initial_node_count << ", ";
@@ -124,9 +125,11 @@ void KnapsackBDDSolver::solve()
     cout << reduced_arcs_count << ", ";
     cout << timers.get_time(bdd_compilation_time) << ", ";
     cout << timers.get_time(bdd_reduction_time) << ", ";
-    cout << timers.get_time(bdd_pareto_time) << endl;
+    cout << timers.get_time(bdd_pareto_time) << " ###";
+    mo_result->print_num_pareto_sol();
+    
 
     // Clean memory
     delete bdd;
-    delete paretoSet;
+    delete mo_result;
 }
