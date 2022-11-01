@@ -1,3 +1,4 @@
+import json
 import random
 from operator import itemgetter
 
@@ -292,7 +293,20 @@ def get_static_orders(data, order_type=None):
     return order
 
 
-def get_static_order(data, order_type):
+def get_smac_path(cfg, resource_path, pid):
+    path = resource_path / 'smac_output' / cfg.problem.name / cfg.problem.size / cfg.split
+    if cfg.problem.name == 'knapsack':
+        path = path / f'kp_{cfg.seed.opt}_{cfg.problem.size}_{pid}' / f'run_{cfg.seed.smac}'
+
+    else:
+        raise ValueError('Invalid problem type!')
+
+    return path
+
+
+def get_baseline_order(data, cfg, resource_path, pid):
+    order_type = cfg.order_type
+
     orders = []
     if order_type == 'min_weight':
         order = get_static_orders(data, order_type='min_weight')
@@ -308,6 +322,17 @@ def get_static_order(data, order_type):
             random.seed(s)
             random.shuffle(random_order)
             orders.append(random_order)
+
+    elif order_type == 'smac':
+        run_path = get_smac_path(cfg, resource_path, pid)
+        traj_path = run_path / 'traj.json'
+        if traj_path.exists():
+            # Get property weight
+            traj = traj_path.open('r')
+            lines = traj.readlines()
+            property_weight = json.loads(lines[-1])
+            order, _ = get_variable_order_from_weights(data, property_weight['incumbent'])
+            orders.append(order)
 
     return orders
 

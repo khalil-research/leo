@@ -8,7 +8,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from learn2rank.utils.bdd import run_bdd_builder
-from learn2rank.utils.order import get_static_order
+from learn2rank.utils.order import get_baseline_order
 from learn2rank.utils.order import make_result_column
 
 # A logger for this file
@@ -30,11 +30,10 @@ def parse_instance_data(raw_data):
     return data
 
 
-@hydra.main(version_base='1.1', config_path='../config', config_name='eval_static_orderings.yaml')
+@hydra.main(version_base='1.1', config_path='../config', config_name='eval_baseline_ordering.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
-    # preds = preds['val'] if cfg.split is None else preds[cfg.split]
     results = []
 
     inst_path = inst_path / cfg.problem.size / cfg.split
@@ -47,7 +46,8 @@ def main(cfg: DictConfig):
         log.info(f'Order type: {cfg.order_type}')
         raw_data = open(dat_path, 'r')
         data = parse_instance_data(raw_data)
-        orders = get_static_order(data, cfg.order_type)
+
+        orders = get_baseline_order(data, cfg, resource_path, pid)
 
         for run_id, order in enumerate(orders):
             status, result = run_bdd_builder(str(dat_path), order, binary=str(resource_path),
@@ -65,7 +65,7 @@ def main(cfg: DictConfig):
                                               result,
                                               run_id=run_id))
 
-    with open(f"eval_static_{cfg.problem.size}_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.pkl", 'wb') as fp:
+    with open(f"eval_{cfg.order_type}_{cfg.problem.size}_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.pkl", 'wb') as fp:
         pkl.dump(results, fp)
 
 

@@ -4,6 +4,10 @@ problem:
   n_vars: 60
   size: ${problem.n_objs}_${problem.n_vars}
 
+seed:
+  opt: 7
+  smac: 777
+
 from_pid: 0
 to_pid: 1
 # train | val
