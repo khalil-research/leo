@@ -7,22 +7,22 @@ BASISDIR    = /opt
 # --- DIRECTORIES ---
 
 CCC = g++
-# BASISILOG  = $(BASISDIR)/ibm/ILOG/cplex
-# CPOPTDIR   = $(BASISILOG)/cpoptimizer
-# CONCERTDIR = $(BASISILOG)/concert
-# CPLEXDIR   = $(BASISILOG)/cplex
+BASISILOG  = $(BASISDIR)/ibm/ILOG/CPLEX_Studio1210
+CPOPTDIR   = $(BASISILOG)/cpoptimizer
+CONCERTDIR = $(BASISILOG)/concert
+CPLEXDIR   = $(BASISILOG)/cplex
 BOOSTDIR   = $(BASISDIR)/boost
 
 # --- FLAGS ---
 
 CCOPT = -m64 -fPIC -fno-strict-aliasing -fexceptions -DIL_STD -Wno-deprecated-declarations -std=c++17
-# CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
-# CONCERTLIBDIR = $(CONCERTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
-# CPOPTLIBDIR = $(CPOPTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
+CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
+CONCERTLIBDIR = $(CONCERTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
+CPOPTLIBDIR = $(CPOPTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 
-# CONCERTINCDIR = $(CONCERTDIR)/include
-# CPLEXINCDIR   = $(CPLEXDIR)/include
-# CPOPTINCDIR   = $(CPOPTDIR)/include
+CONCERTINCDIR = $(CONCERTDIR)/include
+CPLEXINCDIR   = $(CPLEXDIR)/include
+CPOPTINCDIR   = $(CPOPTDIR)/include
 
 # --- OPTIMIZATION FLAGS ---
 
@@ -31,11 +31,11 @@ DEBUG_OPT = -DNDEBUG -O3
 #PROF = -pg
 PROF =
 
-# CFLAGS += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
-CFLAGS += $(CCOPT) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
+CFLAGS += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
+# CFLAGS += $(CCOPT) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
 
-# LDFLAGS = -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -lm -pthread 
-LDFLAGS = -lm -pthread 
+LDFLAGS = -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -lm -ldl -pthread 
+# LDFLAGS = -lm -pthread 
 
 
 # ---- COMPILE  ----
