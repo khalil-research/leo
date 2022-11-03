@@ -15,19 +15,6 @@ log = logging.getLogger(__name__)
 print(os.getcwd())
 
 
-def parse_instance_data(raw_data):
-    data = {'value': [], 'weight': [], 'capacity': 0}
-
-    n_vars = int(raw_data.readline())
-    n_objs = int(raw_data.readline())
-    for _ in range(n_objs):
-        data['value'].append(list(map(int, raw_data.readline().split())))
-    data['weight'].extend(list(map(int, raw_data.readline().split())))
-    data['capacity'] = int(raw_data.readline().split()[0])
-
-    return data
-
-
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_pred_ordering.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(cfg.res_path[cfg.machine])

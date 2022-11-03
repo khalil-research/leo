@@ -7,6 +7,49 @@ from torch.utils.data.dataset import Dataset
 ROOT_PATH = Path(__file__).parent.parent
 
 
+def read_data_from_file(problem_acronym, file_path):
+    data = {'value': [], 'n_vars': 0, 'n_cons': 1, 'n_objs': 3}
+    raw_data = open(file_path, 'r')
+
+    def parse_knapsack():
+        data['weight'], data['capacity'] = [], 0
+
+        data['n_vars'] = int(raw_data.readline())
+        data['n_objs'] = int(raw_data.readline())
+        for _ in range(data['n_objs']):
+            data['value'].append(list(map(int, raw_data.readline().split())))
+        data['weight'].extend(list(map(int, raw_data.readline().split())))
+        data['capacity'] = int(raw_data.readline().split()[0])
+
+    def parse_binproblem():
+        data['cons'], data['cons_mat'] = [], []
+
+        data['n_vars'], data['n_cons'] = list(map(int, raw_data.readline().strip().split()))
+        data['n_objs'] = int(raw_data.readline())
+        for _ in range(data['n_objs']):
+            data['value'].append(list(map(int, raw_data.readline().split())))
+        for _ in range(data['n_cons']):
+            n_vars_per_con = raw_data.readline()
+
+            non_zero_vars_lst = list(map(int, raw_data.readline().strip().split()))
+            data['cons'].append(non_zero_vars_lst)
+            cons_mat = np.zeros(data['n_vars'])
+            cons_mat[non_zero_vars_lst] = 1
+            data['cons_mat'].append(cons_mat)
+        data['cons_mat'] = np.asarray(data['cons_mat'])
+
+    if problem_acronym == 'kp':
+        parse_knapsack()
+
+    elif problem_acronym == 'bp':
+        parse_binproblem()
+
+    else:
+        raise ValueError('Invalid problem!')
+
+    return data
+
+
 class PointwiseVariableRankRegressionDataset(Dataset):
     def __init__(self, x, y, wt, device):
         self.x = torch.from_numpy(x).float().to(device)
@@ -27,20 +70,6 @@ class WeightRegressionDataset(Dataset):
 
     def __getitem__(self, item):
         return 1
-
-
-def read_data_from_file(filepath):
-    data = {'value': [], 'weight': [], 'capacity': 0}
-
-    with open(filepath, 'r') as fp:
-        n_vars = int(fp.readline())
-        n_objs = int(fp.readline())
-        for _ in range(n_objs):
-            data['value'].append(list(map(int, fp.readline().split())))
-        data['weight'].extend(list(map(int, fp.readline().split())))
-        data['capacity'] = int(fp.readline().split()[0])
-
-    return data
 
 
 def normalize_labels(Y, n_max_vars, padded_value=-1):

@@ -8,6 +8,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from learn2rank.utils.bdd import run_bdd_builder
+from learn2rank.utils.data import read_data_from_file
 from learn2rank.utils.order import get_baseline_order
 from learn2rank.utils.order import make_result_column
 
@@ -15,19 +16,6 @@ from learn2rank.utils.order import make_result_column
 log = logging.getLogger(__name__)
 
 print(os.getcwd())
-
-
-def parse_instance_data(raw_data):
-    data = {'value': [], 'weight': [], 'capacity': 0}
-
-    n_vars = int(raw_data.readline())
-    n_objs = int(raw_data.readline())
-    for _ in range(n_objs):
-        data['value'].append(list(map(int, raw_data.readline().split())))
-    data['weight'].extend(list(map(int, raw_data.readline().split())))
-    data['capacity'] = int(raw_data.readline().split()[0])
-
-    return data
 
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_baseline_ordering.yaml')
@@ -45,8 +33,7 @@ def main(cfg: DictConfig):
         log.info(f'Processing: {dat_path.name}')
         log.info(f'Order type: {cfg.order_type}')
         raw_data = open(dat_path, 'r')
-        data = parse_instance_data(raw_data)
-
+        data = read_data_from_file(cfg.problem.acronym, raw_data)
         orders = get_baseline_order(data, cfg, resource_path, pid)
 
         for run_id, order in enumerate(orders):

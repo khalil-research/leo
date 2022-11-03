@@ -43,7 +43,7 @@ def main(cfg: DictConfig):
 
                 # Prepare x
                 dat_path = res_path / 'instances' / cfg.featurizer.name / size / f'{split.stem}/{inst.stem}.dat'
-                data = read_data_from_file(dat_path)
+                data = read_data_from_file(cfg.problem.acronym, dat_path)
                 featurizer = featurizer_factory.create(cfg.featurizer.name, cfg=cfg.featurizer, data=data)
                 features = featurizer.get()
                 _dataset['x'] = features

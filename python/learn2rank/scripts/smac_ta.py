@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pathlib
 import sys
 
 from learn2rank.utils.bdd import run_bdd_builder
@@ -14,10 +15,12 @@ def run_target_algorithm(instance, cutoff, feature_weights, log=True):
         logger = logging.getLogger(__file__)
         logger.debug(instance)
 
-    data = read_data_from_file(instance)
+    inst_path = pathlib.Path(instance)
+    acronym = inst_path.stem.split('_')[0]
+    data = read_data_from_file(acronym, instance)
     order, _ = get_variable_order_from_weights(data, feature_weights)
     status, runtime = run_bdd_builder(instance, order, time_limit=cutoff, get_runtime=True)
-    
+
     print(f"Result for SMAC: {status}, {runtime}, 0, 0, 0")
 
 

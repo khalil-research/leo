@@ -1,18 +1,12 @@
-problem:
-  name: knapsack
-  n_objs: 3
-  n_vars: 60
-  size: ${problem.n_objs}_${problem.n_vars}
+defaults:
+  - problem: knapsack
+  - default: _self_
 
-seed:
-  opt: 7
-  smac: 777
 
 from_pid: 0
 to_pid: 1
 # train | val
 split: train
-case: 0
 
 # canonical: default ordering [0, ..., n-1]
 # rand: random ordering based on fixed seeds
@@ -27,9 +21,9 @@ res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
   laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources
-
 machine: desktop
 
+case: 0
 hydra:
   run:
     dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}

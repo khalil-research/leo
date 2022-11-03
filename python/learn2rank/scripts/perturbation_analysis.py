@@ -10,20 +10,9 @@ from subprocess import Popen, PIPE, TimeoutExpired
 import hydra
 import numpy as np
 
+from learn2rank.utils.data import read_data_from_file
+
 log = logging.getLogger(__name__)
-
-
-def parse_instance_data(raw_data):
-    data = {'value': [], 'weight': [], 'capacity': 0}
-
-    n_vars = int(raw_data.readline())
-    n_objs = int(raw_data.readline())
-    for _ in range(n_objs):
-        data['value'].append(list(map(int, raw_data.readline().split())))
-    data['weight'].extend(list(map(int, raw_data.readline().split())))
-    data['capacity'] = int(raw_data.readline().split()[0])
-
-    return data
 
 
 def get_variable_score(data, feature_weights):
@@ -183,8 +172,8 @@ def main(cfg):
                         # Get instance
                         dat_path = inst_zip_path.joinpath(f'{size.name}/{split.name}/{inst.name}.dat')
                         # raw_data = inst_zip_path.open('r')
-                        raw_data = open(str(dat_path), 'r')
-                        inst_data = parse_instance_data(raw_data)
+                        # raw_data = open(str(dat_path), 'r')
+                        inst_data = read_data_from_file(cfg.problem.acronym, dat_path)
 
                         traj_path = inst.joinpath(f'run_{cfg.seed}/traj.json')
                         if not traj_path.exists():
