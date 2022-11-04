@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
-// #include <ilcplex/ilocplex.h>
+#include <ilcplex/ilocplex.h>
 
 #include "bdd.hpp"
 #include "pareto_util.hpp"
@@ -93,11 +93,11 @@ public:
 	static void remove_node(Node *node);
 
 	// Create flow model from BDD
-	// static void flow_model(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer);
+	static void flow_model(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer);
 
-	// // Create flow model from BDD. Amount of flow is controlled by a variable f
-	// static void flow_model_f(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer,
-	// 						 IloNumVar &f);
+	// Create flow model from BDD. Amount of flow is controlled by a variable f
+	static void flow_model_f(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer,
+							 IloNumVar &f);
 
 	// Export BDD to file
 	static void exportToFile(BDD *bdd, char *filename);
