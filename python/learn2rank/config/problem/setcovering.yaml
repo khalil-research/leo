@@ -1,4 +1,4 @@
-name: setcovering
+name: binproblem
 n_objs: 3
 n_vars: 100
 n_cons: 20
@@ -9,3 +9,4 @@ n_max_objs: ${problem.n_objs}
 n_features: 37
 n_weights: 7
 acronym: bp
+id: 3
