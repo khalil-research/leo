@@ -32,8 +32,7 @@ def main(cfg: DictConfig):
 
         log.info(f'Processing: {dat_path.name}')
         log.info(f'Order type: {cfg.order_type}')
-        raw_data = open(dat_path, 'r')
-        data = read_data_from_file(cfg.problem.acronym, raw_data)
+        data = read_data_from_file(cfg.problem.acronym, dat_path)
         orders = get_baseline_order(data, cfg, resource_path, pid)
 
         for run_id, order in enumerate(orders):

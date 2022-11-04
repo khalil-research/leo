@@ -33,10 +33,15 @@ def read_data_from_file(problem_acronym, file_path):
 
             non_zero_vars_lst = list(map(int, raw_data.readline().strip().split()))
             data['cons'].append(non_zero_vars_lst)
+            non_zero_vars_lst = np.array(non_zero_vars_lst)
+
+            non_zero_vars_lst -= 1
             cons_mat = np.zeros(data['n_vars'])
             cons_mat[non_zero_vars_lst] = 1
+
             data['cons_mat'].append(cons_mat)
         data['cons_mat'] = np.asarray(data['cons_mat'])
+        data['weight'] = np.sum(data['cons_mat'], axis=1)
 
     if problem_acronym == 'kp':
         parse_knapsack()
