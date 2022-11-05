@@ -41,7 +41,7 @@ def read_data_from_file(problem_acronym, file_path):
 
             data['cons_mat'].append(cons_mat)
         data['cons_mat'] = np.asarray(data['cons_mat'])
-        data['weight'] = np.sum(data['cons_mat'], axis=1)
+        data['weight'] = np.sum(data['cons_mat'], axis=0)
 
     if problem_acronym == 'kp':
         parse_knapsack()
