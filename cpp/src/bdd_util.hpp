@@ -19,40 +19,44 @@
 
 using namespace std;
 
-
 //
 // Multiobjective optimization result
 //
-struct MultiobjResult{
+struct MultiobjResult
+{
 	int num_layers;
-	ParetoSet * pareto_set;	
-	unsigned long int * num_pareto_sol;	
+	ParetoSet *pareto_set;
+	unsigned long int *num_pareto_sol;
 
-	MultiobjResult(int _num_layers){
+	MultiobjResult(int _num_layers)
+	{
 		num_layers = _num_layers;
 		pareto_set = NULL;
 		num_pareto_sol = new unsigned long int[num_layers];
 		// Zero-initialize
-		for(int i=0; i < num_layers; i++){
+		for (int i = 0; i < num_layers; i++)
+		{
 			num_pareto_sol[i] = 0;
 		}
 	}
 
-	~MultiobjResult(){
+	~MultiobjResult()
+	{
 		// Free memory
 		delete pareto_set;
 		delete[] num_pareto_sol;
 	}
 
-	void print_num_pareto_sol(){
+	void print_num_pareto_sol()
+	{
 		cout << " # " << num_pareto_sol[0];
-		for (int i=1; i<num_layers; i++){
-			cout << ", " << num_pareto_sol[i];			
+		for (int i = 1; i < num_layers; i++)
+		{
+			cout << ", " << num_pareto_sol[i];
 		}
 		cout << endl;
 	}
 };
-
 
 //
 // BDD Algorithms
@@ -127,15 +131,13 @@ public:
 	// Compute longest path for multi-objective problem for given objective function
 	static vector<int> longest_path_multi_obj(BDD *bdd, int obj, const vector<vector<int>> &obj_coeffs);
 
-	/*
-  // Compute Nadir and Ideal points for multi-objective program starting from a given node
-  static vector<vector<int> > extreme_points_from_node(BDD* bdd, const vector< vector<int> >& obj_coeffs,
-							Node* node, int layer);
+	// Compute Nadir and Ideal points for multi-objective program starting from a given node
+	static vector<vector<int>> extreme_points_from_node(BDD *bdd, const vector<vector<int>> &obj_coeffs,
+														Node *node, int layer);
 
-  // Compute longest path for multi-objective problem for objective function 'obj' starting from a given node
-  static vector<int> longest_path_multi_obj_from_node(BDD* bdd, int obj, const vector< vector<int> >& obj_coeffs,
-						      Node* node, int layer);
-  */
+	// Compute longest path for multi-objective problem for objective function 'obj' starting from a given node
+	static vector<int> longest_path_multi_obj_from_node(BDD *bdd, int obj, const vector<vector<int>> &obj_coeffs,
+														Node *node, int layer);
 
 	// Extract upper bound for all nodes w.r.t. to function 'obj'
 	static void compute_ub_longest_path(BDD *bdd, int obj, const vector<vector<int>> &obj_coeffs);
@@ -197,7 +199,7 @@ inline int BDDAlg::longest_path(BDD *bdd)
 	bdd->layers[0][0]->length = 0;
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
-		//cout << "Layer " << l << endl;
+		// cout << "Layer " << l << endl;
 		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
 		{
 			Node *node = bdd->layers[l][i];
@@ -359,7 +361,7 @@ inline void BDDAlg::remove_dangling_nodes(BDD *bdd)
 {
 	for (int l = bdd->num_layers - 2; l >= 0; --l)
 	{
-		//cout << "Layer " << l << endl;
+		// cout << "Layer " << l << endl;
 		for (size_t i = 0; i < bdd->layers[l].size();)
 		{
 			Node *node = bdd->layers[l][i];
