@@ -1,7 +1,10 @@
 import argparse
 import logging
+import os
 import pathlib
 import sys
+
+sys.path.insert(0, os.environ.get('module_path'))
 
 from learn2rank.utils.bdd import run_bdd_builder
 from learn2rank.utils.data import read_data_from_file

@@ -84,6 +84,12 @@ def run_smac(instances, base_scenario_dict, opts):
 def main(cfg):
     logger = get_logger(cfg.verbose) if cfg.verbose else None
 
+    # Set environment variables
+    os.environ['module_path'] = cfg.module_path[cfg.machine]
+    os.environ['bin_path'] = cfg.res_path[cfg.machine]
+    os.environ['prob_id'] = str(cfg.problem.id)
+    os.environ['preprocess'] = str(cfg.problem.preprocess)
+
     # Create configuration space
     cs = get_config_space()
 
@@ -97,12 +103,13 @@ def main(cfg):
     }
 
     # Check paths
-    resource_path = Path(__file__).parent.parent / 'resources'
+    resource_path = Path(cfg.res_path[cfg.machine])
     data_path = resource_path / f'instances/{cfg.problem.name}/{cfg.problem.size}/{cfg.split}'
     assert data_path.is_dir()
 
-    python_path = resource_path.parent.parent
-    base_scenario_dict['algo'] = f"python {str(python_path)}/learn2rank/scripts/smac_ta.py"
+    # python_path = f'{Path(__file__).parent}/smac_ta.py
+    # base_scenario_dict['algo'] = f"python {str(python_path)}/learn2rank/scripts/smac_ta.py"
+    base_scenario_dict['algo'] = f"python {Path(__file__).parent}/smac_ta.py"
     # Prepare training dataset over which SMAC will optimize
     all_files = [p for p in data_path.iterdir()]
     # For arranging them from 0 to num_instances
@@ -110,8 +117,6 @@ def main(cfg):
     files = [str(data_path.joinpath(all_files_prefix + f"_{i}.dat"))
              for i in range(cfg.from_pid, cfg.from_pid + cfg.num_instances)]
 
-    # Set environment variables
-    os.environ['prob_id'], os.environ['preprocess'] = str(cfg.problem.id), str(cfg.problem.preprocess)
     if cfg.mode == 'one':
         dataset = [[files[i]] for i in range(cfg.num_instances)]
         for instance in dataset:

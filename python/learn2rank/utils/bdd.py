@@ -1,7 +1,6 @@
 import logging
 import os
 import resource
-from pathlib import Path
 from subprocess import Popen, PIPE, TimeoutExpired
 
 import numpy as np
@@ -20,14 +19,16 @@ def limit_virtual_memory():
     resource.setrlimit(resource.RLIMIT_AS, (mvm, mvm))
 
 
-def run_bdd_builder(instance, order, binary=None, time_limit=60, get_runtime=False, mem_limit=None):
-    # Prepare the call string to binary
-    binary = Path(__file__).parent.parent / 'resources/' if binary is None else binary
-    prob_id = os.environ.get('prob_id')
-    preprocess = os.environ.get('preprocess')
-    order_string = " ".join(map(str, order))
+def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=None,
+                    time_limit=60, get_runtime=False, mem_limit=None):
+    # Prepare the call string to bin_path
+    bin_path = os.environ.get('bin_path') if bin_path is None else bin_path
+    binary = bin_path + '/multiobj'
+    prob_id = os.environ.get('prob_id') if prob_id is None else prob_id
+    preprocess = os.environ.get('preprocess') if preprocess is None else preprocess
 
-    cmd = f"{binary}/multiobj {instance} {prob_id} {preprocess} {len(order)} {order_string}"
+    order_string = " ".join(map(str, order))
+    cmd = f"{binary} {instance} {prob_id} {preprocess} {len(order)} {order_string}"
     # Maximal virtual memory for subprocesses (in bytes).
     os.environ['MAX_VIRTUAL_MEMORY'] = str(mem_limit) if mem_limit is None else str(mem_limit * (1024 ** 3))
     status = "SUCCESS"

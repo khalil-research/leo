@@ -1,5 +1,4 @@
 import logging
-import os
 import pickle as pkl
 from pathlib import Path
 
@@ -34,8 +33,8 @@ def main(cfg: DictConfig):
         orders = get_baseline_order(data, cfg, resource_path, pid)
 
         for run_id, order in enumerate(orders):
-            os.environ['prob_id'], os.environ['preprocess'] = str(cfg.problem.id), str(cfg.problem.preprocess)
-            status, result = run_bdd_builder(str(dat_path), order, binary=str(resource_path),
+            status, result = run_bdd_builder(str(dat_path), order, prob_id=str(cfg.problem.id),
+                                             preprocess=str(cfg.problem.preprocess), bin_path=str(resource_path),
                                              time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
             log.info(f'Status: {status}')
             if status == 'SUCCESS':
@@ -50,8 +49,8 @@ def main(cfg: DictConfig):
                                               result,
                                               run_id=run_id))
 
-    with open(f"eval-{cfg.problem.acronym}-{cfg.problem.preprocess}-{cfg.order_type}-{cfg.problem.size}-{cfg.split}"
-              f"-{cfg.from_pid}-{cfg.to_pid}.pkl", 'wb') as fp:
+    with open(f"eval-{cfg.problem.acronym}-{cfg.problem.preprocess}-{cfg.order_type}-"
+              f"{cfg.problem.size}-{cfg.split}-{cfg.from_pid}-{cfg.to_pid}.pkl", 'wb') as fp:
         pkl.dump(results, fp)
 
 

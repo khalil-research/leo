@@ -40,8 +40,8 @@ def main(cfg: DictConfig):
         size = f'{n_objs}_{n_vars}'
         dat_path = inst_path / size / f'{cfg.split}/{_name}.dat'
 
-        os.environ['prob_id'], os.environ['preprocess'] = str(cfg.problem.id), str(cfg.problem.preprocess)
-        status, result = run_bdd_builder(str(dat_path), _order[:_n_item], binary=str(resource_path),
+        status, result = run_bdd_builder(str(dat_path), _order[:_n_item], bin_path=str(resource_path),
+                                         prob_id=str(cfg.problem.id), preprocess=str(cfg.problem.preprocess),
                                          time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
         results.append(make_result_column(cfg.problem.name,
                                           size,

@@ -1,5 +1,5 @@
 defaults:
-  - problem: knapsack
+  - problem: setpacking
   - _self_
 
 verbose: 1
@@ -12,7 +12,7 @@ cutoff_time: 60
 wallclock_limit: 300
 
 from_pid: 0
-num_instances: 10
+num_instances: 1
 split: train
 restore_run: 0
 
@@ -22,6 +22,17 @@ hydra:
   run:
     dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
 
+module_path:
+  cc: /home/rahulpat/scratch/smac_runner
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python
+
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources
+
+machine: laptop
 # Should be more than the wallclock limit of the last run
 #    parser.add_argument('--rwcl', type=int, default=20, help='Wallclock limit for restored run')
 #    parser.add_argument('--rods', type=str, default='+', help='Suffix of output dir for restored run')
