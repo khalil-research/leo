@@ -1,6 +1,6 @@
 knapsack:
   name: knapsack
-  generate: True
+  generate: False
   seed: 7
   max_obj: 1000
   n_train: 1000
@@ -22,6 +22,20 @@ binproblem:
   output_dir: ./mo_instances
   size:
     - 100-3
+    - 100-4
+    - 100-5
+    - 125-3
+    - 125-4
+    - 125-5
+    - 150-3
+    - 150-4
+    - 150-5
+    - 175-3
+    - 175-4
+    - 175-5
+    - 200-3
+    - 200-4
+    - 200-5
 
 hydra:
   output_subdir:

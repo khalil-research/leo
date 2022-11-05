@@ -73,7 +73,7 @@ def generate_binproblem_instances(cfg):
             text += string + "\n"
 
         for i in range(n_cons):
-            text += f"{len(data['cons'])} \n"
+            text += f"{len(data['cons'][i])} \n"
             string = " ".join([str(c) for c in data['cons'][i]])
             text += string + "\n"
 
@@ -82,15 +82,13 @@ def generate_binproblem_instances(cfg):
     def generate_instance(n_vars, n_objs, max_obj=100):
         n_cons = int(n_vars / 5)
 
-        # Fixed
-        # 2 to 18 constraints per variable
-        n_vars_per_con = rng.randint(2, 19)
-
         data = {'value': [], 'cons': []}
         for _ in range(n_objs):
             data['value'].append(rng.randint(1, max_obj + 1, n_vars))
 
         for _ in range(n_cons):
+            # 2 to 18 constraints per variable
+            n_vars_per_con = rng.randint(2, 20)
             data['cons'].append(rng.choice(n_vars, n_vars_per_con, replace=False) + 1)
 
         return data
