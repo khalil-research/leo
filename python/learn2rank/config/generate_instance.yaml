@@ -1,0 +1,27 @@
+knapsack:
+  name: knapsack
+  generate: True
+  seed: 7
+  max_obj: 1000
+  n_train: 1000
+  n_val: 100
+  n_test: 100
+  output_dir: ./mo_instances
+  size:
+    - 60-3
+
+
+binproblem:
+  name: binproblem
+  generate: True
+  seed: 7
+  max_obj: 100
+  n_train: 1000
+  n_val: 100
+  n_test: 100
+  output_dir: ./mo_instances
+  size:
+    - 100-3
+
+hydra:
+  output_subdir:
