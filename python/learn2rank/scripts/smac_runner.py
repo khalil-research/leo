@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import hydra
@@ -109,6 +110,8 @@ def main(cfg):
     files = [str(data_path.joinpath(all_files_prefix + f"_{i}.dat"))
              for i in range(cfg.from_pid, cfg.from_pid + cfg.num_instances)]
 
+    # Set environment variables
+    os.environ['prob_id'], os.environ['preprocess'] = str(cfg.problem.id), str(cfg.problem.preprocess)
     if cfg.mode == 'one':
         dataset = [[files[i]] for i in range(cfg.num_instances)]
         for instance in dataset:

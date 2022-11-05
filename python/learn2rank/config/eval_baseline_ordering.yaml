@@ -1,5 +1,5 @@
 defaults:
-  - problem: knapsack
+  - problem: setpacking
   - _self_
 
 

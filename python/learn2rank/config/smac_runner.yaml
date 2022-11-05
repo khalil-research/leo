@@ -1,8 +1,6 @@
-problem:
-  name: knapsack
-  n_objs: 7
-  n_vars: 40
-  size: ${problem.n_objs}_${problem.n_vars}
+defaults:
+  - problem: knapsack
+  - _self_
 
 verbose: 1
 # one | all

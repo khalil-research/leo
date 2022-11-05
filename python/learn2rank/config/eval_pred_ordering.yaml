@@ -1,11 +1,11 @@
-problem:
-  name: knapsack
+defaults:
+  - problem: knapsack
+  - _self_
 
 from_pid: 0
 to_pid: 1
 # train | val
 split: train
-case: 0
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
@@ -21,6 +21,7 @@ bdd:
   timelimit: 300
   memlimit:
 
+case: 0
 hydra:
   run:
     dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}

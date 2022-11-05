@@ -10,3 +10,6 @@ n_features: 37
 n_weights: 7
 acronym: bp
 id: 3
+# Control bandwidth minimization
+# Options: 0 | 1
+preprocess: 0

@@ -15,8 +15,6 @@ from learn2rank.utils.order import make_result_column
 # A logger for this file
 log = logging.getLogger(__name__)
 
-print(os.getcwd())
-
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_baseline_ordering.yaml')
 def main(cfg: DictConfig):
@@ -36,6 +34,7 @@ def main(cfg: DictConfig):
         orders = get_baseline_order(data, cfg, resource_path, pid)
 
         for run_id, order in enumerate(orders):
+            os.environ['prob_id'], os.environ['preprocess'] = str(cfg.problem.id), str(cfg.problem.preprocess)
             status, result = run_bdd_builder(str(dat_path), order, binary=str(resource_path),
                                              time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
             log.info(f'Status: {status}')
@@ -51,7 +50,8 @@ def main(cfg: DictConfig):
                                               result,
                                               run_id=run_id))
 
-    with open(f"eval_{cfg.order_type}_{cfg.problem.size}_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.pkl", 'wb') as fp:
+    with open(f"eval-{cfg.problem.acronym}-{cfg.problem.preprocess}-{cfg.order_type}-{cfg.problem.size}-{cfg.split}"
+              f"-{cfg.from_pid}-{cfg.to_pid}.pkl", 'wb') as fp:
         pkl.dump(results, fp)
 
 

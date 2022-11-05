@@ -1,6 +1,7 @@
 defaults:
   - _self_
   - featurizer: knapsack
+  - problem: knapsack
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
