@@ -33,8 +33,8 @@ def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=Non
     os.environ['MAX_VIRTUAL_MEMORY'] = str(mem_limit) if mem_limit is None else str(mem_limit * (1024 ** 3))
     status = "SUCCESS"
 
-    log.info('Executing: ', cmd)
-    log.info('Memory limit: ', os.environ.get('MAX_VIRTUAL_MEMORY'))
+    log.info(f'Executing: {cmd}')
+    log.info(f"Memory limit: {os.environ.get('MAX_VIRTUAL_MEMORY')}")
     try:
         if mem_limit is None:
             # Do not set memory limit

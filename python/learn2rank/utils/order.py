@@ -112,40 +112,55 @@ def get_weighted_order(opts, data, weighted_ordering_dict):
     return new_order
 
 
-def get_variable_score_from_weights(data, feature_weights):
+def get_variable_score_from_weights(data, property_weights):
+    """Given variables score based on property weights"""
     weight, value = np.asarray(data['weight']), np.asarray(data['value'])
     n_items = weight.shape[0]
     value_mean = np.mean(value, axis=0)
     value_max = np.max(value, axis=0)
     value_min = np.min(value, axis=0)
 
-    scores = np.zeros(n_items)
-    for fk, fv in feature_weights.items():
+    # Normalized variable score computation
+    scores, _norm_scores = np.zeros(n_items), np.zeros(n_items)
+    for fk, fv in property_weights.items():
         if fk == 'weight':
-            scores += fv * weight
+            _norm_scores = weight / weight.sum()
+
         elif fk == 'avg_value':
-            scores += fv * value_mean
+            _norm_scores = value_mean / value_mean.sum()
+
         elif fk == 'max_value':
-            scores += fv * value_max
+            _norm_scores = value_max / value_max.sum()
+
         elif fk == 'min_value':
-            scores += fv * value_min
+            _norm_scores = value_min / value_min.sum()
+
         elif fk == 'avg_value_by_weight':
-            scores += fv * (value_mean / weight)
+            _norm_scores = (value_mean / weight)
+            _norm_scores /= _norm_scores.sum()
+
         elif fk == 'max_value_by_weight':
-            scores += fv * (value_max / weight)
+            _norm_scores = (value_max / weight)
+            _norm_scores /= _norm_scores.sum()
+
         elif fk == 'min_value_by_weight':
-            scores += fv * (value_min / weight)
+            _norm_scores = (value_min / weight)
+            _norm_scores /= _norm_scores.sum()
+
+        assert _norm_scores.shape[0] == n_items
+        assert np.round(_norm_scores.sum()) == 1
+        scores += fv * _norm_scores
 
     return scores
 
 
-def get_variable_order_from_weights(data, feature_weights):
+def get_variable_order_from_weights(data, property_weights):
     """Returns array of variable order
     For example: [2, 1, 0]
     Here 2 is the index of item which should be used first to create the BDD
     """
     n_items = len(data['weight'])
-    scores = get_variable_score_from_weights(data, feature_weights)
+    scores = get_variable_score_from_weights(data, property_weights)
 
     idx_score = [(i, v) for i, v in zip(np.arange(n_items), scores)]
     idx_score.sort(key=itemgetter(1), reverse=True)
@@ -155,14 +170,14 @@ def get_variable_order_from_weights(data, feature_weights):
     return order, idx_score
 
 
-def get_variable_rank_from_weights(data, feature_weights, normalized=True):
+def get_variable_rank_from_weights(data, property_weights, normalized=True):
     """Returns array of variable ranks
     For example: [2, 1, 0]
     Item 0 must be used third to construct the BDD
     """
     n_items = len(data['weight'])
 
-    _, idx_score_desc = get_variable_order_from_weights(data, feature_weights)
+    _, idx_score_desc = get_variable_order_from_weights(data, property_weights)
 
     variable_rank = np.zeros(n_items)
     for rank, (i, _) in enumerate(idx_score_desc):
