@@ -98,9 +98,9 @@ def main():
               ('test', False, 1100, 1200))
 
     table_str = ''
-    table_str += create_knapsack_table(splits=splits) if gen_knapsack else table_str
-    table_str += create_setpacking_table(splits=splits) if gen_setpacking else table_str
-    table_str += create_setcovering_table(splits=splits) if gen_setcovering else table_str
+    table_str = table_str + create_knapsack_table(splits=splits) if gen_knapsack else table_str
+    table_str = table_str + create_setpacking_table(splits=splits) if gen_setpacking else table_str
+    table_str = table_str + create_setcovering_table(splits=splits) if gen_setcovering else table_str
 
     fp.write(table_str)
 

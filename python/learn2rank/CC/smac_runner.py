@@ -20,9 +20,9 @@ def create_knapsack_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 60), (3, 50), (3, 40), (3, 30), (3, 20),
-            (4, 50), (4, 40), (4, 30), (4, 20),
-            (5, 40), (5, 30), (5, 20)]
+    size = [(3, 50), (3, 40), (3, 30), (3, 20),
+            (4, 40), (4, 30), (4, 20),
+            (5, 30), (5, 20)]
     cutoff = 60
     wallclock = 300
     n_instances = 25
@@ -103,9 +103,9 @@ def main():
               ('test', False, 1100, 1200))
 
     table_str = ''
-    table_str += create_knapsack_table(splits=splits) if gen_knapsack else table_str
-    table_str += create_setpacking_table(splits=splits) if gen_setpacking else table_str
-    table_str += create_setcovering_table(splits=splits) if gen_setcovering else table_str
+    table_str = table_str + create_knapsack_table(splits=splits) if gen_knapsack else table_str
+    table_str = table_str + create_setpacking_table(splits=splits) if gen_setpacking else table_str
+    table_str = table_str + create_setcovering_table(splits=splits) if gen_setcovering else table_str
 
     fp.write(table_str)
 
