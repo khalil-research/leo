@@ -1,4 +1,5 @@
-name: binproblem
+name: setpacking
+inst_name: binproblem
 n_objs: 3
 n_vars: 100
 n_cons: 20

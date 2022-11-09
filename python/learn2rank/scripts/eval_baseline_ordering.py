@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_baseline_ordering.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(cfg.res_path[cfg.machine])
-    inst_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
+    inst_path = resource_path.joinpath(f'instances/{cfg.problem.inst_name}')
     results = []
 
     inst_path = inst_path / cfg.problem.size / cfg.split

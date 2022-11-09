@@ -10,7 +10,7 @@ from smac.scenario.scenario import Scenario
 
 
 def get_config_space():
-    # Define configuration space
+    # Define knapsack configuration space
     cs = ConfigurationSpace()
 
     weight = UniformFloatHyperparameter(
@@ -43,6 +43,56 @@ def get_config_space():
                             min_value_by_weight])
 
     return cs
+
+
+# TODO: Richer config space for binproblem
+# def get_config_space_binproblem():
+#     # Define binproblem configuration space
+#     cs = ConfigurationSpace()
+#
+#     weight = UniformFloatHyperparameter(
+#         "weight", -1, 1, default_value=-1)
+#
+#     weight_Av_mean = UniformFloatHyperparameter(
+#         "weight", -1, 1, default_value=-1)
+#
+#     avg_value = UniformFloatHyperparameter(
+#         "avg_value", -1, 1, default_value=0)
+#
+#     max_value = UniformFloatHyperparameter(
+#         "max_value", -1, 1, default_value=0)
+#
+#     min_value = UniformFloatHyperparameter(
+#         "min_value", -1, 1, default_value=0)
+#
+#     avg_value_by_weight = UniformFloatHyperparameter(
+#         "avg_value_by_weight", -1, 1, default_value=0)
+#
+#     max_value_by_weight = UniformFloatHyperparameter(
+#         "max_value_by_weight", -1, 1, default_value=0)
+#
+#     min_value_by_weight = UniformFloatHyperparameter(
+#         "min_value_by_weight", -1, 1, default_value=0)
+#
+#     dot = UniformFloatHyperparameter(
+#         "min_value_by_weight", -1, 1, default_value=0)
+#
+#     cs.add_hyperparameters([weight,
+#                             avg_value,
+#                             max_value,
+#                             min_value,
+#                             avg_value_by_weight,
+#                             max_value_by_weight,
+#                             min_value_by_weight,
+#                             dot])
+#
+#     return cs
+#
+#
+# config_space = {
+#     'knapsack': get_config_space_knapsack(),
+#     'binproblem': get_config_space_binproblem()
+# }
 
 
 def get_logger(verbosity):
@@ -91,6 +141,7 @@ def main(cfg):
     os.environ['preprocess'] = str(cfg.problem.preprocess)
 
     # Create configuration space
+    # cs = config_space.get(cfg.problem.name)
     cs = get_config_space()
 
     # Define scenario
@@ -104,7 +155,7 @@ def main(cfg):
 
     # Check paths
     resource_path = Path(cfg.res_path[cfg.machine])
-    data_path = resource_path / f'instances/{cfg.problem.name}/{cfg.problem.size}/{cfg.split}'
+    data_path = resource_path / f'instances/{cfg.problem.inst_name}/{cfg.problem.size}/{cfg.split}'
     assert data_path.is_dir()
 
     # python_path = f'{Path(__file__).parent}/smac_ta.py

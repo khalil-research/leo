@@ -1,4 +1,5 @@
 name: knapsack
+inst_name: knapsack
 n_objs: 3
 n_vars: 60
 size: ${problem.n_objs}_${problem.n_vars}

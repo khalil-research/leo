@@ -152,7 +152,7 @@ def main(cfg):
 
     # Zip path objects
     # inst_zip_path = zipfile.Path(inst_zip_obj).joinpath(cfg.problem.name)
-    inst_zip_path = resource_path.joinpath(f'instances/{cfg.problem.name}')
+    inst_zip_path = resource_path.joinpath(f'instances/{cfg.problem.inst_name}')
     smac_output_zip_path = zipfile.Path(smac_output_zip_obj).joinpath(cfg.problem.name)
 
     from_pid = 0 if cfg.from_pid is None else cfg.from_pid
