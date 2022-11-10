@@ -25,7 +25,8 @@ def main(cfg: DictConfig):
 
     """
     res_path = Path(cfg.res_path[cfg.machine])
-    dataset = {}
+    dataset_path = res_path / 'datasets' / cfg.featurizer.name / f'{cfg.featurizer.name}_dataset.pkl'
+    dataset = {} if not dataset_path.exists() else pkl.load(open(dataset_path, 'rb'))
 
     # For each size
     for size in cfg.featurizer.size:
@@ -46,7 +47,6 @@ def main(cfg: DictConfig):
                 data = read_data_from_file(cfg.problem.acronym, dat_path)
                 featurizer = featurizer_factory.create(cfg.featurizer.name, cfg=cfg.featurizer, data=data)
                 features = featurizer.get()
-                _dataset['x'] = features
 
                 # Prepare y
                 smac_out_dir = inst / f'run_{cfg.featurizer.seed.smac}'
@@ -58,8 +58,10 @@ def main(cfg: DictConfig):
                         _dataset['y'].append({'cost': np.asarray(run['cost']).reshape(1, 1),
                                               'pwt': property_weight_dict2array(run['incumbent'],
                                                                                 cast_to_numpy=True)})
-                    _dataset['y'][-1]['rank'] = get_variable_rank_from_weights(
-                        data, run['incumbent'], normalized=False)
+                    if len(_dataset['y']):
+                        _dataset['x'] = features
+                        _dataset['y'][-1]['rank'] = get_variable_rank_from_weights(
+                            data, run['incumbent'], normalized=False)
 
     with open(res_path / f'datasets/{cfg.featurizer.name}/{cfg.featurizer.name}_dataset.pkl', 'wb') as fp:
         pkl.dump(dataset, fp)
