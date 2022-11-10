@@ -121,8 +121,9 @@ def get_variable_score_from_weights(data, property_weights):
     value_min = np.min(value, axis=0)
 
     # Normalized variable score computation
-    scores, _norm_scores = np.zeros(n_items), np.zeros(n_items)
+    scores = np.zeros(n_items)
     for fk, fv in property_weights.items():
+        _norm_scores = np.zeros(n_items)
         if fk == 'weight':
             _norm_scores = weight / weight.sum()
 
