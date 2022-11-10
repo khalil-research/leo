@@ -25,14 +25,20 @@ struct SetPackingInstance
 	// Number of constraints
 	int n_cons;
 	// Number of objective functions
-	int n_objs;
+	int n_objs;	
+	// Weight of the variables. Indicates in how constraints a variable participates
+	vector<int> weight;
+
 	// Objective functions
 	vector<vector<int>> objs;
+	vector<vector<int>> objs_removed;
 	vector<vector<int>> objs_canonical;
 
 	// Variables indices in constraint
 	vector<vector<int>> vars_cons;
+	vector<vector<int>> vars_cons_removed;
 	vector<vector<int>> vars_cons_canonical;
+
 
 	// Matrix bandwidth
 	int bandwidth;
@@ -40,6 +46,9 @@ struct SetPackingInstance
 	// Constructors
 	SetPackingInstance() {}
 	SetPackingInstance(const char *filename);
+
+	// Remove variables which do not participate in any constraint
+	void remove_variables_without_constraints();
 
 	// Create independent set instance from set packing
 	IndepSetInst *create_indepset_instance();
@@ -99,6 +108,9 @@ inline SetPackingInstance::SetPackingInstance(const char *inputfile)
 		}
 	}
 
+	// remove variables which do not participate in any constraint
+	remove_variables_without_constraints();
+
 	objs_canonical = objs;
 	vars_cons_canonical = vars_cons;
 
@@ -110,6 +122,65 @@ inline SetPackingInstance::SetPackingInstance(const char *inputfile)
 
 	// minimize_bandwidth();
 }
+
+
+inline void SetPackingInstance::remove_variables_without_constraints()
+{
+	weight.resize(n_vars);
+	fill(weight.begin(), weight.end(), 0);
+
+	vector<int> new_index(n_vars, -1);
+	int index_counter = 0;
+
+	// Find variables which do not participate in any constraint
+	for (int c = 0; c < n_cons; ++c)
+	{		
+		for (int i = 0; i < vars_cons[c].size(); ++i)
+		{
+			weight[vars_cons[c][i]] += 1;			
+		}
+	}
+
+	// Find new indices
+	for (int i=0; i<n_vars; ++i){
+		if(weight[i] > 0){
+			new_index[i] = index_counter;
+			index_counter += 1;
+		}		
+	}		
+	
+	// Update objective
+	objs_removed.resize(n_objs);	
+	for (int v = 0; v < n_vars; ++v){		
+		if (weight[v] > 0){
+			// Add objectives
+			for (int o=0; o < n_objs; ++o){
+				objs_removed[o].push_back(objs[o][v]);
+			}	
+		}	
+	} 	
+
+	// Remove variables from constraints based on old indices	
+	vars_cons_removed = vars_cons;
+	for (int v = 0; v < n_vars; ++v){		
+		if(weight[v] == 0){			
+			for (int c=0; c<n_cons; ++c){
+				remove(vars_cons_removed[c].begin(), vars_cons_removed[c].end(), v);		
+			}
+		}
+	}
+	// Update variable indices
+	for (int c=0; c<n_cons; ++c){
+		for (int i=0; i<vars_cons_removed[c].size(); ++i){
+			vars_cons_removed[c][i] = new_index[vars_cons_removed[c][i]];
+		}		
+	}
+
+	n_vars = objs_removed[0].size();
+	objs = objs_removed;
+	vars_cons = vars_cons_removed;
+}
+
 
 // Create independent set instance from set packing
 inline IndepSetInst *SetPackingInstance::create_indepset_instance()
