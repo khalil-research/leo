@@ -42,6 +42,12 @@ def read_data_from_file(problem_acronym, file_path):
             data['cons_mat'].append(cons_mat)
         data['cons_mat'] = np.asarray(data['cons_mat'])
         data['weight'] = np.sum(data['cons_mat'], axis=0)
+        # Remove cons as we only use cons_mat
+        del data['cons']
+
+        # Remove variables which do not participate in any constraint
+        data['n_vars'] = len(data['weight'] != 0)
+        data['cons_mat'] = data['cons_mat'][:, data['weight'] != 0]
 
     if problem_acronym == 'kp':
         parse_knapsack()
