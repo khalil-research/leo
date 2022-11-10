@@ -30,10 +30,9 @@ def main(cfg: DictConfig):
     log.info(f'* Loading data...')
     # Dataset path
 
-    dp = Path(cfg.res_path[cfg.machine]) / f"datasets/{cfg.problem.name}/{cfg.problem.name}_dataset_5_40.pkl"
+    dp = Path(cfg.res_path[cfg.machine]) / cfg.dataset.path
     with open(dp, 'rb') as fp:
         data = pkl.load(fp)
-        data = data['5_40']
     log.info(dp)
     log.info('')
 

@@ -20,9 +20,9 @@ def create_knapsack_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 50), (3, 40), (3, 30), (3, 20),
-            (4, 40), (4, 30), (4, 20),
-            (5, 30), (5, 20)]
+    size = [(3, 60), (3, 50), (3, 40), (3, 30), (3, 20),
+            (4, 50), (4, 40), (4, 30), (4, 20),
+            (5, 40), (5, 30), (5, 20)]
     cutoff = 60
     wallclock = 300
     n_instances = 25

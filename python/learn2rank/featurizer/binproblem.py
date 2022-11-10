@@ -2,7 +2,7 @@ from operator import itemgetter
 
 import numpy as np
 
-from learn2rank.utils.const import StaticOrderings
+from learn2rank.utils.const import BinproblemStaticOrderings
 from .featurizer import Featurizer
 
 
@@ -44,7 +44,7 @@ class BinproblemFeaturizer(Featurizer):
 
     def _get_heuristic_variable_rank_features(self):
         ranks = []
-        for o in StaticOrderings:
+        for o in BinproblemStaticOrderings:
             if o.name == 'max_weight':
                 idx_weight = [(i, w) for i, w in enumerate(self.data['weight'])]
                 idx_weight.sort(key=itemgetter(1), reverse=True)
@@ -153,7 +153,7 @@ class BinproblemFeaturizer(Featurizer):
 
     def get(self):
         # Calculate instance features
-        feat = {'raw': None, 'inst': None, 'var': None, 'var_rank': None}
+        feat = {'raw': None, 'inst': None, 'var': None, 'vrank': None}
         raw_feat = np.vstack(([self.norm_value,
                                self.data['cons_mat']]))
         feat['raw'] = raw_feat.T

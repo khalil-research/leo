@@ -1,7 +1,20 @@
 from enum import Enum
 
 
-class StaticOrderings(Enum):
+class KnapsackStaticOrderings(Enum):
+    max_weight = 0
+    min_weight = 1
+    max_avg_value = 2
+    min_avg_value = 3
+    max_max_value = 4
+    min_max_value = 5
+    max_min_value = 6
+    min_min_value = 7
+    max_avg_value_by_weight = 8
+    max_max_value_by_weight = 9
+
+
+class BinproblemStaticOrderings(Enum):
     max_weight = 0
     min_weight = 1
     max_avg_value = 2

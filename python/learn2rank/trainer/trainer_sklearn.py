@@ -4,8 +4,9 @@ import time
 
 import numpy as np
 
-from learn2rank.utils.data import flatten_data, unflatten_data
-from learn2rank.utils.data import get_n_items, get_sample_weight
+# from learn2rank.utils.data import flatten_data, unflatten_data
+# from learn2rank.utils.data import get_n_items, get_sample_weight
+from learn2rank.utils.data import get_sample_weight, unflatten_data
 from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.order import score2order
@@ -22,15 +23,17 @@ class SklearnTrainer(Trainer):
         self.ps = self._get_preds_store()
 
     def run(self):
-        x_tr, y_tr, self.ps['tr']['names'] = self._get_split_data(split='train')
-        x_val, y_val, self.ps['val']['names'] = self._get_split_data(split='val')
+        x_tr, y_tr, names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
+        x_val, y_val, names_val, n_items_val, wt_val = self._get_split_data(split='val')
+        self.ps['tr']['names'], self.ps['tr']['n_items'] = names_tr, n_items_tr
+        self.ps['val']['names'], self.ps['val']['n_items'] = names_val, n_items_val
+        # self.ps['tr']['n_items'] = get_n_items(y_tr)
+        # self.ps['val']['n_items'] = get_n_items(y_val)
+        # wt_tr = get_sample_weight(y_tr, self.cfg.model.weights)
+        # wt_val = get_sample_weight(y_val, self.cfg.model.weights)
 
-        self.ps['tr']['n_items'] = get_n_items(y_tr)
-        self.ps['val']['n_items'] = get_n_items(y_val)
-        wt_tr = get_sample_weight(y_tr, self.cfg.model.weights)
-        wt_val = get_sample_weight(y_val, self.cfg.model.weights)
-        _data = flatten_data([x_tr, y_tr, wt_tr, x_val, y_val, wt_val])
-        [x_tr, y_tr, wt_tr, x_val, y_val, wt_val] = _data
+        # _data = flatten_data([x_tr, y_tr, wt_tr, x_val, y_val, wt_val])
+        # [x_tr, y_tr, wt_tr, x_val, y_val, wt_val] = _data
 
         # Train
         _time = time.time()
@@ -50,10 +53,9 @@ class SklearnTrainer(Trainer):
         self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['score'], sample_weight=wt_val)
 
         # Unflatten data
-        _data = unflatten_data([y_tr, self.ps['tr']['score'], y_val, self.ps['val']['score']],
-                               self.cfg.problem.n_max_vars)
-        [y_tr, self.ps['tr']['score'], y_val, self.ps['val']['score']] = _data
-
+        y_tr, self.ps['tr']['score'] = unflatten_data([y_tr, self.ps['tr']['score']], self.ps['tr']['n_items'])
+        y_val, self.ps['val']['score'] = unflatten_data([y_val, self.ps['val']['score']], self.ps['val']['n_items'])
+        
         # Transform scores to order
         y_tr_order = score2order(y_tr)
         self.ps['tr']['order'] = score2order(self.ps['tr']['score'])
@@ -87,15 +89,22 @@ class SklearnTrainer(Trainer):
             pickle.dump(self.rs, p)
 
     def _get_split_data(self, split='train'):
-        x, y, names = [], [], []
-        for name, v in self.data[split].items():
-            _x, _y = v['x'], v['y'][-1]
+        x, y, wt, names, n_items = [], [], [], [], []
 
-            names.append(name)
-            x.append(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
-            y.append(_y['rank'])
+        for size in self.cfg.dataset.size:
+            for name, v in self.data[size][split].items():
+                _x, _y = v['x'], v['y'][-1]
+                size_blobs = size.split('_')
+                n_items.append(size_blobs[1] if 'kp' in name else size_blobs[0])
+                names.append(name)
 
-        return np.asarray(x), np.asarray(y), names
+                x.extend(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
+
+                weights = get_sample_weight(_y['rank'], self.cfg.model.weights)
+                y.extend(_y['rank'])
+                wt.extend(list(weights[0]))
+
+        return np.asarray(x), np.asarray(y), names, n_items, np.asarray(wt)
 
     @staticmethod
     def _get_results_store():

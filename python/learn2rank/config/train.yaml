@@ -11,7 +11,12 @@ res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
   laptop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
-
 machine: desktop
+
+dataset:
+  path: datasets/knapsack/knapsack_dataset.pkl
+  size:
+    - 3_60
+
 case: 0
 output_dir: ${hydra:runtime.output_dir}

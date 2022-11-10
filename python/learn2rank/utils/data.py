@@ -156,16 +156,16 @@ def get_sample_weight(y, weighted_loss, padded_value=-1):
     return np.asarray(weights)
 
 
-def unflatten_data(flattened_lists, n_max_vars):
+def unflatten_data(flattened_lists, n_items):
     unflattened_list = []
     for flattened_list in flattened_lists:
         _unflattened_list = []
 
-        num_samples = int(flattened_list.shape[0] / n_max_vars)
+        # num_samples = int(flattened_list.shape[0] / n_max_vars)
         i = 0
-        for _ in range(num_samples):
-            _unflattened_list.append(flattened_list[i: i + n_max_vars])
-            i += n_max_vars
+        for _n_items in range(n_items):
+            _unflattened_list.append(flattened_list[i: i + _n_items])
+            i += _n_items
 
         _unflattened_list = np.asarray(_unflattened_list)
         unflattened_list.append(_unflattened_list)

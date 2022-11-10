@@ -2,7 +2,7 @@ from operator import itemgetter
 
 import numpy as np
 
-from learn2rank.utils.const import StaticOrderings
+from learn2rank.utils.const import KnapsackStaticOrderings
 from .featurizer import Featurizer
 
 
@@ -39,7 +39,7 @@ class KnapsackFeaturizer(Featurizer):
         self.n_vars = len(self.data['weight'])
 
         ranks = []
-        for o in StaticOrderings:
+        for o in KnapsackStaticOrderings:
             if o.name == 'max_weight':
                 idx_weight = [(i, w) for i, w in enumerate(self.data['weight'])]
                 idx_weight.sort(key=itemgetter(1), reverse=True)
