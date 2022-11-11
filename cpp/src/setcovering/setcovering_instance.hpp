@@ -81,7 +81,6 @@ inline SetCoveringInstance::SetCoveringInstance(const char* inputfile) {
 		cout << "Error: could not open file " << inputfile << endl;
 		exit(1);
 	}
-	cout << "Here";
 
 	input >> n_vars;
 	input >> n_cons;
@@ -289,14 +288,17 @@ inline void SetCoveringInstance::reset_order(vector<int> new_order){
 	cout << "\tReordering instance based on input order...";
 	for (int c = 0; c < n_cons; ++c) {
 		for (size_t i = 0; i < vars_cons[c].size(); ++i) {
-			vars_cons[c].push_back( new_order[vars_cons_canonical[c][i]] );
-			cons_var[ new_order[vars_cons_canonical[c][i]] ].push_back(c);
+			vars_cons[c][i] = new_order[vars_cons_canonical[c][i]];			
 		}
 	}
 
+	for (int i = 0; i < n_vars; ++i){
+		cons_var[i] = cons_var_canonical[new_order[i]];
+	}
+
 	for (int p = 0; p < n_objs; ++p) {
-		for (int j = 0; j < n_vars; ++j) {
-			objs[p][new_order[j]] = objs_canonical[p][j];			
+		for (int j = 0; j < n_vars; ++j) {			
+			objs[p][j] = objs_canonical[p][new_order[j]];			
 		}
 	}
 

@@ -343,7 +343,7 @@ inline void SetPackingInstance::reset_order(vector<int> new_order)
 	{
 		for (int j = 0; j < n_vars; ++j)
 		{
-			objs[p][new_order[j]] = objs_canonical[p][j];
+			objs[p][j] = objs_canonical[p][new_order[j]];
 		}
 	}
 }
