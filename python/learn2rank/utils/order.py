@@ -359,8 +359,8 @@ def get_baseline_order(data, cfg, resource_path, pid):
             order, _ = get_variable_order_from_weights(data, property_weight['incumbent'])
             orders.append(order)
 
-    elif cfg.order_type == 'smac_one':
-        run_path = get_smac_path(cfg, resource_path)
+    elif cfg.order_type == 'smac_all':
+        run_path = get_smac_all_path(cfg, resource_path)
         traj_path = run_path / 'traj.json'
         if traj_path.exists():
             # Get property weight
