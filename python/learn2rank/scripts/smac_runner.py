@@ -9,7 +9,7 @@ from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
 
-def get_config_space():
+def get_knapsack_config_space():
     # Define knapsack configuration space
     cs = ConfigurationSpace()
 
@@ -45,54 +45,89 @@ def get_config_space():
     return cs
 
 
-# TODO: Richer config space for binproblem
-# def get_config_space_binproblem():
-#     # Define binproblem configuration space
-#     cs = ConfigurationSpace()
-#
-#     weight = UniformFloatHyperparameter(
-#         "weight", -1, 1, default_value=-1)
-#
-#     weight_Av_mean = UniformFloatHyperparameter(
-#         "weight", -1, 1, default_value=-1)
-#
-#     avg_value = UniformFloatHyperparameter(
-#         "avg_value", -1, 1, default_value=0)
-#
-#     max_value = UniformFloatHyperparameter(
-#         "max_value", -1, 1, default_value=0)
-#
-#     min_value = UniformFloatHyperparameter(
-#         "min_value", -1, 1, default_value=0)
-#
-#     avg_value_by_weight = UniformFloatHyperparameter(
-#         "avg_value_by_weight", -1, 1, default_value=0)
-#
-#     max_value_by_weight = UniformFloatHyperparameter(
-#         "max_value_by_weight", -1, 1, default_value=0)
-#
-#     min_value_by_weight = UniformFloatHyperparameter(
-#         "min_value_by_weight", -1, 1, default_value=0)
-#
-#     dot = UniformFloatHyperparameter(
-#         "min_value_by_weight", -1, 1, default_value=0)
-#
-#     cs.add_hyperparameters([weight,
-#                             avg_value,
-#                             max_value,
-#                             min_value,
-#                             avg_value_by_weight,
-#                             max_value_by_weight,
-#                             min_value_by_weight,
-#                             dot])
-#
-#     return cs
-#
-#
-# config_space = {
-#     'knapsack': get_config_space_knapsack(),
-#     'binproblem': get_config_space_binproblem()
-# }
+def get_setpacking_config_space():
+    # Define knapsack configuration space
+    cs = ConfigurationSpace()
+
+    weight = UniformFloatHyperparameter(
+        "weight", -1, 1, default_value=0)
+
+    avg_value = UniformFloatHyperparameter(
+        "avg_value", -1, 1, default_value=0)
+
+    max_value = UniformFloatHyperparameter(
+        "max_value", -1, 1, default_value=0)
+
+    min_value = UniformFloatHyperparameter(
+        "min_value", -1, 1, default_value=0)
+
+    avg_value_by_weight = UniformFloatHyperparameter(
+        "avg_value_by_weight", -1, 1, default_value=0)
+
+    max_value_by_weight = UniformFloatHyperparameter(
+        "max_value_by_weight", -1, 1, default_value=0)
+
+    min_value_by_weight = UniformFloatHyperparameter(
+        "min_value_by_weight", -1, 1, default_value=0)
+
+    cs.add_hyperparameters([weight,
+                            avg_value,
+                            max_value,
+                            min_value,
+                            avg_value_by_weight,
+                            max_value_by_weight,
+                            min_value_by_weight])
+
+    return cs
+
+
+def get_setcovering_config_space():
+    # Define binproblem configuration space
+    cs = ConfigurationSpace()
+
+    weight = UniformFloatHyperparameter(
+        "weight", -1, 1, default_value=0)
+
+    # weight_Av_mean = UniformFloatHyperparameter(
+    #     "weight", -1, 1, default_value=-1)
+
+    avg_value = UniformFloatHyperparameter(
+        "avg_value", -1, 1, default_value=0)
+
+    max_value = UniformFloatHyperparameter(
+        "max_value", -1, 1, default_value=0)
+
+    min_value = UniformFloatHyperparameter(
+        "min_value", -1, 1, default_value=0)
+
+    avg_value_by_weight = UniformFloatHyperparameter(
+        "avg_value_by_weight", -1, 1, default_value=0)
+
+    max_value_by_weight = UniformFloatHyperparameter(
+        "max_value_by_weight", -1, 1, default_value=0)
+
+    min_value_by_weight = UniformFloatHyperparameter(
+        "min_value_by_weight", -1, 1, default_value=0)
+
+    # dot = UniformFloatHyperparameter(
+    #     "min_value_by_weight", -1, 1, default_value=0)
+
+    cs.add_hyperparameters([weight,
+                            avg_value,
+                            max_value,
+                            min_value,
+                            avg_value_by_weight,
+                            max_value_by_weight,
+                            min_value_by_weight])
+
+    return cs
+
+
+config_space = {
+    'knapsack': get_knapsack_config_space(),
+    'setcovering': get_setcovering_config_space(),
+    'setpacking': get_setpacking_config_space()
+}
 
 
 def get_logger(verbosity):
@@ -141,8 +176,9 @@ def main(cfg):
     os.environ['preprocess'] = str(cfg.problem.preprocess)
 
     # Create configuration space
-    # cs = config_space.get(cfg.problem.name)
-    cs = get_config_space()
+    cs = config_space.get(cfg.problem.name)
+    assert cs is not None
+    # cs = get_config_space(cfg.problem.name)
 
     # Define scenario
     base_scenario_dict = {
