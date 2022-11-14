@@ -79,8 +79,6 @@ inline SetCoveringInstance::SetCoveringInstance(const char *inputfile)
 		cout << "Error: could not open file " << inputfile << endl;
 		exit(1);
 	}
-	cout << "Here";
-
 	input >> n_vars;
 	input >> n_cons;
 
@@ -314,24 +312,47 @@ inline void SetCoveringInstance::createLP_Melihozen(string lpfilename)
 inline void SetCoveringInstance::reset_order(vector<int> new_order)
 {
 	cout << "\tReordering instance based on input order...";
+
+	// Update vars_cons
+	for (int c = 0; c < n_cons; c++)
+	{
+		vars_cons[c].clear();
+	}
+	int new_index = 0;
+	for (int e : new_order)
+	{
+		for (int c = 0; c < n_cons; ++c)
+		{
+			for (int v : vars_cons_canonical[c])
+			{
+				if (v == e)
+				{
+					vars_cons[c].push_back(new_index);
+				}
+			}
+		}
+		new_index += 1;
+	}
+
+	// Update cons_var
+	for (int v = 0; v < n_vars; v++)
+	{
+		cons_var[v].clear();
+	}
 	for (int c = 0; c < n_cons; ++c)
 	{
-		for (size_t i = 0; i < vars_cons[c].size(); ++i)
+		for (int variable : vars_cons[c])
 		{
-			vars_cons[c][i] = new_order[vars_cons_canonical[c][i]];
+			cons_var[variable].push_back(c);
 		}
 	}
 
-	for (int i = 0; i < n_vars; ++i)
-	{
-		cons_var[i] = cons_var_canonical[new_order[i]];
-	}
-
+	// Update objective
 	for (int p = 0; p < n_objs; ++p)
 	{
 		for (int j = 0; j < n_vars; ++j)
 		{
-			objs[p][new_order[j]] = objs_canonical[p][j];
+			objs[p][j] = objs_canonical[p][new_order[j]];
 		}
 	}
 }

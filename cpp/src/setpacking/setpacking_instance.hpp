@@ -25,7 +25,7 @@ struct SetPackingInstance
 	// Number of constraints
 	int n_cons;
 	// Number of objective functions
-	int n_objs;	
+	int n_objs;
 	// Weight of the variables. Indicates in how constraints a variable participates
 	vector<int> weight;
 
@@ -38,7 +38,6 @@ struct SetPackingInstance
 	vector<vector<int>> vars_cons;
 	vector<vector<int>> vars_cons_removed;
 	vector<vector<int>> vars_cons_canonical;
-
 
 	// Matrix bandwidth
 	int bandwidth;
@@ -123,7 +122,6 @@ inline SetPackingInstance::SetPackingInstance(const char *inputfile)
 	// minimize_bandwidth();
 }
 
-
 inline void SetPackingInstance::remove_variables_without_constraints()
 {
 	weight.resize(n_vars);
@@ -134,53 +132,62 @@ inline void SetPackingInstance::remove_variables_without_constraints()
 
 	// Find variables which do not participate in any constraint
 	for (int c = 0; c < n_cons; ++c)
-	{		
+	{
 		for (int i = 0; i < vars_cons[c].size(); ++i)
 		{
-			weight[vars_cons[c][i]] += 1;			
+			weight[vars_cons[c][i]] += 1;
 		}
 	}
 
 	// Find new indices
-	for (int i=0; i<n_vars; ++i){
-		if(weight[i] > 0){
+	for (int i = 0; i < n_vars; ++i)
+	{
+		if (weight[i] > 0)
+		{
 			new_index[i] = index_counter;
 			index_counter += 1;
-		}		
-	}		
-	
-	// Update objective
-	objs_removed.resize(n_objs);	
-	for (int v = 0; v < n_vars; ++v){		
-		if (weight[v] > 0){
-			// Add objectives
-			for (int o=0; o < n_objs; ++o){
-				objs_removed[o].push_back(objs[o][v]);
-			}	
-		}	
-	} 	
+		}
+	}
 
-	// Remove variables from constraints based on old indices	
+	// Update objective
+	objs_removed.resize(n_objs);
+	for (int v = 0; v < n_vars; ++v)
+	{
+		if (weight[v] > 0)
+		{
+			// Add objectives
+			for (int o = 0; o < n_objs; ++o)
+			{
+				objs_removed[o].push_back(objs[o][v]);
+			}
+		}
+	}
+
+	// Remove variables from constraints based on old indices
 	vars_cons_removed = vars_cons;
-	for (int v = 0; v < n_vars; ++v){		
-		if(weight[v] == 0){			
-			for (int c=0; c<n_cons; ++c){
-				remove(vars_cons_removed[c].begin(), vars_cons_removed[c].end(), v);		
+	for (int v = 0; v < n_vars; ++v)
+	{
+		if (weight[v] == 0)
+		{
+			for (int c = 0; c < n_cons; ++c)
+			{
+				remove(vars_cons_removed[c].begin(), vars_cons_removed[c].end(), v);
 			}
 		}
 	}
 	// Update variable indices
-	for (int c=0; c<n_cons; ++c){
-		for (int i=0; i<vars_cons_removed[c].size(); ++i){
+	for (int c = 0; c < n_cons; ++c)
+	{
+		for (int i = 0; i < vars_cons_removed[c].size(); ++i)
+		{
 			vars_cons_removed[c][i] = new_index[vars_cons_removed[c][i]];
-		}		
+		}
 	}
 
 	n_vars = objs_removed[0].size();
 	objs = objs_removed;
 	vars_cons = vars_cons_removed;
 }
-
 
 // Create independent set instance from set packing
 inline IndepSetInst *SetPackingInstance::create_indepset_instance()
@@ -331,14 +338,29 @@ inline void SetPackingInstance::createLP_Melihozen(string lpfilename)
 
 inline void SetPackingInstance::reset_order(vector<int> new_order)
 {
-	for (int c = 0; c < n_cons; ++c)
+
+	// Update vars_cons
+	for (int c = 0; c < n_cons; c++)
 	{
-		for (size_t i = 0; i < vars_cons[c].size(); ++i)
+		vars_cons[c].clear();
+	}
+	int new_index = 0;
+	for (int element : new_order)
+	{
+		for (int c = 0; c < n_cons; ++c)
 		{
-			vars_cons[c][i] = new_order[vars_cons_canonical[c][i]];
+			for (int variable : vars_cons_canonical[c])
+			{
+				if (variable == element)
+				{
+					vars_cons[c].push_back(new_index);
+				}
+			}
 		}
+		new_index += 1;
 	}
 
+	// Update objective
 	for (int p = 0; p < n_objs; ++p)
 	{
 		for (int j = 0; j < n_vars; ++j)
