@@ -17,6 +17,7 @@ seed:
   opt: 7
   smac: 777
 
+smac_all:
 smac_all_dir: kp_7_3_60_0
 
 bdd:

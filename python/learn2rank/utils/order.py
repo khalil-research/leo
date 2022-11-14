@@ -310,10 +310,16 @@ def get_static_orders(data, order_type=None):
 
 
 def get_smac_path(cfg, resource_path, pid):
-    path = resource_path / 'smac_output' / cfg.problem.name / cfg.problem.size / cfg.split
+    path = resource_path / 'smac_output' / cfg.problem.name
+    if cfg.smac_dir is None:
+        path = path / cfg.problem.size / cfg.split
+    else:
+        path = path / cfg.smac_dir / cfg.problem.size / cfg.split
+
     if cfg.problem.name == 'knapsack':
         path = path / f'kp_{cfg.seed.opt}_{cfg.problem.size}_{pid}' / f'run_{cfg.seed.smac}'
-
+    elif cfg.problem.name == 'setcovering' or cfg.problem.name == 'setpacking':
+        path = path / f'bp_{cfg.seed.opt}_{cfg.problem.size}_{pid}' / f'run_{cfg.seed.smac}'
     else:
         raise ValueError('Invalid problem type!')
 
@@ -321,7 +327,7 @@ def get_smac_path(cfg, resource_path, pid):
 
 
 def get_smac_all_path(cfg, resource_path):
-    path = resource_path / 'smac_all_output' / cfg.problem.name / cfg.problem.size / cfg.split
+    path = resource_path / 'smac_all_output' / cfg.problem.name / cfg.problem.size
     if cfg.problem.name == 'knapsack':
         path = path / cfg.smac_all_dir / f'run_{cfg.seed.smac}'
 
@@ -336,6 +342,10 @@ def get_baseline_order(data, cfg, resource_path, pid):
     if cfg.order_type == 'min_weight':
         order = get_static_orders(data, order_type='min_weight')
         orders.append(order['min_weight'])
+
+    if cfg.order_type == 'max_weight':
+        order = get_static_orders(data, order_type='max_weight')
+        orders.append(order['max_weight'])
 
     elif cfg.order_type == 'canonical':
         orders.append(list(range(len(data['weight']))))

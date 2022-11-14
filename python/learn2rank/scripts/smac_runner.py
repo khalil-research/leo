@@ -9,30 +9,53 @@ from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
 
-def get_knapsack_config_space():
+def get_knapsack_config_space(optimized=True):
     # Define knapsack configuration space
     cs = ConfigurationSpace()
 
-    weight = UniformFloatHyperparameter(
-        "weight", -1, 1, default_value=-1)
+    if optimized:
+        """Values obtained by running smac on 1000 instances of size 3_60 for 12 hours"""
+        weight = UniformFloatHyperparameter(
+            "weight", -1, 1, default_value=0.18407294515644979)
 
-    avg_value = UniformFloatHyperparameter(
-        "avg_value", -1, 1, default_value=0)
+        avg_value = UniformFloatHyperparameter(
+            "avg_value", -1, 1, default_value=-0.849306708200642)
 
-    max_value = UniformFloatHyperparameter(
-        "max_value", -1, 1, default_value=0)
+        max_value = UniformFloatHyperparameter(
+            "max_value", -1, 1, default_value=-0.10555914003952549)
 
-    min_value = UniformFloatHyperparameter(
-        "min_value", -1, 1, default_value=0)
+        min_value = UniformFloatHyperparameter(
+            "min_value", -1, 1, default_value=0.4366275788209819)
 
-    avg_value_by_weight = UniformFloatHyperparameter(
-        "avg_value_by_weight", -1, 1, default_value=0)
+        avg_value_by_weight = UniformFloatHyperparameter(
+            "avg_value_by_weight", -1, 1, default_value=0.9643321570505012)
 
-    max_value_by_weight = UniformFloatHyperparameter(
-        "max_value_by_weight", -1, 1, default_value=0)
+        max_value_by_weight = UniformFloatHyperparameter(
+            "max_value_by_weight", -1, 1, default_value=-0.7850141125118346)
 
-    min_value_by_weight = UniformFloatHyperparameter(
-        "min_value_by_weight", -1, 1, default_value=0)
+        min_value_by_weight = UniformFloatHyperparameter(
+            "min_value_by_weight", -1, 1, default_value=0.9621416689765441)
+    else:
+        weight = UniformFloatHyperparameter(
+            "weight", -1, 1, default_value=-1)
+
+        avg_value = UniformFloatHyperparameter(
+            "avg_value", -1, 1, default_value=0)
+
+        max_value = UniformFloatHyperparameter(
+            "max_value", -1, 1, default_value=0)
+
+        min_value = UniformFloatHyperparameter(
+            "min_value", -1, 1, default_value=0)
+
+        avg_value_by_weight = UniformFloatHyperparameter(
+            "avg_value_by_weight", -1, 1, default_value=0)
+
+        max_value_by_weight = UniformFloatHyperparameter(
+            "max_value_by_weight", -1, 1, default_value=0)
+
+        min_value_by_weight = UniformFloatHyperparameter(
+            "min_value_by_weight", -1, 1, default_value=0)
 
     cs.add_hyperparameters([weight,
                             avg_value,
@@ -86,7 +109,7 @@ def get_setcovering_config_space():
     cs = ConfigurationSpace()
 
     weight = UniformFloatHyperparameter(
-        "weight", -1, 1, default_value=0)
+        "weight", -1, 1, default_value=1)
 
     # weight_Av_mean = UniformFloatHyperparameter(
     #     "weight", -1, 1, default_value=-1)
