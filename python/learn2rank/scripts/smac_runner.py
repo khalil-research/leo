@@ -8,54 +8,51 @@ from smac.configspace import ConfigurationSpace
 from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
+cs = ConfigurationSpace()
+weight = UniformFloatHyperparameter("weight", -1, 1)
+avg_value = UniformFloatHyperparameter("avg_value", -1, 1)
+max_value = UniformFloatHyperparameter("max_value", -1, 1)
+min_value = UniformFloatHyperparameter("min_value", -1, 1)
+avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -1, 1)
+max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -1, 1)
+min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -1, 1)
 
-def get_knapsack_config_space(optimized=True):
+
+## Additional parameters for binproblem
+# weight_Av_mean = UniformFloatHyperparameter(
+#     "weight", -1, 1, default_value=-1)
+# dot = UniformFloatHyperparameter(
+#     "min_value_by_weight", -1, 1, default_value=0)
+
+def get_knapsack_config_space(incumbent='smac_optimized'):
     # Define knapsack configuration space
-    cs = ConfigurationSpace()
-
-    if optimized:
+    if incumbent == 'smac_optimized':
         """Values obtained by running smac on 1000 instances of size 3_60 for 12 hours"""
-        weight = UniformFloatHyperparameter(
-            "weight", -1, 1, default_value=0.18407294515644979)
-
-        avg_value = UniformFloatHyperparameter(
-            "avg_value", -1, 1, default_value=-0.849306708200642)
-
-        max_value = UniformFloatHyperparameter(
-            "max_value", -1, 1, default_value=-0.10555914003952549)
-
-        min_value = UniformFloatHyperparameter(
-            "min_value", -1, 1, default_value=0.4366275788209819)
-
-        avg_value_by_weight = UniformFloatHyperparameter(
-            "avg_value_by_weight", -1, 1, default_value=0.9643321570505012)
-
-        max_value_by_weight = UniformFloatHyperparameter(
-            "max_value_by_weight", -1, 1, default_value=-0.7850141125118346)
-
-        min_value_by_weight = UniformFloatHyperparameter(
-            "min_value_by_weight", -1, 1, default_value=0.9621416689765441)
+        weight.default_value = 0.18407294515644979
+        avg_value.default_value = -0.849306708200642
+        max_value.default_value = -0.10555914003952549
+        min_value.default_value = 0.4366275788209819
+        avg_value_by_weight.default_value = 0.9643321570505012
+        max_value_by_weight.default_value = -0.7850141125118346
+        min_value_by_weight.default_value = 0.9621416689765441
+    elif incumbent == 'min_weight':
+        weight.default_value = -1
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
+    elif incumbent == 'canonical':
+        weight.default_value = 0
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
     else:
-        weight = UniformFloatHyperparameter(
-            "weight", -1, 1, default_value=-1)
-
-        avg_value = UniformFloatHyperparameter(
-            "avg_value", -1, 1, default_value=0)
-
-        max_value = UniformFloatHyperparameter(
-            "max_value", -1, 1, default_value=0)
-
-        min_value = UniformFloatHyperparameter(
-            "min_value", -1, 1, default_value=0)
-
-        avg_value_by_weight = UniformFloatHyperparameter(
-            "avg_value_by_weight", -1, 1, default_value=0)
-
-        max_value_by_weight = UniformFloatHyperparameter(
-            "max_value_by_weight", -1, 1, default_value=0)
-
-        min_value_by_weight = UniformFloatHyperparameter(
-            "min_value_by_weight", -1, 1, default_value=0)
+        raise ValueError
 
     cs.add_hyperparameters([weight,
                             avg_value,
@@ -68,30 +65,26 @@ def get_knapsack_config_space(optimized=True):
     return cs
 
 
-def get_setpacking_config_space():
-    # Define knapsack configuration space
-    cs = ConfigurationSpace()
-
-    weight = UniformFloatHyperparameter(
-        "weight", -1, 1, default_value=0)
-
-    avg_value = UniformFloatHyperparameter(
-        "avg_value", -1, 1, default_value=0)
-
-    max_value = UniformFloatHyperparameter(
-        "max_value", -1, 1, default_value=0)
-
-    min_value = UniformFloatHyperparameter(
-        "min_value", -1, 1, default_value=0)
-
-    avg_value_by_weight = UniformFloatHyperparameter(
-        "avg_value_by_weight", -1, 1, default_value=0)
-
-    max_value_by_weight = UniformFloatHyperparameter(
-        "max_value_by_weight", -1, 1, default_value=0)
-
-    min_value_by_weight = UniformFloatHyperparameter(
-        "min_value_by_weight", -1, 1, default_value=0)
+def get_setpacking_config_space(incumbent='min_weight'):
+    # Define setpacking configuration space
+    if incumbent == 'min_weight':
+        weight.default_value = -1
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
+    elif incumbent == 'canonical':
+        weight.default_value = 0
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
+    else:
+        raise ValueError
 
     cs.add_hyperparameters([weight,
                             avg_value,
@@ -104,36 +97,27 @@ def get_setpacking_config_space():
     return cs
 
 
-def get_setcovering_config_space():
+def get_setcovering_config_space(incumbent='max_weight'):
     # Define binproblem configuration space
     cs = ConfigurationSpace()
-
-    weight = UniformFloatHyperparameter(
-        "weight", -1, 1, default_value=1)
-
-    # weight_Av_mean = UniformFloatHyperparameter(
-    #     "weight", -1, 1, default_value=-1)
-
-    avg_value = UniformFloatHyperparameter(
-        "avg_value", -1, 1, default_value=0)
-
-    max_value = UniformFloatHyperparameter(
-        "max_value", -1, 1, default_value=0)
-
-    min_value = UniformFloatHyperparameter(
-        "min_value", -1, 1, default_value=0)
-
-    avg_value_by_weight = UniformFloatHyperparameter(
-        "avg_value_by_weight", -1, 1, default_value=0)
-
-    max_value_by_weight = UniformFloatHyperparameter(
-        "max_value_by_weight", -1, 1, default_value=0)
-
-    min_value_by_weight = UniformFloatHyperparameter(
-        "min_value_by_weight", -1, 1, default_value=0)
-
-    # dot = UniformFloatHyperparameter(
-    #     "min_value_by_weight", -1, 1, default_value=0)
+    if incumbent == 'max_weight':
+        weight.default_value = 1
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
+    elif incumbent == 'canonical':
+        weight.default_value = 0
+        avg_value.default_value = 0
+        max_value.default_value = 0
+        min_value.default_value = 0
+        avg_value_by_weight.default_value = 0
+        max_value_by_weight.default_value = 0
+        min_value_by_weight.default_value = 0
+    else:
+        raise ValueError
 
     cs.add_hyperparameters([weight,
                             avg_value,
@@ -147,9 +131,9 @@ def get_setcovering_config_space():
 
 
 config_space = {
-    'knapsack': get_knapsack_config_space(),
-    'setcovering': get_setcovering_config_space(),
-    'setpacking': get_setpacking_config_space()
+    'knapsack': get_knapsack_config_space,
+    'setcovering': get_setcovering_config_space,
+    'setpacking': get_setpacking_config_space
 }
 
 
@@ -199,7 +183,7 @@ def main(cfg):
     os.environ['preprocess'] = str(cfg.problem.preprocess)
 
     # Create configuration space
-    cs = config_space.get(cfg.problem.name)
+    cs = config_space.get(cfg.problem.name)(cfg.init_incumbent)
     assert cs is not None
     # cs = get_config_space(cfg.problem.name)
 

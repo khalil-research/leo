@@ -16,6 +16,8 @@ num_instances: 1
 split: train
 restore_run: 0
 
+init_incumbent: canonical
+
 case: 0
 # Customize output directory creation
 hydra:
