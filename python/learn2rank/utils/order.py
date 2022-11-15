@@ -328,11 +328,7 @@ def get_smac_path(cfg, resource_path, pid):
 
 def get_smac_all_path(cfg, resource_path):
     path = resource_path / 'smac_all_output' / cfg.problem.name / cfg.problem.size
-    if cfg.problem.name == 'knapsack':
-        path = path / cfg.smac_all_dir / f'run_{cfg.seed.smac}'
-
-    else:
-        raise ValueError('Invalid problem type!')
+    path = path / cfg.smac_all_dir / f'run_{cfg.seed.smac}'
 
     return path
 
