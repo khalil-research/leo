@@ -48,10 +48,10 @@ def create_knapsack_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            _folder = _folder if _folder is None else f"{_folder}/kp_7_{s[0]}_{s[1]}_0"
+                            folder = _folder if _folder is None else f"{_folder}/kp_7_{s[0]}_{s[1]}_0"
                             table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
-                                                           dir_path=_folder)
+                                                           dir_path=folder)
                             case += 1
 
     return table_str
@@ -85,10 +85,10 @@ def create_setpacking_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            _folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
                             table_str += create_table_line(case=case, problem='setpacking', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
-                                                           dir_path=_folder)
+                                                           dir_path=folder)
                             case += 1
 
     return table_str
@@ -122,10 +122,10 @@ def create_setcovering_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            _folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
                             table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
-                                                           dir_path=_folder)
+                                                           dir_path=folder)
                             case += 1
 
     return table_str

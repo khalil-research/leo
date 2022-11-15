@@ -2,7 +2,7 @@ case = 1
 
 
 def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='train', start_idx=0, n_instances=1,
-                      cutoff=60, wallclock=300):
+                      cutoff=60, wallclock=300, init_incumbent='canonical'):
     return f'{case} python -m learn2rank.scripts.smac_runner ' \
            f'problem={problem} ' \
            f'problem.n_objs={n_objs} ' \
@@ -12,6 +12,7 @@ def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='tr
            f'num_instances={n_instances} ' \
            f'cutoff_time={cutoff} ' \
            f'wallclock_limit={wallclock} ' \
+           f'init_incumbent={init_incumbent} ' \
            f'machine=cc ' \
            f'case={case}\n'
 
@@ -35,7 +36,7 @@ def create_knapsack_table(splits=None):
                 for si in range(start, end, n_instances):
                     table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1], split=key,
                                                    start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock)
+                                                   wallclock=wallclock, init_incumbent='smac_optimized')
                     case += 1
 
     return table_str
@@ -45,12 +46,15 @@ def create_setpacking_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 100), (3, 125), (3, 150),
-            (4, 100), (4, 125), (4, 150),
-            (5, 100), (5, 125)]
-    cutoff = 60
-    wallclock = 300
-    n_instances = 25
+    # size = [(3, 100), (3, 125), (3, 150),
+    #         (4, 100), (4, 125), (4, 150),
+    #         (5, 100), (5, 125)]
+    size = [(3, 100),
+            (4, 100),
+            (5, 100)]
+    cutoff = 200
+    wallclock = 43200
+    n_instances = 1000
 
     table_str = ''
     for split in splits:
@@ -60,7 +64,7 @@ def create_setpacking_table(splits=None):
                 for si in range(start, end, n_instances):
                     table_str += create_table_line(case=case, problem='setpacking', n_objs=s[0], n_vars=s[1], split=key,
                                                    start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock)
+                                                   wallclock=wallclock, init_incumbent='min_weight')
                     case += 1
 
     return table_str
@@ -70,12 +74,16 @@ def create_setcovering_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 100), (3, 125),
-            (4, 100), (4, 125),
+    # size = [(3, 100), (3, 125),
+    #         (4, 100), (4, 125),
+    #         (5, 100)]
+    size = [(3, 100),
+            (4, 100),
             (5, 100)]
-    cutoff = 60
-    wallclock = 300
-    n_instances = 25
+
+    cutoff = 200
+    wallclock = 43200
+    n_instances = 1000
 
     table_str = ''
     for split in splits:
@@ -84,18 +92,17 @@ def create_setcovering_table(splits=None):
             for s in size:
                 for si in range(start, end, n_instances):
                     table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
-                                                   split=key,
-                                                   start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock)
+                                                   split=key, start_idx=si, n_instances=n_instances, cutoff=cutoff,
+                                                   wallclock=wallclock, init_incumbent='max_weight')
                     case += 1
 
     return table_str
 
 
 def main():
-    gen_knapsack = True
-    gen_setpacking = False
-    gen_setcovering = False
+    gen_knapsack = False
+    gen_setpacking = True
+    gen_setcovering = True
 
     fp = open('table.dat', 'w')
     splits = (('train', True, 0, 1000),
@@ -104,8 +111,8 @@ def main():
 
     table_str = ''
     table_str = table_str + create_knapsack_table(splits=splits) if gen_knapsack else table_str
-    table_str = table_str + create_setpacking_table(splits=splits) if gen_setpacking else table_str
     table_str = table_str + create_setcovering_table(splits=splits) if gen_setcovering else table_str
+    table_str = table_str + create_setpacking_table(splits=splits) if gen_setpacking else table_str
 
     fp.write(table_str)
 
