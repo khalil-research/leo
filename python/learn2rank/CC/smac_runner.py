@@ -1,4 +1,24 @@
+from collections import namedtuple
+
+Config = namedtuple('Config', ['cutoff_time', 'wallclock_limit', 'n_instances'])
+
 case = 1
+
+# In hours
+HOUR2SEC = 60 * 60
+JOB_TIME = 3 * HOUR2SEC
+
+# Cutoff presets
+BASE_CUTOFF = 60
+BASE_CUTOFF_2 = 2 * BASE_CUTOFF
+BASE_CUTOFF_3 = 3 * BASE_CUTOFF
+BASE_CUTOFF_4 = 4 * BASE_CUTOFF
+
+# Wallclock presets
+BASE_WALLCLOCK = 5 * 60
+BASE_WALLCLOCK_2 = 2 * BASE_WALLCLOCK
+BASE_WALLCLOCK_3 = 3 * BASE_WALLCLOCK
+BASE_WALLCLOCK_4 = 4 * BASE_WALLCLOCK
 
 
 def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='train', start_idx=0, n_instances=1,
@@ -21,22 +41,38 @@ def create_knapsack_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 60), (3, 50), (3, 40), (3, 30), (3, 20),
-            (4, 50), (4, 40), (4, 30), (4, 20),
-            (5, 40), (5, 30), (5, 20)]
-    cutoff = 60
-    wallclock = 300
-    n_instances = 25
+    # size = [(3, 60), (3, 50), (3, 40), (3, 30), (3, 20),
+    #         (4, 50), (4, 40), (4, 30), (4, 20),
+    #         (5, 40), (5, 30), (5, 20)]
+    configs = {
+        '40_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '50_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '60_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '40_6': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
+        '70_3': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
+        '40_7': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1),
+        '80_3': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
+    }
+
+    size = [(3, 80)]
+
+    # cutoff = 4 * 60
+    # wallclock = 4 * 5 * 60
+    # n_instances = 8
 
     table_str = ''
     for split in splits:
         key, active, start, end = split
         if active:
             for s in size:
-                for si in range(start, end, n_instances):
+                _cfg = configs[f'{s[1]}_{s[0]}']
+
+                for si in range(start, end, _cfg.n_instances):
+                    _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
                     table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1], split=key,
-                                                   start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock, init_incumbent='smac_optimized')
+                                                   start_idx=si, n_instances=_n_instances,
+                                                   cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
+                                                   init_incumbent='min_weight')
                     case += 1
 
     return table_str
@@ -49,22 +85,30 @@ def create_setpacking_table(splits=None):
     # size = [(3, 100), (3, 125), (3, 150),
     #         (4, 100), (4, 125), (4, 150),
     #         (5, 100), (5, 125)]
-    size = [(3, 100),
-            (4, 100),
-            (5, 100)]
-    cutoff = 200
-    wallclock = 43200
-    n_instances = 1000
+    configs = {
+        '150_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '150_4': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
+        '150_5': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
+    }
+
+    size = [(5, 150)]
+    # cutoff = 4 * 60
+    # wallclock = 4 * 5 * 60
+    # n_instances = 8
 
     table_str = ''
     for split in splits:
         key, active, start, end = split
         if active:
             for s in size:
-                for si in range(start, end, n_instances):
+                _cfg = configs[f'{s[1]}_{s[0]}']
+
+                for si in range(start, end, _cfg.n_instances):
+                    _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
                     table_str += create_table_line(case=case, problem='setpacking', n_objs=s[0], n_vars=s[1], split=key,
-                                                   start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock, init_incumbent='min_weight')
+                                                   start_idx=si, n_instances=_n_instances,
+                                                   cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
+                                                   init_incumbent='canonical')
                     case += 1
 
     return table_str
@@ -74,39 +118,52 @@ def create_setcovering_table(splits=None):
     assert splits is not None
 
     global case
+
+    configs = {
+        '100_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_6': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_7': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '150_3': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 1),
+        '150_4': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
+    }
+
     # size = [(3, 100), (3, 125),
     #         (4, 100), (4, 125),
     #         (5, 100)]
-    size = [(3, 100),
-            (4, 100),
-            (5, 100)]
+    size = [(4, 150)]
 
-    cutoff = 200
-    wallclock = 43200
-    n_instances = 1000
+    # cutoff = 4 * 60
+    # wallclock = 4 * 5 * 60
+    # n_instances = 8
 
     table_str = ''
     for split in splits:
         key, active, start, end = split
         if active:
             for s in size:
-                for si in range(start, end, n_instances):
+                _cfg = configs[f'{s[1]}_{s[0]}']
+
+                for si in range(start, end, _cfg.n_instances):
+                    _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
                     table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
-                                                   split=key, start_idx=si, n_instances=n_instances, cutoff=cutoff,
-                                                   wallclock=wallclock, init_incumbent='max_weight')
+                                                   split=key, start_idx=si, n_instances=_n_instances,
+                                                   cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
+                                                   init_incumbent='max_weight')
                     case += 1
 
     return table_str
 
 
 def main():
-    gen_knapsack = False
+    gen_knapsack = True
     gen_setpacking = True
     gen_setcovering = True
 
     fp = open('table.dat', 'w')
     splits = (('train', True, 0, 1000),
-              ('val', True, 1000, 1100),
+              ('val', False, 1000, 1100),
               ('test', False, 1100, 1200))
 
     table_str = ''
