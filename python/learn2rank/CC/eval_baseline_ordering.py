@@ -27,17 +27,22 @@ def create_knapsack_table(splits=None):
     assert splits is not None
 
     global case
-    size = [(3, 60), (3, 50), (3, 40), (3, 30), (3, 20),
-            (4, 50), (4, 40), (4, 30), (4, 20),
-            (5, 40), (5, 30), (5, 20)]
-    order_type = ['min_weight', 'canonical']
+    # size = [(3, 60), (3, 70), (3, 80),
+    #         (4, 50),
+    #         (5, 40),
+    #         (6, 40),
+    #         (7, 40)]
+    size = [(3, 60), (4, 50), (5, 40)]
+
+    # min_weight, canonical, rand,
+    order_type = ['min_weight', 'canonical', 'smac', 'smac_all']
     n_items = 50
     folders = {
         'canonical': [None],
         'min_weight': [None],
         'max_weight': [None],
-        'smac': [None],
-        'smac_all': ['1000_12h_iinc_max_weight', '1000_12h_iinc_canonical']
+        'smac': ['iinc_min_weight'],
+        'smac_all': ['1000_12h_iinc_min_weight_777']
     }
 
     table_str = ''
@@ -48,7 +53,8 @@ def create_knapsack_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            folder = _folder if _folder is None else f"{_folder}/kp_7_{s[0]}_{s[1]}_0"
+                            # folder = _folder if _folder is None else f"{_folder}/kp_7_{s[0]}_{s[1]}_0"
+                            folder = _folder
                             table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
                                                            dir_path=folder)
@@ -67,8 +73,8 @@ def create_setpacking_table(splits=None):
     size = [(3, 100),
             (4, 100),
             (5, 100)]
-    order_type = ['smac_all']
-    n_items = 50
+    order_type = ['canonical', 'min_weight', 'max_weight']
+    n_items = 100
     folders = {
         'canonical': [None],
         'min_weight': [None],
@@ -85,7 +91,8 @@ def create_setpacking_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            # folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            folder = _folder
                             table_str += create_table_line(case=case, problem='setpacking', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
                                                            dir_path=folder)
@@ -104,8 +111,8 @@ def create_setcovering_table(splits=None):
     size = [(3, 100),
             (4, 100),
             (5, 100)]
-    order_type = ['smac_all']
-    n_items = 50
+    order_type = ['max_weight', 'canonical', 'min_weight']
+    n_items = 100
     folders = {
         'canonical': [None],
         'min_weight': [None],
@@ -122,7 +129,8 @@ def create_setcovering_table(splits=None):
                 if active:
                     for s in size:
                         for si in range(start, end, n_items):
-                            folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            # folder = _folder if _folder is None else f"{_folder}/bp_7_{s[1]}_{s[0]}_0"
+                            folder = _folder
                             table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
                                                            dir_path=folder)
@@ -132,9 +140,9 @@ def create_setcovering_table(splits=None):
 
 
 def main():
-    gen_knapsack = False
-    gen_setpacking = True
-    gen_setcovering = True
+    gen_knapsack = True
+    gen_setpacking = False
+    gen_setcovering = False
 
     fp = open('table.dat', 'w')
     splits = (('train', True, 0, 1000),
