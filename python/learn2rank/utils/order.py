@@ -121,8 +121,9 @@ def get_variable_score_from_weights(data, property_weights):
     value_min = np.min(value, axis=0)
 
     # Normalized variable score computation
-    scores, _norm_scores = np.zeros(n_items), np.zeros(n_items)
+    scores = np.zeros(n_items)
     for fk, fv in property_weights.items():
+        _norm_scores = np.zeros(n_items)
         if fk == 'weight':
             _norm_scores = weight / weight.sum()
 
@@ -309,10 +310,32 @@ def get_static_orders(data, order_type=None):
 
 
 def get_smac_path(cfg, resource_path, pid):
-    path = resource_path / 'smac_output' / cfg.problem.name / cfg.problem.size / cfg.split
+    path = resource_path / 'smac_output' / cfg.problem.name
+    if cfg.smac_dir is None:
+        path = path / cfg.problem.size / cfg.split
+    else:
+        path = path / cfg.smac_dir / cfg.problem.size / cfg.split
+
     if cfg.problem.name == 'knapsack':
         path = path / f'kp_{cfg.seed.opt}_{cfg.problem.size}_{pid}' / f'run_{cfg.seed.smac}'
+    elif cfg.problem.name == 'setcovering' or cfg.problem.name == 'setpacking':
+        path = path / f'bp_{cfg.seed.opt}_{cfg.problem.size}_{pid}' / f'run_{cfg.seed.smac}'
+    else:
+        raise ValueError('Invalid problem type!')
 
+    return path
+
+
+def get_smac_all_path(cfg, resource_path):
+    path = resource_path / 'smac_all_output' / cfg.problem.name
+
+    assert cfg.smac_all_dir is not None
+    path = path / cfg.smac_all_dir / cfg.problem.size
+
+    if cfg.problem.name == 'knapsack':
+        path = path / f'kp_{cfg.seed.opt}_{cfg.problem.size}_0' / f'run_{cfg.seed.smac}'
+    elif cfg.problem.name == 'setcovering' or cfg.problem.name == 'setpacking':
+        path = path / f'bp_{cfg.seed.opt}_{cfg.problem.size}_0' / f'run_{cfg.seed.smac}'
     else:
         raise ValueError('Invalid problem type!')
 
@@ -320,17 +343,19 @@ def get_smac_path(cfg, resource_path, pid):
 
 
 def get_baseline_order(data, cfg, resource_path, pid):
-    order_type = cfg.order_type
-
     orders = []
-    if order_type == 'min_weight':
+    if cfg.order_type == 'min_weight':
         order = get_static_orders(data, order_type='min_weight')
         orders.append(order['min_weight'])
 
-    elif order_type == 'canonical':
+    if cfg.order_type == 'max_weight':
+        order = get_static_orders(data, order_type='max_weight')
+        orders.append(order['max_weight'])
+
+    elif cfg.order_type == 'canonical':
         orders.append(list(range(len(data['weight']))))
 
-    elif order_type == 'rand':
+    elif cfg.order_type == 'rand':
         seeds = [13, 444, 1212, 1003, 7517]
         for s in seeds:
             random_order = list(range(len(data['weight'])))
@@ -338,8 +363,19 @@ def get_baseline_order(data, cfg, resource_path, pid):
             random.shuffle(random_order)
             orders.append(random_order)
 
-    elif order_type == 'smac':
+    elif cfg.order_type == 'smac':
         run_path = get_smac_path(cfg, resource_path, pid)
+        traj_path = run_path / 'traj.json'
+        if traj_path.exists():
+            # Get property weight
+            traj = traj_path.open('r')
+            lines = traj.readlines()
+            property_weight = json.loads(lines[-1])
+            order, _ = get_variable_order_from_weights(data, property_weight['incumbent'])
+            orders.append(order)
+
+    elif cfg.order_type == 'smac_all':
+        run_path = get_smac_all_path(cfg, resource_path)
         traj_path = run_path / 'traj.json'
         if traj_path.exists():
             # Get property weight

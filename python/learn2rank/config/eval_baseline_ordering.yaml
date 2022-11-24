@@ -13,6 +13,13 @@ split: train
 # min_weight: Ascending order of weight
 order_type: canonical
 
+seed:
+  opt: 7
+  smac: 777
+
+smac_dir:
+smac_all_dir: kp_7_3_60_0
+
 bdd:
   timelimit: 300
   memlimit:
