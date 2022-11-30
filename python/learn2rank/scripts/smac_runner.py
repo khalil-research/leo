@@ -16,30 +16,30 @@ min_value = UniformFloatHyperparameter("min_value", -1, 1)
 avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -1, 1)
 max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -1, 1)
 min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -1, 1)
+label = UniformFloatHyperparameter("label", -1, 1)
 
 
 def set_property_weights(init_incumbent, problem=None, size=None):
     incb = init_incumbent.split('/')
+    # if incb[0] == 'smac_optimized':
+    #     assert problem and size and incb[1]
+    #
+    #     from learn2rank.prop_wt import optimized as prop_wt_opt
+    #
+    #     assert problem in prop_wt_opt
+    #     if size not in prop_wt_opt[problem]:
+    #         print('Size not found! Switching to defaults')
+    #         if problem == 'knapsack':
+    #             size = '3_60'
+    #
+    #         elif problem == 'setpacking' or problem == 'setcovering':
+    #             size = '100_3'
+    #
+    #     pwts = prop_wt_opt[problem][size][incb[1]]
 
-    if incb[0] == 'smac_optimized':
-        assert problem and size and incb[1]
-
-        from learn2rank.prop_wt import optimized as prop_wt_opt
-
-        assert problem in prop_wt_opt
-        if size not in prop_wt_opt[problem]:
-            print('Size not found! Switching to defaults')
-            if problem == 'knapsack':
-                size = '3_60'
-
-            elif problem == 'setpacking' or problem == 'setcovering':
-                size = '100_3'
-
-        pwts = prop_wt_opt[problem][size][incb[1]]
-
-    else:
-        from learn2rank.prop_wt import static as prop_wt_static
-        pwts = prop_wt_static[incb[0]]
+    # else:
+    from learn2rank.prop_wt import static as prop_wt_static
+    pwts = prop_wt_static[incb[0]]
 
     weight.default_value = pwts['weight']
     avg_value.default_value = pwts['avg_value']
@@ -48,14 +48,19 @@ def set_property_weights(init_incumbent, problem=None, size=None):
     avg_value_by_weight.default_value = pwts['avg_value_by_weight']
     max_value_by_weight.default_value = pwts['max_value_by_weight']
     min_value_by_weight.default_value = pwts['min_value_by_weight']
+    label.default_value = pwts['label']
 
-    cs.add_hyperparameters([weight,
-                            avg_value,
-                            max_value,
-                            min_value,
-                            avg_value_by_weight,
-                            max_value_by_weight,
-                            min_value_by_weight])
+    props_lst = [weight,
+                 avg_value,
+                 max_value,
+                 min_value,
+                 avg_value_by_weight,
+                 max_value_by_weight,
+                 min_value_by_weight]
+    if problem == 'setcovering':
+        props_lst.append(label)
+
+    cs.add_hyperparameters(props_lst)
 
 
 def get_logger(verbosity):
