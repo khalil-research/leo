@@ -17,6 +17,11 @@ split: train
 restore_run: 0
 
 init_incumbent: canonical
+# Helps to set the property value range [-width, width] for the
+# setcovering problem
+width:
+  default: 1
+  label: 0.9
 
 case: 0
 # Customize output directory creation

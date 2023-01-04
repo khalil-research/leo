@@ -8,38 +8,33 @@ from smac.configspace import ConfigurationSpace
 from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
-cs = ConfigurationSpace()
-weight = UniformFloatHyperparameter("weight", -1, 1)
-avg_value = UniformFloatHyperparameter("avg_value", -1, 1)
-max_value = UniformFloatHyperparameter("max_value", -1, 1)
-min_value = UniformFloatHyperparameter("min_value", -1, 1)
-avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -1, 1)
-max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -1, 1)
-min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -1, 1)
-label = UniformFloatHyperparameter("label", -1, 1)
 
+def get_config_space(init_incumbent, problem=None, size=None, width=None):
+    cs = ConfigurationSpace()
 
-def set_property_weights(init_incumbent, problem=None, size=None):
+    # Hyperparams
+    weight = UniformFloatHyperparameter("weight", -width.default, width.default),
+    avg_value = UniformFloatHyperparameter("avg_value", -width.default, width.default),
+    max_value = UniformFloatHyperparameter("max_value", -width.default, width.default),
+    min_value = UniformFloatHyperparameter("min_value", -width.default, width.default),
+    avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -width.default, width.default),
+    max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -width.default, width.default),
+    min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -width.default, width.default),
+
+    if problem == 'setcovering' and width.label < 1:
+        label = UniformFloatHyperparameter("label", 1 - width.label, 1)
+    elif problem == 'setcovering' and width.label == 1:
+        label = UniformFloatHyperparameter("label", -1, 1)
+
+    # Fetch incumbent config and initialize hyperparams
     incb = init_incumbent.split('/')
-    # if incb[0] == 'smac_optimized':
-    #     assert problem and size and incb[1]
-    #
-    #     from learn2rank.prop_wt import optimized as prop_wt_opt
-    #
-    #     assert problem in prop_wt_opt
-    #     if size not in prop_wt_opt[problem]:
-    #         print('Size not found! Switching to defaults')
-    #         if problem == 'knapsack':
-    #             size = '3_60'
-    #
-    #         elif problem == 'setpacking' or problem == 'setcovering':
-    #             size = '100_3'
-    #
-    #     pwts = prop_wt_opt[problem][size][incb[1]]
-
-    # else:
-    from learn2rank.prop_wt import static as prop_wt_static
-    pwts = prop_wt_static[incb[0]]
+    if incb[0] == 'smac_optimized':
+        from learn2rank.prop_wt import optimized as prop_wt_opt
+        assert problem in prop_wt_opt and size in prop_wt_opt[problem]
+        pwts = prop_wt_opt[problem][size][incb[1]]
+    else:
+        from learn2rank.prop_wt import static as prop_wt_static
+        pwts = prop_wt_static[incb[0]]
 
     weight.default_value = pwts['weight']
     avg_value.default_value = pwts['avg_value']
@@ -48,19 +43,16 @@ def set_property_weights(init_incumbent, problem=None, size=None):
     avg_value_by_weight.default_value = pwts['avg_value_by_weight']
     max_value_by_weight.default_value = pwts['max_value_by_weight']
     min_value_by_weight.default_value = pwts['min_value_by_weight']
-    label.default_value = pwts['label']
-
-    props_lst = [weight,
-                 avg_value,
-                 max_value,
-                 min_value,
-                 avg_value_by_weight,
-                 max_value_by_weight,
-                 min_value_by_weight]
+    props_lst = [weight, avg_value, max_value, min_value, avg_value_by_weight,
+                 max_value_by_weight, min_value_by_weight]
     if problem == 'setcovering':
+        label.default_value = pwts['label']
         props_lst.append(label)
 
+    # Add hyperparams to config store
     cs.add_hyperparameters(props_lst)
+
+    return cs
 
 
 def get_logger(verbosity):
@@ -109,7 +101,7 @@ def main(cfg):
     os.environ['preprocess'] = str(cfg.problem.preprocess)
 
     # Create configuration space
-    set_property_weights(cfg.init_incumbent, cfg.problem.name, cfg.problem.size)
+    cs = get_config_space(cfg.init_incumbent, problem=cfg.problem.name, size=cfg.problem.size, width=cfg.width)
 
     # Define scenario
     base_scenario_dict = {
