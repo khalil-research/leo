@@ -20,10 +20,11 @@ def limit_virtual_memory():
 
 
 def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=None,
-                    time_limit=60, get_runtime=False, mem_limit=None):
+                    bin_name='multiobj', time_limit=60, get_runtime=False, mem_limit=16,
+                    mask_mem_out=False):
     # Prepare the call string to bin_path
     bin_path = os.environ.get('bin_path') if bin_path is None else bin_path
-    binary = bin_path + '/multiobj'
+    binary = f'{bin_path}/{bin_name}'
     prob_id = os.environ.get('prob_id') if prob_id is None else prob_id
     preprocess = os.environ.get('preprocess') if preprocess is None else preprocess
 
@@ -36,11 +37,8 @@ def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=Non
     log.info(f'Executing: {cmd}')
     log.info(f"Memory limit: {os.environ.get('MAX_VIRTUAL_MEMORY')}")
     try:
-        if mem_limit is None:
-            # Do not set memory limit
-            io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
-        else:
-            io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE, preexec_fn=limit_virtual_memory)
+        preexec_fn = None if mem_limit is None else limit_virtual_memory
+        io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE, preexec_fn=preexec_fn)
 
         # Call target algorithm with cutoff time
         (stdout_, stderr_) = io.communicate(timeout=time_limit)
@@ -63,9 +61,17 @@ def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=Non
             # runtime limit or memory limit. In either of the two cases, we will not be
             # allowed to run more instances. Hence, we stop the parameter optimization
             # process using the ABORT signal
-            status = "ABORT"
-            log.info("ABORT")
-            result = -1 if get_runtime else [-1] * 11
+            if mask_mem_out:
+                # Mask the memory out signal as timeout. To be used for set covering instances
+                log.info("MEMOUT/MASKED")
+
+                status = "TIMEOUT"
+                result = time_limit if get_runtime else [time_limit] * 11
+            else:
+                log.info("MEMOUT/ABORT")
+
+                status = "ABORT"
+                result = -1 if get_runtime else [-1] * 11
 
     except TimeoutExpired:
         log.info("TIMEOUT")
