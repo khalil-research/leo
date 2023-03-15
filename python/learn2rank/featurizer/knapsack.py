@@ -8,16 +8,18 @@ from .featurizer import Featurizer
 
 class KnapsackFeaturizer(Featurizer):
     def __init__(self, cfg=None, data=None):
+        self.norm_const = 1000
         self.cfg = cfg
         self.data = data
         # Get features
-        self.norm_value = (1 / self.cfg.norm_const) * np.asarray(self.data['value'])
-        self.norm_weight = (1 / self.cfg.norm_const) * np.asarray(self.data['weight'])
+        self.norm_value = (1 / self.norm_const) * np.asarray(self.data['value'])
+        self.norm_weight = (1 / self.norm_const) * np.asarray(self.data['weight'])
         self.n_objs, self.n_vars = self.norm_value.shape
 
     def _get_instance_features(self):
-        inst_feat = [self.n_objs / self.cfg.n_max_objs,
-                     self.n_vars / self.cfg.n_max_vars,
+        # TODO: Divide by self.cfg.n_max_objs/vars later
+        inst_feat = [self.n_objs / 7,
+                     self.n_vars / 100,
                      (np.ceil(self.norm_weight.sum()) / 2) / self.n_vars,  # Normalized capacity
                      self.norm_weight.mean(), self.norm_weight.min(), self.norm_weight.max(),
                      self.norm_weight.std()]  # Weight aggregate stats
@@ -132,7 +134,7 @@ class KnapsackFeaturizer(Featurizer):
         feat = {'raw': None, 'inst': None, 'var': None, 'var_rank': None}
         raw_feat = np.vstack((self.norm_value,
                               self.norm_weight,
-                              np.repeat(self.data['capacity'] / 1000, self.n_vars).reshape(1, -1)))
+                              np.repeat(self.data['capacity'] / self.norm_const, self.n_vars).reshape(1, -1)))
         feat['raw'] = raw_feat.T
 
         inst_feat = self._get_instance_features()
