@@ -70,19 +70,22 @@ class SMACRunner:
         # Set output directory
         output_dir = str(Path(instances[0][0]).stem)
         scenario_dict['output_dir'] = output_dir
-        # Create scenario object
-        scenario = Scenario(scenario_dict,
-                            cmd_options={
-                                "wallclock_limit": self.cfg.new_wallclock_limit,  # overwrite these args
-                                "cutoff_time": self.cfg.new_cutoff_time,
-                                "output_dir": output_dir,
-                                "output_dir_for_this_run": f"{output_dir}/run_{self.cfg.seed}"
-                            })
 
         # Load old run, if need be
         if self.cfg.restore_run == 1:
+            # Create scenario object
+            scenario = Scenario(scenario_dict,
+                                cmd_options={
+                                    "wallclock_limit": self.cfg.new_wallclock_limit,  # overwrite these args
+                                    "cutoff_time": self.cfg.new_cutoff_time,
+                                    "output_dir": output_dir,
+                                    "output_dir_for_this_run": f"{output_dir}/run_{self.cfg.seed}"
+                                })
             runhistory, stats, incumbent = self.load_old_run(scenario, output_dir)
+
         else:
+            # Create scenario object
+            scenario = Scenario(scenario_dict)
             runhistory, stats, incumbent = None, None, None
 
         # Create smac object
@@ -90,8 +93,9 @@ class SMACRunner:
                        runhistory=runhistory,
                        stats=stats,
                        restore_incumbent=incumbent,
+                       n_jobs=self.cfg.n_jobs,
                        rng=np.random.RandomState(self.cfg.seed),
-                       run_id=self.cfg.seed + 10)
+                       run_id=self.cfg.seed)
 
         # Start optimization
         try:

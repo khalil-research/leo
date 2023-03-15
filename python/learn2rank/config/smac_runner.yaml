@@ -1,34 +1,64 @@
 defaults:
-  - problem: setpacking
+  - problem: knapsack
   - _self_
 
+################################################
+# SMAC parameters
+################################################
+# Name of the binary to use
+# Use "multiobj" for knapsack, set covering, set packing
+# Use "multiobj_v2" for
+bin_name: multiobj                              # multiobj | multiobj_v2
 verbose: 1
-# one | all
-mode: one
+# Mode to run smac
+# Use "one" for smacI
+# Use "all" for smacD
+mode: one                                       # one | all
+# Seed for SMAC. Impacts the SMAC trajectory
 seed: 777
+# Number of jobs
+n_jobs: 1
 # Maximum time to evaluate one config
 cutoff_time: 60
-# Total time
+# Total time limit
 wallclock_limit: 300
+# Init incumbent can be smac_optimized (smacD) or static
+# smac optimized config takes the form
+# - smac_optimized/<incumbent_used_for_smacD>
+# i.e., smac_optimized/min_weight
+# Types of static options:
+# - canonical
+# - min_weight
+# - max_weight
+init_incumbent: smac_optimized/min_weight
+# Helps to restart previous run if set of 1
+restore_run: 0                                  # 0 | 1
+# New cutoff time for the restored run
+new_cutoff_time: 600
+# New wallclock time for the restored run
+new_wallclock_limit: 2400
 
-from_pid: 0
-num_instances: 1
-split: train
-restore_run: 0
-
-init_incumbent: canonical
+################################################
+# BDD parameters
+################################################
 # Helps to set the property value range [-width, width] for the
-# setcovering problem
+# set covering problem
 width:
-  default: 1
+  default: 1.0
   label: 0.9
 
+################################################
+# Dataset parameters
+################################################
+split: train
+from_pid: 0
+num_instances: 1
 case: 0
-# Customize output directory creation
-hydra:
-  run:
-    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
 
+################################################
+# Path parameters
+################################################
+machine: laptop
 module_path:
   cc: /home/rahulpat/scratch/smac_runner
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python
@@ -39,8 +69,7 @@ res_path:
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources
   laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python/learn2rank/resources
 
-machine: laptop
-# Should be more than the wallclock limit of the last run
-#    parser.add_argument('--rwcl', type=int, default=20, help='Wallclock limit for restored run')
-#    parser.add_argument('--rods', type=str, default='+', help='Suffix of output dir for restored run')
-#    parser.add_argument('--verbose', type=int, default=1)
+# Customize hydra output directory creation
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
