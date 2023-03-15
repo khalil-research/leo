@@ -21,7 +21,7 @@ def limit_virtual_memory():
 
 def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=None,
                     bin_name='multiobj', time_limit=60, get_runtime=False, mem_limit=16,
-                    mask_mem_out=False):
+                    mask_mem_limit=False):
     # Prepare the call string to bin_path
     bin_path = os.environ.get('bin_path') if bin_path is None else bin_path
     binary = f'{bin_path}/{bin_name}'
@@ -61,7 +61,7 @@ def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=Non
             # runtime limit or memory limit. In either of the two cases, we will not be
             # allowed to run more instances. Hence, we stop the parameter optimization
             # process using the ABORT signal
-            if mask_mem_out:
+            if mask_mem_limit:
                 # Mask the memory out signal as timeout. To be used for set covering instances
                 log.info("MEMOUT/MASKED")
 
