@@ -2,7 +2,7 @@ case = 1
 
 
 def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='train', order_type='canonical',
-                      from_pid=0, to_pid=1, dir_path=None):
+                      from_pid=0, to_pid=1, dir_path=None, memlimit=16, timelimit=600, mask_memlimit=0):
     line = f'{case} python -m learn2rank.scripts.eval_baseline_ordering ' \
            f'problem={problem} ' \
            f'problem.n_objs={n_objs} ' \
@@ -11,6 +11,9 @@ def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='tr
            f'split={split} ' \
            f'from_pid={from_pid} ' \
            f'to_pid={to_pid} ' \
+           f'bdd.timelimit={timelimit} ' \
+           f'bdd.memlimit={memlimit} ' \
+           f'bdd.mask_memlimit={mask_memlimit} ' \
            f'machine=cc '
 
     if order_type == 'smac' and dir_path is not None:
@@ -27,15 +30,15 @@ def create_knapsack_table(splits=None):
     assert splits is not None
 
     global case
-    # size = [(3, 60), (3, 70), (3, 80),
-    #         (4, 50),
-    #         (5, 40),
-    #         (6, 40),
-    #         (7, 40)]
-    size = [(3, 60), (4, 50), (5, 40)]
+    size = [(3, 60), (3, 70), (3, 80),
+            (4, 50),
+            (5, 40),
+            (6, 40),
+            (7, 40)]
+    # size = [(3, 70), (6, 40)]
 
     # min_weight, canonical, rand,
-    order_type = ['min_weight', 'canonical', 'smac', 'smac_all']
+    order_type = ['smac_all']
     n_items = 50
     folders = {
         'canonical': [None],
@@ -108,10 +111,11 @@ def create_setcovering_table(splits=None):
     # size = [(3, 100), (3, 125),
     #         (4, 100), (4, 125),
     #         (5, 100)]
-    size = [(3, 100),
-            (4, 100),
-            (5, 100)]
-    order_type = ['max_weight', 'canonical', 'min_weight']
+    # size = [(3, 100),
+    #         (4, 100),
+    #         (5, 100)]
+    size = [(5, 100)]
+    order_type = ['canonical']
     n_items = 100
     folders = {
         'canonical': [None],
@@ -120,6 +124,9 @@ def create_setcovering_table(splits=None):
         'smac': [None],
         'smac_all': ['1000_12h_iinc_max_weight', '1000_12h_iinc_canonical']
     }
+    timelimit = 600
+    memlimit = 5
+    mask_memlimit = 0
 
     table_str = ''
     for ot in order_type:
@@ -133,20 +140,21 @@ def create_setcovering_table(splits=None):
                             folder = _folder
                             table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
                                                            split=key, from_pid=si, to_pid=si + n_items, order_type=ot,
-                                                           dir_path=folder)
+                                                           dir_path=folder, timelimit=timelimit, memlimit=memlimit,
+                                                           mask_memlimit=mask_memlimit)
                             case += 1
 
     return table_str
 
 
 def main():
-    gen_knapsack = True
+    gen_knapsack = False
     gen_setpacking = False
-    gen_setcovering = False
+    gen_setcovering = True
 
     fp = open('table.dat', 'w')
     splits = (('train', True, 0, 1000),
-              ('val', True, 1000, 1100),
+              ('val', False, 1000, 1100),
               ('test', False, 1100, 1200))
 
     table_str = ''

@@ -8,18 +8,20 @@ from .featurizer import Featurizer
 
 class BinproblemFeaturizer(Featurizer):
     def __init__(self, cfg=None, data=None):
+        self.norm_const = 100
         self.cfg = cfg
         self.data = data
         # Get features
-        self.norm_value = (1 / self.cfg.norm_const) * np.asarray(self.data['value'])
-        self.norm_weight = np.mean(self.data['weight'], axis=0) + 1e-10
+        self.norm_value = (1 / self.norm_const) * np.asarray(self.data['value'])
+        # self.norm_weight = np.mean(self.data['weight'], axis=0) + 1e-10
+        self.norm_weight = self.data['weight'] / self.data['n_cons']
         self.n_objs, self.n_vars = self.norm_value.shape
         self.n_cons = self.data['cons_mat'].shape[0]
 
     def _get_instance_features(self):
-        inst_feat = [self.n_objs / self.cfg.n_max_objs,
-                     self.n_vars / self.cfg.n_max_vars,
-                     self.n_cons / self.cfg.n_max_cons,
+        inst_feat = [self.n_objs / 7,
+                     self.n_vars / 150,
+                     self.n_cons / 20,
                      self.norm_weight.mean(),
                      self.norm_weight.std(),
                      self.norm_weight.min(),
@@ -139,7 +141,7 @@ class BinproblemFeaturizer(Featurizer):
         _v_feat = np.array(_v_feat)
         # Normalize
         _v_feat = _v_feat / (_v_feat.sum(0) + 1e-10)
-        v_feat = np.vstack([v_feat, _v_feat])
+        v_feat = np.vstack([v_feat, _v_feat.T])
 
         return v_feat
 

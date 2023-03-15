@@ -4,39 +4,54 @@ from pathlib import Path
 import hydra
 import numpy as np
 from ConfigSpace.hyperparameters import UniformFloatHyperparameter
+from smac.callbacks import IncorporateRunResultCallback
 from smac.configspace import ConfigurationSpace
 from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
-cs = ConfigurationSpace()
-weight = UniformFloatHyperparameter("weight", -1, 1)
-avg_value = UniformFloatHyperparameter("avg_value", -1, 1)
-max_value = UniformFloatHyperparameter("max_value", -1, 1)
-min_value = UniformFloatHyperparameter("min_value", -1, 1)
-avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -1, 1)
-max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -1, 1)
-min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -1, 1)
+
+class TestCallback(IncorporateRunResultCallback):
+    def __init__(self):
+        self.num_call = 0
+        self.smbo = None
+        self.run_info = None
+        self.result = None
+        self.time_left = None
+
+    def __call__(self, smbo, run_info, result, time_left):
+        self.num_call += 1
+        self.smbo = smbo
+        self.run_info = run_info
+        self.result = result
+        self.time_left = time_left
+
+        if self.num_call == 2:
+            return False
 
 
-def set_property_weights(init_incumbent, problem=None, size=None):
+def get_config_space(init_incumbent, problem=None, size=None, width=None):
+    cs = ConfigurationSpace()
+
+    # Hyperparams
+    weight = UniformFloatHyperparameter("weight", -width.default, width.default)
+    avg_value = UniformFloatHyperparameter("avg_value", -width.default, width.default)
+    max_value = UniformFloatHyperparameter("max_value", -width.default, width.default)
+    min_value = UniformFloatHyperparameter("min_value", -width.default, width.default)
+    avg_value_by_weight = UniformFloatHyperparameter("avg_value_by_weight", -width.default, width.default)
+    max_value_by_weight = UniformFloatHyperparameter("max_value_by_weight", -width.default, width.default)
+    min_value_by_weight = UniformFloatHyperparameter("min_value_by_weight", -width.default, width.default)
+
+    if problem == 'setcovering' and width.label < 1:
+        label = UniformFloatHyperparameter("label", 1 - width.label, 1)
+    elif problem == 'setcovering' and width.label == 1:
+        label = UniformFloatHyperparameter("label", -1, 1)
+
+    # Fetch incumbent config and initialize hyperparams
     incb = init_incumbent.split('/')
-
     if incb[0] == 'smac_optimized':
-        assert problem and size and incb[1]
-
         from learn2rank.prop_wt import optimized as prop_wt_opt
-
-        assert problem in prop_wt_opt
-        if size not in prop_wt_opt[problem]:
-            print('Size not found! Switching to defaults')
-            if problem == 'knapsack':
-                size = '3_60'
-
-            elif problem == 'setpacking' or problem == 'setcovering':
-                size = '100_3'
-
+        assert problem in prop_wt_opt and size in prop_wt_opt[problem]
         pwts = prop_wt_opt[problem][size][incb[1]]
-
     else:
         from learn2rank.prop_wt import static as prop_wt_static
         pwts = prop_wt_static[incb[0]]
@@ -48,14 +63,17 @@ def set_property_weights(init_incumbent, problem=None, size=None):
     avg_value_by_weight.default_value = pwts['avg_value_by_weight']
     max_value_by_weight.default_value = pwts['max_value_by_weight']
     min_value_by_weight.default_value = pwts['min_value_by_weight']
+    props_lst = [weight, avg_value, max_value, min_value, avg_value_by_weight,
+                 max_value_by_weight, min_value_by_weight]
 
-    cs.add_hyperparameters([weight,
-                            avg_value,
-                            max_value,
-                            min_value,
-                            avg_value_by_weight,
-                            max_value_by_weight,
-                            min_value_by_weight])
+    if problem == 'setcovering':
+        label.default_value = pwts['label']
+        props_lst.append(label)
+
+    # Add hyperparams to config store
+    cs.add_hyperparameters(props_lst)
+
+    return cs
 
 
 def get_logger(verbosity):
@@ -78,12 +96,15 @@ def run_smac(instances, base_scenario_dict, opts):
     output_dir = str(Path(instances[0][0]).stem)
     scenario_dict['output_dir'] = output_dir
 
+    # dummy_callback = TestCallback()
     scenario = Scenario(scenario_dict)
     smac = SMAC4AC(
         scenario=scenario,
         rng=np.random.RandomState(opts.seed),
         run_id=opts.seed
     )
+    # smac.register_callback(dummy_callback)
+
     # Start optimization
     try:
         incumbent = smac.optimize()
@@ -91,6 +112,8 @@ def run_smac(instances, base_scenario_dict, opts):
         incumbent = smac.solver.incumbent
 
     print("Optimized configuration %s" % str(incumbent))
+
+    # return dummy_callback
 
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='smac_runner.yaml')
@@ -100,11 +123,12 @@ def main(cfg):
     # Set environment variables
     os.environ['module_path'] = cfg.module_path[cfg.machine]
     os.environ['bin_path'] = cfg.res_path[cfg.machine]
+    os.environ['bin_name'] = cfg.bin_name
     os.environ['prob_id'] = str(cfg.problem.id)
     os.environ['preprocess'] = str(cfg.problem.preprocess)
 
     # Create configuration space
-    set_property_weights(cfg.init_incumbent, cfg.problem.name, cfg.problem.size)
+    cs = get_config_space(cfg.init_incumbent, problem=cfg.problem.name, size=cfg.problem.size, width=cfg.width)
 
     # Define scenario
     base_scenario_dict = {
@@ -112,8 +136,11 @@ def main(cfg):
         "deterministic": "true",
         "run_obj": "runtime",
         "cutoff_time": cfg.cutoff_time,
-        "wallclock_limit": cfg.wallclock_limit,
+        "wallclock_limit": cfg.wallclock_limit
     }
+    # "rand_prob": 0.5,
+    # "maxR": 1,
+    # "intens_adaptive_capping_slackfactork": 2
 
     # Check paths
     resource_path = Path(cfg.res_path[cfg.machine])
@@ -130,15 +157,22 @@ def main(cfg):
     files = [str(data_path.joinpath(all_files_prefix + f"_{i}.dat"))
              for i in range(cfg.from_pid, cfg.from_pid + cfg.num_instances)]
 
+    cb = None
     if cfg.mode == 'one':
         dataset = [[files[i]] for i in range(cfg.num_instances)]
         for instance in dataset:
             # [[instance]]
-            run_smac([instance], base_scenario_dict, cfg)
+            cb = run_smac([instance], base_scenario_dict, cfg)
     else:
         dataset = [[file] for file in files]
         # [[instance_1], [instance_2]]
-        run_smac(dataset, base_scenario_dict, cfg)
+        cb = run_smac(dataset, base_scenario_dict, cfg)
+
+    if cb is not None:
+        print(cb.run_info)
+        print(cb.run_info.capped)
+        print(cb.result)
+        print(cb.time_left)
 
 
 if __name__ == "__main__":

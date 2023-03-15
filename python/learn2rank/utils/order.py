@@ -125,29 +125,30 @@ def get_variable_score_from_weights(data, property_weights):
     for fk, fv in property_weights.items():
         _norm_scores = np.zeros(n_items)
         if fk == 'weight':
-            _norm_scores = weight / weight.sum()
+            _norm_scores = weight
 
         elif fk == 'avg_value':
-            _norm_scores = value_mean / value_mean.sum()
+            _norm_scores = value_mean
 
         elif fk == 'max_value':
-            _norm_scores = value_max / value_max.sum()
+            _norm_scores = value_max
 
         elif fk == 'min_value':
-            _norm_scores = value_min / value_min.sum()
+            _norm_scores = value_min
 
         elif fk == 'avg_value_by_weight':
             _norm_scores = (value_mean / weight)
-            _norm_scores /= _norm_scores.sum()
 
         elif fk == 'max_value_by_weight':
             _norm_scores = (value_max / weight)
-            _norm_scores /= _norm_scores.sum()
 
         elif fk == 'min_value_by_weight':
             _norm_scores = (value_min / weight)
-            _norm_scores /= _norm_scores.sum()
 
+        elif fk == 'label':
+            _norm_scores = np.arange(1, n_items + 1)[::-1]
+
+        _norm_scores = _norm_scores / np.sum(_norm_scores)
         assert _norm_scores.shape[0] == n_items
         assert np.round(_norm_scores.sum()) == 1
         scores += fv * _norm_scores

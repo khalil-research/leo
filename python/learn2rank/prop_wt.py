@@ -1,5 +1,41 @@
 optimized = {
     'knapsack': {
+        '5_40': {
+            'min_weight': {"avg_value": 0.0,
+                           "avg_value_by_weight": 0.0,
+                           "max_value": 0.0,
+                           "max_value_by_weight": 0.0,
+                           "min_value": 0.0,
+                           "min_value_by_weight": 0.0,
+                           "weight": -1.0}
+        },
+        '6_40': {
+            'min_weight': {"avg_value": 0.0,
+                           "avg_value_by_weight": 0.0,
+                           "max_value": 0.0,
+                           "max_value_by_weight": 0.0,
+                           "min_value": 0.0,
+                           "min_value_by_weight": 0.0,
+                           "weight": -1.0}
+        },
+        '7_40': {
+            'min_weight': {"avg_value": 0.06077666420562999,
+                           "avg_value_by_weight": 0.4049255553653872,
+                           "max_value": -0.022131977548749404,
+                           "max_value_by_weight": 0.42302212657854343,
+                           "min_value": -0.1061603562395197,
+                           "min_value_by_weight": 0.5672202170455134,
+                           "weight": -0.9933547556774658}},
+        '4_50': {
+            'min_weight': {"avg_value": -0.4809015637265437,
+                           "avg_value_by_weight": -0.07263368539446324,
+                           "max_value": -0.7209545865666165,
+                           "max_value_by_weight": 0.009029703922206034,
+                           "min_value": 0.011842658258427452,
+                           "min_value_by_weight": 0.724234037246076,
+                           "weight": -0.9139149602132084},
+
+        },
         '3_60': {
             'min_weight': {"avg_value": -0.849306708200642,
                            "avg_value_by_weight": 0.9643321570505012,
@@ -8,6 +44,24 @@ optimized = {
                            "min_value": 0.4366275788209819,
                            "min_value_by_weight": 0.9621416689765441,
                            "weight": 0.18407294515644979}
+        },
+        '3_70': {
+            'min_weight': {"avg_value": 0.11983525404463147,
+                           "avg_value_by_weight": 0.6374375141384838,
+                           "max_value": -0.9885887447698448,
+                           "max_value_by_weight": -0.39906499741739243,
+                           "min_value": 0.12554849779045663,
+                           "min_value_by_weight": 0.7023400381735663,
+                           "weight": 0.12781380938849285}
+        },
+        '3_80': {
+            'min_weight': {"avg_value": -0.8910440645200488,
+                           "avg_value_by_weight": 0.03372635196014451,
+                           "max_value": -0.650641192114219,
+                           "max_value_by_weight": 0.614525335070413,
+                           "min_value": 0.8570100902327173,
+                           "min_value_by_weight": 0.8985991983865966,
+                           "weight": 0.5545967334044306}
         }
     },
     'setcovering': {
@@ -120,19 +174,22 @@ static = {
                   "max_value_by_weight": 0,
                   "min_value": 0,
                   "min_value_by_weight": 0,
-                  "weight": 0},
+                  "weight": 0,
+                  "label": 1},
     'min_weight': {"avg_value": 0,
                    "avg_value_by_weight": 0,
                    "max_value": 0,
                    "max_value_by_weight": 0,
                    "min_value": 0,
                    "min_value_by_weight": 0,
-                   "weight": -1},
+                   "weight": -1,
+                   "label": 0},
     'max_weight': {"avg_value": 0,
                    "avg_value_by_weight": 0,
                    "max_value": 0,
                    "max_value_by_weight": 0,
                    "min_value": 0,
                    "min_value_by_weight": 0,
-                   "weight": 1}
+                   "weight": 1,
+                   "label": 0}
 }

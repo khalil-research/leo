@@ -1,5 +1,5 @@
 name: setcovering
-inst_name: binproblem
+inst_name: setcovering_preprocessed
 n_objs: 3
 n_vars: 100
 n_cons: 20

@@ -5,8 +5,8 @@ Config = namedtuple('Config', ['cutoff_time', 'wallclock_limit', 'n_instances'])
 case = 1
 
 # Modes
-SMAC_ALL = 'all'
-SMAC_ONE = 'one'
+smacD = 'all'
+smacI = 'one'
 
 # In hours
 HOUR2SEC = 60 * 60
@@ -44,65 +44,93 @@ configs_all = {
     '150_5': Config(BASE_CUTOFF_ALL, BASE_WALLCLOCK_ALL, 1000)
 }
 
+# seeds = [329, 1021, 983439, 4321, 7623, 5621, 271, 82, 3336, 813,
+#          774, 9194, 2127, 5104, 7746, 2401, 76, 5475, 7557, 5958, 6348,
+#          7766, 7843, 533, 8496, 1234, 7186, 7987, 1245, 2959, 470, 8946,
+#          571, 6654, 9314, 7144, 7179, 3198, 854, 7774, 5953, 4226, 2857,
+#          3345, 578, 2020, 1253, 1337, 8695, 8385]
 
-def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, split='train', start_idx=0, n_instances=1,
-                      cutoff=60, wallclock=300, init_incumbent='canonical', mode='one'):
-    return f'{case} python -m learn2rank.scripts.smac_runner ' \
+seeds = [578, 470, 1337, 3345, 983439, 329, 1021, 4321, 7623, 5621,
+         271, 82, 3336, 813, 774, 9194, 2127, 5104, 7746, 2401, 76,
+         5475, 7557, 5958, 6348, 7766, 7843, 533, 8496, 1234, 7186,
+         7987, 1245, 2959, 8946, 571, 6654, 9314, 7144, 7179, 3198,
+         854, 7774, 5953, 4226, 2857, 2020, 1253, 8695, 8385]
+
+
+def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, bin_name='multiobj', mode='one', seed=777,
+                      n_jobs=1, cutoff=60, wallclock=300, init_incumbent='canonical', restore_run=0, new_cutoff=120,
+                      new_wallclock=600, default_width=1.0, label_width=1.0, split='train', start_idx=0,
+                      n_instances=1, ):
+    return f'{case} python -m learn2rank.smac_runner ' \
            f'problem={problem} ' \
            f'problem.n_objs={n_objs} ' \
            f'problem.n_vars={n_vars} ' \
-           f'split={split} ' \
-           f'from_pid={start_idx} ' \
-           f'num_instances={n_instances} ' \
+           f'bin_name={bin_name} ' \
+           f'mode={mode} ' \
+           f'seed={seed} ' \
+           f'n_jobs={n_jobs} ' \
            f'cutoff_time={cutoff} ' \
            f'wallclock_limit={wallclock} ' \
            f'init_incumbent={init_incumbent} ' \
-           f'mode={mode} ' \
+           f'restore_run={restore_run} ' \
+           f'new_cutoff_time={new_cutoff} ' \
+           f'new_wallclock_limit={new_wallclock} ' \
+           f'width.default={default_width} ' \
+           f'width.label={label_width} ' \
+           f'split={split} ' \
+           f'from_pid={start_idx} ' \
+           f'num_instances={n_instances} ' \
            f'machine=cc ' \
            f'case={case}\n'
 
 
-def create_knapsack_table(splits=None, mode='one'):
-    assert splits is not None
-
+def create_knapsack_table():
     global case
     configs_one = {
         '40_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '50_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '60_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '40_6': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
-        '70_3': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
+        '70_3': Config(BASE_CUTOFF_ALL, 2 * BASE_WALLCLOCK_2, int(JOB_TIME / (2 * BASE_WALLCLOCK_2)) - 1),
         '40_7': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1),
         '80_3': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
     }
-    size = [(3, 60), (3, 70), (3, 80),
-            (4, 50),
-            (5, 40),
-            (6, 40),
-            (7, 40)]
-
+    # size = [(3, 60), (3, 70), (3, 80),
+    #         (4, 50),
+    #         (5, 40),
+    #         (6, 40),
+    #         (7, 40)]
+    size = [(3, 70)]
     table_str = ''
+    # seed = 777
     for split in splits:
         key, active, start, end = split
-        if active:
-            for s in size:
-                _cfg = configs_one[f'{s[1]}_{s[0]}'] if mode == 'one' else configs_all[f'{s[1]}_{s[0]}']
+        if not active:
+            continue
 
+        for s in size:
+            _cfg = configs_one[f'{s[1]}_{s[0]}'] if mode == smacI else configs_all[f'{s[1]}_{s[0]}']
+            for seed_id in range(0, 5):
+                # NOTE: Seeds play an important role in the performance for size (3, 70)
+                # Also, setting the cutoff limit higher helps.
                 for si in range(start, end, _cfg.n_instances):
                     _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
-                    table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1], split=key,
+                    table_str += create_table_line(case=case, problem='knapsack', n_objs=s[0], n_vars=s[1],
+                                                   split=key,
                                                    start_idx=si, n_instances=_n_instances,
                                                    cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
-                                                   init_incumbent='min_weight', mode=mode)
+                                                   restore_run=restore_run, new_wallclock=new_wallclock,
+                                                   new_cutoff=new_cutoff,
+                                                   init_incumbent=init_incumbent, mode=mode,
+                                                   n_jobs=n_jobs,
+                                                   seed=seeds[seed_id])
                     case += 1
 
     return table_str
 
 
-def create_setpacking_table(splits=None, mode='one'):
-    assert splits is not None
-
-    global case
+def create_setpacking_table():
+    # global case
     configs_one = {
         '150_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '150_4': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
@@ -128,22 +156,21 @@ def create_setpacking_table(splits=None, mode='one'):
     return table_str
 
 
-def create_setcovering_table(splits=None, mode='one'):
-    assert splits is not None
-
-    global case
+def create_setcovering_table():
+    # global case
 
     configs_one = {
         '100_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '100_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
-        '100_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_5': Config(2 * BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '100_6': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '100_7': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '150_3': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 1),
         '150_4': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
     }
-    size = [(3, 100), (4, 100), (5, 100), (6, 100), (7, 100),
-            (3, 150), (4, 150)]
+    # size = [(3, 150), (4, 150),
+    #         (3, 100), (4, 100), (5, 100), (6, 100), (7, 100)]
+    size = [(7, 100)]
 
     table_str = ''
     for split in splits:
@@ -153,32 +180,48 @@ def create_setcovering_table(splits=None, mode='one'):
                 _cfg = configs_one[f'{s[1]}_{s[0]}'] if mode == 'one' else configs_all[f'{s[1]}_{s[0]}']
 
                 for si in range(start, end, _cfg.n_instances):
-                    _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
-                    table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
-                                                   split=key, start_idx=si, n_instances=_n_instances,
-                                                   cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
-                                                   init_incumbent='max_weight', mode=mode)
-                    case += 1
+                    for dw in [0.1, 0.2]:
+                        for lw in [0.1, 0.2]:
+                            _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
+                            table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
+                                                           split=key, start_idx=si, n_instances=_n_instances,
+                                                           cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
+                                                           default_width=dw, label_width=lw, init_incumbent='canonical',
+                                                           mode=mode)
+                            case += 1
 
     return table_str
 
 
-def main():
-    gen_knapsack = True
-    gen_setpacking = True
-    gen_setcovering = True
+# Select problem
+gen_knapsack = True
+gen_setpacking = False
+gen_setcovering = False
+# Select split and problem ids
+splits = (('train', True, 0, 100),
+          ('val', False, 1000, 1100),
+          ('test', False, 1100, 1200))
+# Select number of seeds you want to try
+n_seeds = 5
+# Select mode
+mode = smacI
+# Select number of jobs
+n_jobs = -1
+# Select initial incumbent
+init_incumbent = 'min_weight'
+# Restore previous run
+restore_run = 0
+new_cutoff = 600
+new_wallclock = 2400
 
+
+def main():
     fp = open('table.dat', 'w')
-    splits = (('train', True, 0, 1000),
-              ('val', True, 1000, 1100),
-              ('test', False, 1100, 1200))
-    # Can be SMAC_ONE | SMAC_ALL
-    mode = SMAC_ONE
 
     table_str = ''
-    table_str = table_str + create_knapsack_table(splits=splits, mode=mode) if gen_knapsack else table_str
-    table_str = table_str + create_setcovering_table(splits=splits, mode=mode) if gen_setcovering else table_str
-    table_str = table_str + create_setpacking_table(splits=splits, mode=mode) if gen_setpacking else table_str
+    table_str = table_str + create_knapsack_table() if gen_knapsack else table_str
+    table_str = table_str + create_setcovering_table() if gen_setcovering else table_str
+    table_str = table_str + create_setpacking_table() if gen_setpacking else table_str
 
     fp.write(table_str)
 

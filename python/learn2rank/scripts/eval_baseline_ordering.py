@@ -41,7 +41,8 @@ def main(cfg: DictConfig):
         for run_id, order in enumerate(orders):
             status, result = run_bdd_builder(str(dat_path), order, prob_id=str(cfg.problem.id),
                                              preprocess=str(cfg.problem.preprocess), bin_path=str(resource_path),
-                                             time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
+                                             time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit,
+                                             mask_mem_limit=cfg.bdd.mask_memlimit)
             log.info(f'Status: {status}')
             if status == 'SUCCESS':
                 log.info(f'Solving time: {np.sum(result[-4:-1]):.3f}')

@@ -21,8 +21,12 @@ smac_dir:
 smac_all_dir: kp_7_3_60_0
 
 bdd:
-  timelimit: 300
-  memlimit:
+  # In seconds
+  timelimit: 600
+  # In GBs
+  memlimit: 5
+  # Boolean: 0 or 1
+  mask_memlimit: 0
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
