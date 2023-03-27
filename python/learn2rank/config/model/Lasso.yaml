@@ -1,0 +1,13 @@
+name: Lasso
+trainer: SklearnTrainer
+
+# Penalty
+alpha: 0.001
+# Whether to fit the intercept for this model.
+# If set to false, no intercept will be used in calculations
+# (i.e. X and y are expected to be centered).
+fit_intercept: True
+# precision of the solver
+tol: 0.0001
+# Sample weights
+weights: False

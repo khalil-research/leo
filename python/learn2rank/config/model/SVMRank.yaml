@@ -1,0 +1,19 @@
+name: SVMRank
+trainer: SVMRankTrainer
+# trade-off between training error and margin (default 0.01)
+c: 0.01
+# L-norm to use for slack variables
+# 1 for L1 norm and 2 for squared slacks
+p: 1
+# Loss function to use
+# 0: zero/one loss
+# 1: Total number of swapped pairs summed over all queries.
+# 2: Fraction of swapped pairs averaged over all queries.
+l: 1
+# Type of kernel
+# 0: linear (default)
+# 1: polynomial (s a*b+c)^d
+# 2: radial basis function exp(-gamma ||a-b||^2)
+# 3: sigmoid tanh(s a*b + c)
+# 4: user defined kernel from kernel.h
+t: 0

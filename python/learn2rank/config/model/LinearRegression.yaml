@@ -1,3 +1,5 @@
 name: LinearRegression
 trainer: SklearnTrainer
+
+# Sample weights
 weights: False

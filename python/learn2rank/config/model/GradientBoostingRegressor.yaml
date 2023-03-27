@@ -1,0 +1,52 @@
+name: GradientBoostingRegressor
+trainer: SklearnTrainer
+
+# Loss function to be optimized. ‘squared_error’ refers to the squared error for regression.
+# ‘absolute_error’ refers to the absolute error of regression and is a robust loss function.
+# ‘huber’ is a combination of the two.
+# ‘quantile’ allows quantile regression (use alpha to specify the quantile).
+# loss{‘squared_error’, ‘absolute_error’, ‘huber’, ‘quantile’}, default=’squared_error’
+loss: squared_error
+# Learning rate shrinks the contribution of each tree by learning_rate.
+# There is a trade-off between learning_rate and n_estimators. Values must be in the range [0.0, inf).
+learning_rate: 0.1
+# The number of boosting stages to perform. Gradient boosting is fairly robust to over-fitting
+# so a large number usually results in better performance. Values must be in the range [1, inf).
+n_estimators: 100
+# The fraction of samples to be used for fitting the individual base learners.
+# If smaller than 1.0 this results in Stochastic Gradient Boosting.
+# subsample interacts with the parameter n_estimators.
+# Choosing subsample < 1.0 leads to a reduction of variance and an increase in bias.
+# Values must be in the range (0.0, 1.0].
+subsample: 1.0
+# The function to measure the quality of a split. Supported criteria are “friedman_mse”
+# for the mean squared error with improvement score by Friedman, “squared_error” for mean squared error.
+# The default value of “friedman_mse” is generally the best as it can provide a better approximation in some cases.
+# criterion{‘friedman_mse’, ‘squared_error’}, default=’friedman_mse’
+criterion: friedman_mse
+# The minimum number of samples required to split an internal node
+min_samples_split: 2
+# The minimum number of samples required to be at a leaf node.
+# A split point at any depth will only be considered if it leaves
+# at least min_samples_leaf training samples in each of the left and
+# right branches. This may have the effect of smoothing the model,
+# especially in regression.
+min_samples_leaf: 1
+# The minimum weighted fraction of the sum total of weights (of all
+# the input samples) required to be at a leaf node. Samples have equal
+# weight when sample_weight is not provided.
+min_weight_fraction_leaf: 0.0
+# Maximum depth of the individual regression estimators. The maximum depth limits
+# the number of nodes in the tree. Tune this parameter for best performance;
+# the best value depends on the interaction of the input variables.
+# If None, then nodes are expanded until all leaves are pure or until all leaves
+# contain less than min_samples_split samples. If int, values must be in the range [1, inf).
+# max_depth: int or None, default=3
+max_depth: 3
+# A node will be split if this split induces a decrease of the impurity greater than
+# or equal to this value. Values must be in the range [0.0, inf).
+min_impurity_decrease: 0.0
+# The number of features to consider when looking for the best split:
+# int, float or {“auto”, “sqrt”, “log2”}, default=None
+max_features: None
+

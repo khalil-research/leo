@@ -1,11 +1,15 @@
 defaults:
   - hydra: train
   - problem: knapsack
-  - model: nrm
+  - model: LinearRegression
   - optimizer: adam
   - run: default
   - wandb: default
   - _self_
+
+# Type of ranking task
+# pointwise, pairwise or listwise
+task: pointwise
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/

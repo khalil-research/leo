@@ -1,0 +1,24 @@
+name: DecisionTreeRegressor
+trainer: SklearnTrainer
+
+# The function to measure the quality of a split.
+criterion: squared_error
+# The maximum depth of the tree. If None, then nodes are expanded
+# until all leaves are pure or until all leaves contain less than
+# min_samples_split samples.
+max_depth: None
+# The minimum number of samples required to split an internal node
+min_samples_split: 2
+# The minimum number of samples required to be at a leaf node.
+# A split point at any depth will only be considered if it leaves
+# at least min_samples_leaf training samples in each of the left and
+# right branches. This may have the effect of smoothing the model,
+# especially in regression.
+min_samples_leaf: 1
+# The minimum weighted fraction of the sum total of weights (of all
+# the input samples) required to be at a leaf node. Samples have equal
+# weight when sample_weight is not provided.
+min_weight_fraction_leaf: 0.0
+# The number of features to consider when looking for the best split:
+# int, float or {“auto”, “sqrt”, “log2”}, default=None
+max_features: None
