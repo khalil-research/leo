@@ -35,6 +35,8 @@ def main(cfg):
     os.environ['bin_name'] = cfg.bin_name
     os.environ['prob_id'] = str(cfg.problem.id)
     os.environ['preprocess'] = str(cfg.problem.preprocess)
+    os.environ['mem_limit'] = str(cfg.mem_limit)
+    os.environ['mask_mem_limit'] = str(1 if cfg.mask_mem_limit else 0)
 
     # Check paths
     resource_path = Path(cfg.res_path[cfg.machine])

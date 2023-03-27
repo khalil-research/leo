@@ -16,6 +16,9 @@ verbose: 1
 mode: one                                       # one | all
 # Seed for SMAC. Impacts the SMAC trajectory
 seed: 777
+# Intensifier
+# Intensifier | SimpleIntensifier | SuccessiveHalving | Hyberband
+# intensifier: Intensifier
 # Number of jobs
 n_jobs: 1
 # Maximum time to evaluate one config
@@ -41,6 +44,10 @@ new_wallclock_limit: 2400
 ################################################
 # BDD parameters
 ################################################
+# Masks the memory limit error as timeout
+mask_mem_limit: 0
+# Memory limit for the target algorithm
+mem_limit: 16
 # Helps to set the property value range [-width, width] for the
 # set covering problem
 width:

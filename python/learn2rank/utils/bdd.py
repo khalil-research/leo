@@ -22,20 +22,18 @@ def limit_virtual_memory():
 def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=None,
                     bin_name='multiobj', time_limit=60, get_runtime=False, mem_limit=16,
                     mask_mem_limit=False):
-    # Prepare the call string to bin_path
-    bin_path = os.environ.get('bin_path') if bin_path is None else bin_path
-    binary = f'{bin_path}/{bin_name}'
-    prob_id = os.environ.get('prob_id') if prob_id is None else prob_id
-    preprocess = os.environ.get('preprocess') if preprocess is None else preprocess
-
     order_string = " ".join(map(str, order))
+    binary = f'{bin_path}/{bin_name}'
     cmd = f"{binary} {instance} {prob_id} {preprocess} {len(order)} {order_string}"
     # Maximal virtual memory for subprocesses (in bytes).
-    os.environ['MAX_VIRTUAL_MEMORY'] = str(mem_limit) if mem_limit is None else str(mem_limit * (1024 ** 3))
+    os.environ['MAX_VIRTUAL_MEMORY'] = str(mem_limit) if mem_limit is None \
+        else str(int(mem_limit) * (1024 ** 3))
     status = "SUCCESS"
 
     log.info(f'Executing: {cmd}')
     log.info(f"Memory limit: {os.environ.get('MAX_VIRTUAL_MEMORY')}")
+    log.info(f"Mask memory limit: {mask_mem_limit}")
+
     try:
         preexec_fn = None if mem_limit is None else limit_virtual_memory
         io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE, preexec_fn=preexec_fn)

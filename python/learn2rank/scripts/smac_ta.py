@@ -22,7 +22,20 @@ def run_target_algorithm(instance, cutoff, property_weights, log=True):
     acronym = inst_path.stem.split('_')[0]
     data = read_data_from_file(acronym, instance)
     order, _ = get_variable_order_from_weights(data, property_weights)
-    status, runtime = run_bdd_builder(instance, order, time_limit=cutoff, get_runtime=True)
+
+    # Prepare the call string to bin_path
+    prob_id = os.environ.get('prob_id')
+    preprocess = os.environ.get('preprocess')
+    bin_path = os.environ.get('bin_path')
+    bin_name = os.environ.get('bin_name')
+    mem_limit = float(os.environ.get('mem_limit'))
+    mask_mem_limit = bool(int(os.environ.get('mask_mem_limit')))
+
+    status, runtime = run_bdd_builder(instance, order,
+                                      prob_id=prob_id, preprocess=preprocess,
+                                      bin_path=bin_path, bin_name=bin_name,
+                                      time_limit=cutoff, get_runtime=True,
+                                      mem_limit=mem_limit, mask_mem_limit=mask_mem_limit)
 
     print(f"Result for SMAC: {status}, {runtime}, 0, 0, 0")
 
