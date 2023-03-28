@@ -1,10 +1,5 @@
 name: knapsack
-size:
-  - '5_40'
-n_max_vars: 40
-n_max_objs: 5
-norm_const: 1000
 
-seed:
-  opt: 7
-  smac: 777
+n_max_vars: 100
+n_max_objs: 7
+norm_const: 1000

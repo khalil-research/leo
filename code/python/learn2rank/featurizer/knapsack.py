@@ -131,7 +131,7 @@ class KnapsackFeaturizer(Featurizer):
 
     def get(self):
         # Calculate instance features
-        feat = {'raw': None, 'inst': None, 'var': None, 'var_rank': None}
+        feat = {'raw': None, 'inst': None, 'var': None, 'vrank': None}
         raw_feat = np.vstack((self.norm_value,
                               self.norm_weight,
                               np.repeat(self.data['capacity'] / self.norm_const, self.n_vars).reshape(1, -1)))
