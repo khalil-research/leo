@@ -12,19 +12,13 @@ smacI = 'one'
 HOUR2SEC = 60 * 60
 JOB_TIME = 3 * HOUR2SEC
 
-# Cutoff presets
-BASE_CUTOFF = 60
-BASE_CUTOFF_2 = 2 * BASE_CUTOFF
-BASE_CUTOFF_3 = 3 * BASE_CUTOFF
-BASE_CUTOFF_4 = 4 * BASE_CUTOFF
-BASE_CUTOFF_ALL = 10 * BASE_CUTOFF
-
-# Wallclock presets
-BASE_WALLCLOCK = 5 * 60
-BASE_WALLCLOCK_2 = 2 * BASE_WALLCLOCK
-BASE_WALLCLOCK_3 = 3 * BASE_WALLCLOCK
-BASE_WALLCLOCK_4 = 4 * BASE_WALLCLOCK
-BASE_WALLCLOCK_ALL = 12 * HOUR2SEC
+# Cutoff and Wallclock presets
+# We set cutoff equal to wallclock to avoid early termination
+BASE_CUTOFF = BASE_WALLCLOCK = 5 * 60
+BASE_CUTOFF_2 = BASE_WALLCLOCK_2 = 2 * BASE_WALLCLOCK
+BASE_CUTOFF_3 = BASE_WALLCLOCK_3 = 3 * BASE_WALLCLOCK
+BASE_CUTOFF_4 = BASE_WALLCLOCK_4 = 4 * BASE_WALLCLOCK
+BASE_CUTOFF_ALL = BASE_WALLCLOCK_ALL = 12 * HOUR2SEC
 
 configs_all = {
     '40_5': Config(BASE_CUTOFF_ALL, BASE_WALLCLOCK_ALL, 1000),
@@ -59,8 +53,8 @@ seeds = [578, 470, 1337, 3345, 983439, 329, 1021, 4321, 7623, 5621,
 
 def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, bin_name='multiobj', mode='one', seed=777,
                       n_jobs=1, cutoff=60, wallclock=300, init_incumbent='canonical', restore_run=0, new_cutoff=120,
-                      new_wallclock=600, default_width=1.0, label_width=1.0, split='train', start_idx=0,
-                      n_instances=1, ):
+                      new_wallclock=600, mask_mem_limit=0, mem_limit=16, default_width=1.0, label_width=1.0,
+                      split='train', start_idx=0, n_instances=1):
     return f'{case} python -m learn2rank.smac_runner ' \
            f'problem={problem} ' \
            f'problem.n_objs={n_objs} ' \
@@ -75,6 +69,8 @@ def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, bin_name=
            f'restore_run={restore_run} ' \
            f'new_cutoff_time={new_cutoff} ' \
            f'new_wallclock_limit={new_wallclock} ' \
+           f'mask_mem_limit={mask_mem_limit} ' \
+           f'mem_limit={mem_limit} ' \
            f'width.default={default_width} ' \
            f'width.label={label_width} ' \
            f'split={split} ' \
@@ -87,11 +83,11 @@ def create_table_line(case=0, problem='knapsack', n_objs=3, n_vars=60, bin_name=
 def create_knapsack_table():
     global case
     configs_one = {
-        '40_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
-        '50_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
-        '60_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
-        '40_6': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 2),
-        '70_3': Config(BASE_CUTOFF_ALL, 2 * BASE_WALLCLOCK_2, int(JOB_TIME / (2 * BASE_WALLCLOCK_2)) - 1),
+        '40_5': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 1),
+        '50_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 1),
+        '60_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 1),
+        '40_6': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1),
+        '70_3': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1),
         '40_7': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1),
         '80_3': Config(BASE_CUTOFF_4, BASE_WALLCLOCK_4, int(JOB_TIME / BASE_WALLCLOCK_4) - 1)
     }
@@ -100,7 +96,7 @@ def create_knapsack_table():
     #         (5, 40),
     #         (6, 40),
     #         (7, 40)]
-    size = [(3, 70)]
+    size = [(4, 50)]
     table_str = ''
     # seed = 777
     for split in splits:
@@ -110,7 +106,7 @@ def create_knapsack_table():
 
         for s in size:
             _cfg = configs_one[f'{s[1]}_{s[0]}'] if mode == smacI else configs_all[f'{s[1]}_{s[0]}']
-            for seed_id in range(0, 5):
+            for seed_id in range(seeds_start_idx, seeds_start_idx + n_seeds):
                 # NOTE: Seeds play an important role in the performance for size (3, 70)
                 # Also, setting the cutoff limit higher helps.
                 for si in range(start, end, _cfg.n_instances):
@@ -157,12 +153,12 @@ def create_setpacking_table():
 
 
 def create_setcovering_table():
-    # global case
+    global case
 
     configs_one = {
         '100_3': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '100_4': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
-        '100_5': Config(2 * BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
+        '100_5': Config(BASE_CUTOFF, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 1),
         '100_6': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '100_7': Config(BASE_CUTOFF, BASE_WALLCLOCK, int(JOB_TIME / BASE_WALLCLOCK) - 2),
         '150_3': Config(BASE_CUTOFF_2, BASE_WALLCLOCK_2, int(JOB_TIME / BASE_WALLCLOCK_2) - 1),
@@ -170,7 +166,7 @@ def create_setcovering_table():
     }
     # size = [(3, 150), (4, 150),
     #         (3, 100), (4, 100), (5, 100), (6, 100), (7, 100)]
-    size = [(7, 100)]
+    size = [(5, 100)]
 
     table_str = ''
     for split in splits:
@@ -178,17 +174,20 @@ def create_setcovering_table():
         if active:
             for s in size:
                 _cfg = configs_one[f'{s[1]}_{s[0]}'] if mode == 'one' else configs_all[f'{s[1]}_{s[0]}']
-
-                for si in range(start, end, _cfg.n_instances):
-                    for dw in [0.1, 0.2]:
-                        for lw in [0.1, 0.2]:
-                            _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
-                            table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0], n_vars=s[1],
-                                                           split=key, start_idx=si, n_instances=_n_instances,
-                                                           cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
-                                                           default_width=dw, label_width=lw, init_incumbent='canonical',
-                                                           mode=mode)
-                            case += 1
+                for seed_id in range(seeds_start_idx, seeds_start_idx + n_seeds):
+                    for si in range(start, end, _cfg.n_instances):
+                        for dw in [0.25, 0.5, 0.75, 1]:
+                            for lw in [0.25, 0.5, 0.75, 1]:
+                                _n_instances = _cfg.n_instances if si + _cfg.n_instances < end else end - si
+                                table_str += create_table_line(case=case, problem='setcovering', n_objs=s[0],
+                                                               n_vars=s[1],
+                                                               split=key, start_idx=si, n_instances=_n_instances,
+                                                               cutoff=_cfg.cutoff_time, wallclock=_cfg.wallclock_limit,
+                                                               mask_mem_limit=mask_mem_limit, mem_limit=mem_limit,
+                                                               default_width=dw, label_width=lw,
+                                                               init_incumbent='canonical',
+                                                               mode=mode, seed=seeds[seed_id])
+                                case += 1
 
     return table_str
 
@@ -198,21 +197,28 @@ gen_knapsack = True
 gen_setpacking = False
 gen_setcovering = False
 # Select split and problem ids
-splits = (('train', True, 0, 100),
-          ('val', False, 1000, 1100),
-          ('test', False, 1100, 1200))
+splits = (('train', False, 0, 1000),
+          ('val', True, 1000, 1100),
+          ('test', True, 1100, 1200))
 # Select number of seeds you want to try
+seeds_start_idx = 0
 n_seeds = 5
 # Select mode
 mode = smacI
 # Select number of jobs
-n_jobs = -1
+n_jobs = 1
 # Select initial incumbent
 init_incumbent = 'min_weight'
 # Restore previous run
 restore_run = 0
 new_cutoff = 600
 new_wallclock = 2400
+
+mask_mem_limit = 0
+mem_limit = 16
+
+default_width = 1
+label_width = 1
 
 
 def main():
