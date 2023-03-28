@@ -31,7 +31,7 @@ def main(cfg: DictConfig):
     # Dataset path
 
     # Load data if pickled. Otherwise, pass the path as data
-    dp = Path(cfg.res_path[cfg.machine]) / cfg.dataset.path
+    dp = Path(cfg.dataset.path)
     if str(dp).split('.')[-1] == 'pkl':
         fp = open(dp, 'rb')
         data = pkl.load(fp)

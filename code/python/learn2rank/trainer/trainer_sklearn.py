@@ -37,16 +37,16 @@ class SklearnTrainer(Trainer):
 
         # Train
         _time = time.time()
-        self.model.train(x_tr, y_tr, sample_weight=wt_tr)
+        self.model.fit(x_tr, y_tr, sample_weight=wt_tr)
         _time = time.time() - _time
         self.rs['time']['train'] = _time
 
         # Predict
-        self.ps['tr']['score'] = self.model(x_tr)
-        self.ps['val']['score'] = self.model(x_val)
+        self.ps['tr']['score'] = self.model.predict(x_tr)
+        self.ps['val']['score'] = self.model.predict(x_val)
 
         # Eval learning metrics
-        log.info("* Linear Regression Results")
+        log.info(f"* {self.cfg.model.name} Results")
         log.info("** Train learning metrics:")
         self.rs['tr']['learning'] = eval_learning_metrics(y_tr, self.ps['tr']['score'], sample_weight=wt_tr)
         log.info("** Validation learning metrics:")
@@ -55,7 +55,7 @@ class SklearnTrainer(Trainer):
         # Unflatten data
         y_tr, self.ps['tr']['score'] = unflatten_data([y_tr, self.ps['tr']['score']], self.ps['tr']['n_items'])
         y_val, self.ps['val']['score'] = unflatten_data([y_val, self.ps['val']['score']], self.ps['val']['n_items'])
-        
+
         # Transform scores to order
         y_tr_order = score2order(y_tr)
         self.ps['tr']['order'] = score2order(self.ps['tr']['score'])
@@ -68,14 +68,16 @@ class SklearnTrainer(Trainer):
         log.info("** Val order metrics:")
         self.rs['val']['ranking'] = eval_order_metrics(y_val_order, self.ps['val']['order'], self.ps['val']['n_items'])
 
-        log.info(f"  Linear regression train time: {self.rs['time']['train']} \n")
+        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
         self._save_model()
         self._save_predictions()
         self._save_results()
 
-    def predict(self, split='test'):
-        pass
+    def predict(self, x=None):
+        assert x is not None
+
+        return self.model.predict(x)
 
     def _save_model(self):
         self.model.save()
@@ -92,16 +94,15 @@ class SklearnTrainer(Trainer):
         x, y, wt, names, n_items = [], [], [], [], []
 
         for size in self.cfg.dataset.size:
-            for name, v in self.data[size][split].items():
-                _x, _y = v['x'], v['y'][-1]
-                size_blobs = size.split('_')
-                n_items.append(size_blobs[1] if 'kp' in name else size_blobs[0])
-                names.append(name)
+            for v in self.data[size][split]:
+                _x, _y = v['x'], v['y']
+                n_items.append(len(_y))
+                names.append(v['name'])
 
                 x.extend(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
 
-                weights = get_sample_weight(_y['rank'], self.cfg.model.weights)
-                y.extend(_y['rank'])
+                weights = get_sample_weight(_y, bool(self.cfg.model.weights))
+                y.extend(_y)
                 wt.extend(list(weights[0]))
 
         return np.asarray(x), np.asarray(y), names, n_items, np.asarray(wt)

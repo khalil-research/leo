@@ -172,7 +172,7 @@ def unflatten_data(flattened_lists, n_items):
 
         # num_samples = int(flattened_list.shape[0] / n_max_vars)
         i = 0
-        for _n_items in range(n_items):
+        for _n_items in n_items:
             _unflattened_list.append(flattened_list[i: i + _n_items])
             i += _n_items
 
