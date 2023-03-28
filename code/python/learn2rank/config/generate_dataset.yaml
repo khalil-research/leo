@@ -21,13 +21,22 @@ iinc: min_weight
 # 2. pair_svmrank: Generates dataset for SVM Rank
 # 3. multitask: Generates dataset for the multitask learning. Stores the cost
 #               and config along with rank
-task: pair_svmrank
+task: point_regress
+
+padding: False
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
   laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/resources
 
+out_path:
+  cc: /home/rahulpat/scratch/l2o_resources
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016
+
 machine: desktop
 
-padding: False
+hydra:
+  run:
+    dir: ${out_path[${machine}]}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
