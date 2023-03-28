@@ -18,7 +18,7 @@ from learn2rank.utils.order import property_weight_dict2array
 def generate_dataset_point_regress(cfg):
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
-    dataset_path = res_path / 'datasets' / cfg.problem.name / f'{cfg.problem.name}_dataset.pkl'
+    dataset_path = res_path / 'datasets' / cfg.problem.name / f'{cfg.problem.name}_dataset_{cfg.task}.pkl'
     dataset = {} if not dataset_path.exists() else pkl.load(open(dataset_path, 'rb'))
     time_dataset = []
 
@@ -73,7 +73,7 @@ def generate_dataset_point_regress(cfg):
 def generate_dataset_multitask(cfg):
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
-    dataset_path = res_path / 'datasets' / cfg.problem.name / f'{cfg.problem.name}_dataset.pkl'
+    dataset_path = res_path / 'datasets' / cfg.problem.name / f'{cfg.problem.name}_dataset_{cfg.task}.pkl'
     dataset = {} if not dataset_path.exists() else pkl.load(open(dataset_path, 'rb'))
     time_dataset = []
 
