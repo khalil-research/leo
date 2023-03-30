@@ -80,14 +80,15 @@ class SklearnTrainer(Trainer):
         return self.model.predict(x)
 
     def _save_model(self):
-        self.model.save()
+        with open(f'./model_{self.model.id}.pkl', 'wb') as p:
+            pickle.dump(self.ps, p)
 
     def _save_predictions(self):
-        with open('./predictions.pkl', 'wb') as p:
+        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
             pickle.dump(self.ps, p)
 
     def _save_results(self):
-        with open('./results.pkl', 'wb') as p:
+        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
             pickle.dump(self.rs, p)
 
     def _get_split_data(self, split='train'):

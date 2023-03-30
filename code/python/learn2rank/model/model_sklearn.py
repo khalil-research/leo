@@ -8,6 +8,10 @@ class LinearRegression(sklm.LinearRegression):
         super(LinearRegression, self).__init__()
         self.cfg = cfg
 
+    @property
+    def id(self):
+        return f"lr_wt-{self.cfg.weights}"
+
 
 class Lasso(sklm.Lasso):
     def __init__(self, cfg=None):
@@ -16,6 +20,10 @@ class Lasso(sklm.Lasso):
                                     tol=cfg.tol)
         self.cfg = cfg
 
+    @property
+    def id(self):
+        return f"lasso_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
+
 
 class Ridge(sklm.Ridge):
     def __init__(self, cfg=None):
@@ -23,6 +31,10 @@ class Ridge(sklm.Ridge):
                                     fit_intercept=cfg.fit_intercept,
                                     tol=cfg.tol)
         self.cfg = cfg
+
+    @property
+    def id(self):
+        return f"ridge_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
 
 
 class DecisionTreeRegressor(sktree.DecisionTreeRegressor):
@@ -34,6 +46,10 @@ class DecisionTreeRegressor(sktree.DecisionTreeRegressor):
                                                     min_weight_fraction_leaf=cfg.min_weight_fraction_leaf,
                                                     max_features=cfg.max_features)
         self.cfg = cfg
+
+    @property
+    def id(self):
+        return f"dtreer_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
 
 
 class GradientBoostingRegressor(skensem.GradientBoostingRegressor):
@@ -53,3 +69,7 @@ class GradientBoostingRegressor(skensem.GradientBoostingRegressor):
 
     def _make_estimator(self, append=True):
         raise NotImplementedError()
+
+    @property
+    def id(self):
+        return f"gbr_nes-{self.cfg.nes}_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"

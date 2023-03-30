@@ -10,4 +10,4 @@ fit_intercept: True
 # precision of the solver
 tol: 0.0001
 # Sample weights
-weights: False
+weights: 0
