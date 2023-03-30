@@ -11,10 +11,17 @@ defaults:
 # pointwise, pairwise or listwise
 task: point_regress
 
+
+out_path:
+  cc: /home/rahulpat/scratch/l2o_resources
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016
+
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
   laptop: /home/rahul/PhD/Documents/projects/multiobjective_cp2016/resources
+
 machine: desktop
 
 dataset:
@@ -23,4 +30,8 @@ dataset:
     - '4_50'
 
 case: 0
-output_dir: ${hydra:runtime.output_dir}
+#output_dir: ${hydra:runtime.output_dir}
+
+hydra:
+  run:
+    dir: ${out_path[${machine}]}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
