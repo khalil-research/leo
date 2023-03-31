@@ -2,7 +2,8 @@ import logging
 
 import numpy as np
 import pandas as pd
-# import scipy as sp
+from scipy.stats import kendalltau
+from scipy.stats import spearmanr
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, mean_absolute_percentage_error
 
 log = logging.getLogger(__name__)
@@ -24,14 +25,14 @@ def eval_learning_metrics(orig, pred, sample_weight):
 
 def count_same(x, y, start=0, end=10):
     """Count the number of indices which correct variable prediction"""
-    assert len(x.shape) == 1 and len(y.shape) == 1
+    # assert len(x.shape) == 1 and len(y.shape) == 1
 
     return np.sum(x[start:end] == y[start:end])
 
 
 def count_common(x, y, start=0, end=10):
     """Count the number of variables common in x and y from [start, end)"""
-    assert len(x.shape) == 1 and len(y.shape) == 1
+    # print(x, y, type(x), type(y), len(x), len(y))
 
     return len(set(x[start:end]).intersection(set(y[start:end])))
 
@@ -39,7 +40,8 @@ def count_common(x, y, start=0, end=10):
 def eval_penalty(orig, pred, start=0, end=10):
     """Evaluate how far the variable is located in the predicted order as
     compared to its position in the original order from [start, end)"""
-    assert len(orig.shape) == 1 and len(pred.shape) == 1
+    orig, pred = np.array(orig), np.array(pred)
+    # assert len(orig.shape) == 1 and len(pred.shape) == 1
 
     penalties = []
     for i in range(start, end):
@@ -51,9 +53,6 @@ def eval_penalty(orig, pred, start=0, end=10):
 def eval_order_metrics(y_orders, y_orders_pred, n_items):
     metrics = []
     for idx, (y_order, y_order_pred) in enumerate(zip(y_orders, y_orders_pred)):
-        # Spearman rank correlation
-        # corr, p = sp.stats.spearmanr(y, y_hat)
-
         # Top 10 accuracy
         y_order, y_order_pred = y_order[:n_items[idx]], y_order_pred[:n_items[idx]]
         top_10_common = count_common(y_order, y_order_pred, end=10)
@@ -75,10 +74,6 @@ def eval_order_metrics(y_orders, y_orders_pred, n_items):
         metrics.append([idx, 'top_5_penalty', top_5_penalty])
 
     df = pd.DataFrame(metrics, columns=['id', 'metric_type', 'metric_value'])
-    # log.info(f"Correlation    : {df[df['metric_type'] == 'corr']['metric_value'].mean()} +/- "
-    #          f"{df[df['metric_type'] == 'corr']['metric_value'].std()}")
-    # log.info(f"p-value        : {df[df['metric_type'] == 'p']['metric_value'].mean()} +/- "
-    #          f"{df[df['metric_type'] == 'p']['metric_value'].std()}")
     log.info(f"Top 10 Common  : {df[df['metric_type'] == 'top_10_common']['metric_value'].mean()} +/- "
              f"{df[df['metric_type'] == 'top_10_common']['metric_value'].std()} ")
     log.info(
@@ -96,5 +91,27 @@ def eval_order_metrics(y_orders, y_orders_pred, n_items):
     log.info(
         f"Top 5 Penalty     : {df[df['metric_type'] == 'top_5_penalty']['metric_value'].mean()} +/- "
         f"{df[df['metric_type'] == 'top_5_penalty']['metric_value'].std()} ")
+
+    return metrics
+
+
+def eval_rank_metrics(y_ranks, y_ranks_pred, n_items):
+    metrics = []
+    for idx, (y_rank, y_rank_pred) in enumerate(zip(y_ranks, y_ranks_pred)):
+        # Spearman rank correlation
+        corr, p = spearmanr(y_rank, y_rank_pred)
+        metrics.append([idx, 'spearman-coeff', corr])
+        metrics.append([idx, 'spearman-p', p])
+
+        # Kendall rank correlation
+        corr, p = kendalltau(y_rank, y_rank_pred)
+        metrics.append([idx, 'kendall-coeff', corr])
+        metrics.append([idx, 'kendall-p', p])
+
+    df = pd.DataFrame(metrics, columns=['id', 'metric_type', 'metric_value'])
+    log.info(f"Spearman Correlation    : {df[df['metric_type'] == 'spearman-coeff']['metric_value'].mean()} +/- "
+             f"{df[df['metric_type'] == 'spearman-coeff']['metric_value'].std()}")
+    log.info(f"Kendall Correlation     : {df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()} +/- "
+             f"{df[df['metric_type'] == 'kendall-coeff']['metric_value'].std()}")
 
     return metrics
