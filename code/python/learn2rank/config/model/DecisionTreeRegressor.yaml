@@ -1,6 +1,7 @@
 name: DecisionTreeRegressor
 trainer: SklearnTrainer
 
+weights: 0
 # The function to measure the quality of a split.
 criterion: squared_error
 # The maximum depth of the tree. If None, then nodes are expanded
@@ -21,4 +22,4 @@ min_samples_leaf: 1
 min_weight_fraction_leaf: 0.0
 # The number of features to consider when looking for the best split:
 # int, float or {“auto”, “sqrt”, “log2”}, default=None
-max_features: None
+max_features: auto

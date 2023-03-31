@@ -24,11 +24,8 @@ def create_linear_models(task, weights=0):
 
 def create_tree_models(task):
     lines = []
-    max_features = ["sqrt", "log2"]
+    max_features = ["none", "log2"]
     max_depth = [3, 5, 10]
-
-    # Default model
-    lines.append(f'model=DecisionTreeRegressor')
 
     # Grid search
     for mf in max_features:
@@ -40,11 +37,10 @@ def create_tree_models(task):
 
 def create_ensemble_models(task):
     lines = []
-    max_features = ["sqrt", "log2"]
-    n_estimators = [25, 50]
+    max_features = ["auto", "log2"]
+    n_estimators = [25, 50, 100]
     max_depth = [3, 5]
 
-    lines.append(f'model=DecisionTreeRegressor')
     for mf in max_features:
         for md in max_depth:
             for nes in n_estimators:

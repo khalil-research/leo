@@ -1,6 +1,7 @@
 name: GradientBoostingRegressor
 trainer: SklearnTrainer
 
+weights: 0
 # Loss function to be optimized. ‘squared_error’ refers to the squared error for regression.
 # ‘absolute_error’ refers to the absolute error of regression and is a robust loss function.
 # ‘huber’ is a combination of the two.
@@ -48,5 +49,5 @@ max_depth: 3
 min_impurity_decrease: 0.0
 # The number of features to consider when looking for the best split:
 # int, float or {“auto”, “sqrt”, “log2”}, default=None
-max_features: None
+max_features: auto
 

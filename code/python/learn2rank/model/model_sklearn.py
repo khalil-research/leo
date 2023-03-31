@@ -72,4 +72,4 @@ class GradientBoostingRegressor(skensem.GradientBoostingRegressor):
 
     @property
     def id(self):
-        return f"gbr_nes-{self.cfg.nes}_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
+        return f"gbr_nes-{self.cfg.n_estimators}_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
