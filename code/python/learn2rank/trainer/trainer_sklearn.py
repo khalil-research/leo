@@ -9,7 +9,9 @@ import numpy as np
 from learn2rank.utils.data import get_sample_weight, unflatten_data
 from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
+from learn2rank.utils.metrics import eval_rank_metrics
 from learn2rank.utils.order import score2order
+from learn2rank.utils.order import score2rank
 from .trainer import Trainer
 
 log = logging.getLogger(__name__)
@@ -53,8 +55,14 @@ class SklearnTrainer(Trainer):
         self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['score'], sample_weight=wt_val)
 
         # Unflatten data
-        y_tr, self.ps['tr']['score'] = unflatten_data([y_tr, self.ps['tr']['score']], self.ps['tr']['n_items'])
-        y_val, self.ps['val']['score'] = unflatten_data([y_val, self.ps['val']['score']], self.ps['val']['n_items'])
+        y_tr, self.ps['tr']['score'] = unflatten_data([y_tr, self.ps['tr']['score']],
+                                                      n_items=self.ps['tr']['n_items'])
+        y_val, self.ps['val']['score'] = unflatten_data([y_val, self.ps['val']['score']],
+                                                        n_items=self.ps['val']['n_items'])
+
+        # Transform scores to ranks
+        self.ps['tr']['rank'] = score2rank(self.ps['tr']['score'])
+        self.ps['val']['rank'] = score2rank(self.ps['val']['score'])
 
         # Transform scores to order
         y_tr_order = score2order(y_tr)
@@ -64,9 +72,14 @@ class SklearnTrainer(Trainer):
 
         # Eval rank predictions
         log.info("** Train order metrics:")
-        self.rs['tr']['ranking'] = eval_order_metrics(y_tr_order, self.ps['tr']['order'], self.ps['tr']['n_items'])
+        self.rs['tr']['ranking'].extend(
+            eval_order_metrics(y_tr_order, self.ps['tr']['order'], self.ps['tr']['n_items']))
+        self.rs['tr']['ranking'].extend(eval_rank_metrics(y_tr, self.ps['tr']['rank'], self.ps['tr']['n_items']))
+
         log.info("** Val order metrics:")
-        self.rs['val']['ranking'] = eval_order_metrics(y_val_order, self.ps['val']['order'], self.ps['val']['n_items'])
+        self.rs['val']['ranking'].extend(
+            eval_order_metrics(y_val_order, self.ps['val']['order'], self.ps['val']['n_items']))
+        self.rs['val']['ranking'].extend(eval_rank_metrics(y_val, self.ps['val']['rank'], self.ps['val']['n_items']))
 
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
@@ -113,15 +126,15 @@ class SklearnTrainer(Trainer):
         return {
             'tr': {
                 'learning': {},
-                'ranking': {},
+                'ranking': [],
             },
             'val': {
                 'learning': {},
-                'ranking': {}
+                'ranking': []
             },
             'test': {
                 'learning': {},
-                'ranking': {}
+                'ranking': []
             },
             'time': {
                 'train': 0.0,
@@ -137,12 +150,14 @@ class SklearnTrainer(Trainer):
                 'names': [],
                 'n_items': [],
                 'score': [],
+                'rank': [],
                 'order': []
             },
             'val': {
                 'names': [],
                 'n_items': [],
                 'score': [],
+                'rank': [],
                 'order': []
             }
         }
