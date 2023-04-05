@@ -21,7 +21,7 @@ iinc: min_weight
 # 2. pair_svmrank: Generates dataset for SVM Rank
 # 3. multitask: Generates dataset for the multitask learning. Stores the cost
 #               and config along with rank
-task: point_regress
+task: pair_svmrank
 
 padding: False
 

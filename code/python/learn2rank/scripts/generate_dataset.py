@@ -158,6 +158,7 @@ def generate_dataset_pair_svmrank(cfg):
             print(f"Split {split}, labels shape {df_label.shape}")
 
             split_str = ''
+            n_items_str = ''
             qid = 1
             inst_path = inst_root_path / size / split
             for inst in inst_path.iterdir():
@@ -176,8 +177,12 @@ def generate_dataset_pair_svmrank(cfg):
 
                 # Get variable order
                 incb_dict = ast.literal_eval(label_row['incb'].values[0])
+                # A lower ranks means the variable is used higher up in the DD construction
+                # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
+                # Hence, modified_rank = n_items - original_rank
                 ranks = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
                 n_items = len(ranks)
+                n_items_str += f'{int(n_items)}\n'
                 for item_id, r in enumerate(ranks):
                     fid = 1
                     features_str = ''
@@ -190,7 +195,9 @@ def generate_dataset_pair_svmrank(cfg):
                         features_str += f"{fid}:{f} "
                         fid += 1
 
-                    split_str += f'{int(n_items - r)} qid:{qid} {features_str}\n'
+                    # Rank modified to be consistent with the convention of SVMRank
+                    modified_rank = int(n_items - r)
+                    split_str += f'{modified_rank} qid:{qid} {features_str}\n'
 
                 # Update qid after processing one instance
                 qid += 1
@@ -201,6 +208,9 @@ def generate_dataset_pair_svmrank(cfg):
             # Save dataset
             fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_dataset_{cfg.task}_{split}.dat', 'w')
             fp.write(split_str)
+
+            fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_n_items_{cfg.task}_{split}.dat', 'w')
+            fp.write(n_items_str)
 
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])

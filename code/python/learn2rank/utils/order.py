@@ -218,14 +218,14 @@ def score2order(scores):
     return orders
 
 
-def score2rank(scores):
+def score2rank(scores, reverse=False):
     ranks = []
     for _scores in scores:
         var_rank_score = []
         for var, score in enumerate(_scores):
             var_rank_score.append((var, score))
 
-        var_rank_score.sort(key=itemgetter(1))
+        var_rank_score.sort(key=itemgetter(1), reverse=False)
         _ranks = [0] * len(_scores)
         for rank, (var, _) in enumerate(var_rank_score):
             _ranks[int(var)] = rank
