@@ -191,7 +191,9 @@ def generate_dataset_pair_svmrank(cfg):
                         fid += 1
 
                     split_str += f'{int(n_items - r)} qid:{qid} {features_str}\n'
-                    qid += 1
+
+                # Update qid after processing one instance
+                qid += 1
 
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
