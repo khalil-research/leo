@@ -24,7 +24,7 @@ def create_linear_models(task, weights=0):
 
 def create_tree_models(task):
     lines = []
-    max_features = ["none", "log2"]
+    max_features = ["auto", "log2"]
     max_depth = [3, 5, 10]
 
     # Grid search
