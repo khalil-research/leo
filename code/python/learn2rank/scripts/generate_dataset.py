@@ -159,10 +159,12 @@ def generate_dataset_pair_svmrank(cfg):
 
             split_str = ''
             n_items_str = ''
+            inst_names_str = ''
             qid = 1
             inst_path = inst_root_path / size / split
             for inst in inst_path.iterdir():
                 pid = int(inst.stem.split('.')[0].split('_')[-1])
+                inst_names_str += f'{inst.stem}\n'
 
                 start_time = time.time()
 
@@ -211,6 +213,9 @@ def generate_dataset_pair_svmrank(cfg):
 
             fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_n_items_{cfg.task}_{split}.dat', 'w')
             fp.write(n_items_str)
+
+            fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_names_{cfg.task}_{split}.dat', 'w')
+            fp.write(inst_names_str)
 
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])
