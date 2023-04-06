@@ -12,5 +12,5 @@ class Trainer(ABC):
         pass
 
     @abstractmethod
-    def predict(self, x):
+    def predict(self, *args, **kwargs):
         pass
