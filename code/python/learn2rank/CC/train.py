@@ -2,11 +2,19 @@ import random
 from argparse import ArgumentParser
 
 
-def create_table_line():
-    pass
+def create_min_weight_model():
+    return [f'model=MinWeight']
 
 
-def create_linear_models(task, weights=0):
+def create_svm_rank_model():
+    lines = []
+    for c in [1e-3, 1e-2, 1e-1, 1e-0, 10, 100, 1000, 10000]:
+        lines.append(f'model=SVMRank model.c={c}')
+
+    return lines
+
+
+def create_linear_models(weights=0):
     # Linear Regression model
     lines = [f'model=LinearRegression model.weights={weights}']
 
@@ -22,7 +30,7 @@ def create_linear_models(task, weights=0):
     return lines
 
 
-def create_tree_models(task):
+def create_tree_models():
     lines = []
     max_features = ["auto", "log2"]
     max_depth = [3, 5, 10]
@@ -35,7 +43,7 @@ def create_tree_models(task):
     return lines
 
 
-def create_ensemble_models(task):
+def create_ensemble_models():
     lines = []
     max_features = ["auto", "log2"]
     n_estimators = [25, 50, 100]
@@ -52,18 +60,26 @@ def create_ensemble_models(task):
     return lines
 
 
-def create_knapsack_table(task):
-    lines = create_linear_models(task)
-    lines += create_tree_models(task)
-    lines += create_ensemble_models(task)
-
+def create_knapsack_table():
     case = 1
-    lines1 = []
+    all_lines = []
+
+    lines = create_min_weight_model()
+    lines += create_linear_models()
+    lines += create_tree_models()
+    lines += create_ensemble_models()
     for l in lines:
-        lines1.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l}")
+        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} task=point_regress")
         case += 1
 
-    return lines1
+    lines = create_svm_rank_model()
+    for l in lines:
+        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} "
+                         f"task=pair_svmrank "
+                         f"dataset.path=/home/rahul/Documents/projects/multiobjective_cp2016/resources/datasets/knapsack")
+        case += 1
+
+    return all_lines
 
 
 def main(args):
@@ -71,7 +87,7 @@ def main(args):
 
     lines = []
     if args.problem == 'knapsack':
-        lines = create_knapsack_table(args.task)
+        lines = create_knapsack_table()
 
     lines = "\n".join(lines)
     with open('table.dat', 'w') as fp:
@@ -81,7 +97,6 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--problem', type=str, default='knapsack')
-    parser.add_argument('--task', type=str, default='point_regress')
     parser.add_argument('--seed', type=int, default=7)
     args = parser.parse_args()
 

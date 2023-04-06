@@ -1,3 +1,4 @@
+import pickle
 from abc import ABC, abstractmethod
 
 
@@ -14,3 +15,11 @@ class Trainer(ABC):
     @abstractmethod
     def predict(self, *args, **kwargs):
         pass
+
+    def _save_predictions(self):
+        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
+            pickle.dump(self.ps, p)
+
+    def _save_results(self):
+        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
+            pickle.dump(self.rs, p)

@@ -1,4 +1,3 @@
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -8,7 +7,7 @@ from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
 from learn2rank.utils.order import get_variable_rank_from_weights
-from learn2rank.utils.order import score2order
+from learn2rank.utils.order import pred_score2order
 from .trainer import Trainer
 
 
@@ -40,10 +39,10 @@ class MinWeightTrainer(Trainer):
         self.rs['tr']['learning'] = eval_learning_metrics(y_tr, self.ps['tr']['rank'], wt_tr)
         self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['rank'], wt_val)
 
-        y_tr_order = score2order(y_tr)
-        self.ps['tr']['order'] = score2order(self.ps['tr']['rank'])
-        y_val_order = score2order(y_val)
-        self.ps['val']['order'] = score2order(self.ps['val']['rank'])
+        y_tr_order = pred_score2order(y_tr)
+        self.ps['tr']['order'] = pred_score2order(self.ps['tr']['rank'])
+        y_val_order = pred_score2order(y_val)
+        self.ps['val']['order'] = pred_score2order(self.ps['val']['rank'])
 
         # Ranking metrics
         self.rs['tr']['ranking'].extend(eval_order_metrics(y_tr_order,
@@ -73,14 +72,6 @@ class MinWeightTrainer(Trainer):
                 y_pred_lst.append(y_pred)
 
         return y_pred_lst
-
-    def _save_predictions(self):
-        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.ps, p)
-
-    def _save_results(self):
-        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.rs, p)
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []

@@ -44,6 +44,7 @@ def main(args):
     task_modelName = set()
     result_summary = []
     for result_path in output_path.rglob('results_*.pkl'):
+        print(result_path)
         result = pkl.load(open(result_path, 'rb'))
 
         cfg_path = result_path.parent / '.hydra/config.yaml'

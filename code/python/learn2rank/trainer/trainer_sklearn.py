@@ -10,8 +10,8 @@ from learn2rank.utils.data import get_sample_weight, unflatten_data
 from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
-from learn2rank.utils.order import score2order
-from learn2rank.utils.order import score2rank
+from learn2rank.utils.order import pred_score2order
+from learn2rank.utils.order import pred_score2rank
 from .trainer import Trainer
 
 log = logging.getLogger(__name__)
@@ -61,24 +61,26 @@ class SklearnTrainer(Trainer):
                                                         n_items=self.ps['val']['n_items'])
 
         # Transform scores to ranks
-        self.ps['tr']['rank'] = score2rank(self.ps['tr']['score'])
-        self.ps['val']['rank'] = score2rank(self.ps['val']['score'])
+        self.ps['tr']['rank'] = pred_score2rank(self.ps['tr']['score'])
+        self.ps['val']['rank'] = pred_score2rank(self.ps['val']['score'])
 
         # Transform scores to order
-        y_tr_order = score2order(y_tr)
-        self.ps['tr']['order'] = score2order(self.ps['tr']['score'])
-        y_val_order = score2order(y_val)
-        self.ps['val']['order'] = score2order(self.ps['val']['score'])
+        y_tr_order = pred_score2order(y_tr)
+        self.ps['tr']['order'] = pred_score2order(self.ps['tr']['score'])
+        y_val_order = pred_score2order(y_val)
+        self.ps['val']['order'] = pred_score2order(self.ps['val']['score'])
 
         # Eval rank predictions
         log.info("** Train order metrics:")
-        self.rs['tr']['ranking'].extend(
-            eval_order_metrics(y_tr_order, self.ps['tr']['order'], self.ps['tr']['n_items']))
+        self.rs['tr']['ranking'].extend(eval_order_metrics(y_tr_order,
+                                                           self.ps['tr']['order'],
+                                                           self.ps['tr']['n_items']))
         self.rs['tr']['ranking'].extend(eval_rank_metrics(y_tr, self.ps['tr']['rank'], self.ps['tr']['n_items']))
 
         log.info("** Val order metrics:")
-        self.rs['val']['ranking'].extend(
-            eval_order_metrics(y_val_order, self.ps['val']['order'], self.ps['val']['n_items']))
+        self.rs['val']['ranking'].extend(eval_order_metrics(y_val_order,
+                                                            self.ps['val']['order'],
+                                                            self.ps['val']['n_items']))
         self.rs['val']['ranking'].extend(eval_rank_metrics(y_val, self.ps['val']['rank'], self.ps['val']['n_items']))
 
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
@@ -95,14 +97,6 @@ class SklearnTrainer(Trainer):
     def _save_model(self):
         with open(f'./model_{self.model.id}.pkl', 'wb') as p:
             pickle.dump(self.ps, p)
-
-    def _save_predictions(self):
-        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.ps, p)
-
-    def _save_results(self):
-        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.rs, p)
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
