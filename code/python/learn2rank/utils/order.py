@@ -201,9 +201,16 @@ def property_weight_dict2array(pw_dict, cast_to_numpy=False):
     return lst
 
 
-def score2order(scores):
+def pred_score2order(scores, reverse=False):
     """
-    scores: list of lists
+    Order variables based on its score
+    If reverse is False (default), then lower score will lead to a
+    higher place high in the order
+    If reverse is True, then higher score will lead to a higher place
+    in the order. Used with SVMRank.
+
+    [80, -10, 50, 100], reverse=False ==> [1, 2, 0, 3]
+    [80, -10, 50, 100], reverse=True ==> [3, 0, 2, 1]
     """
     orders = []
     for _scores in scores:
@@ -211,21 +218,30 @@ def score2order(scores):
         for var, score in enumerate(_scores):
             var_rank_score.append((var, score))
 
-        var_rank_score.sort(key=itemgetter(1))
+        var_rank_score.sort(key=itemgetter(1), reverse=reverse)
         order = [int(var) for (var, _) in var_rank_score]
         orders.append(order)
 
     return orders
 
 
-def score2rank(scores, reverse=False):
+def pred_score2rank(scores, reverse=False):
+    """Rank variables based on its score.
+    If reverse is False (default), then lower score will lead to a
+    higher rank
+    If reverse is True, then lower score will lead to a lower rank
+
+    [80, -10, 50, 100], reverse=False ==> [2, 0, 1, 3]
+    [80, -10, 50, 100], reverse=True ==> [1, 3, 2, 0]
+    """
     ranks = []
     for _scores in scores:
         var_rank_score = []
         for var, score in enumerate(_scores):
             var_rank_score.append((var, score))
 
-        var_rank_score.sort(key=itemgetter(1), reverse=False)
+        var_rank_score.sort(key=itemgetter(1), reverse=reverse)
+
         _ranks = [0] * len(_scores)
         for rank, (var, _) in enumerate(var_rank_score):
             _ranks[int(var)] = rank
