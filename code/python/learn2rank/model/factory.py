@@ -5,7 +5,7 @@ from .model_sklearn import GradientBoostingRegressor
 from .model_sklearn import Lasso
 from .model_sklearn import LinearRegression
 from .model_sklearn import Ridge
-
+from .model_xgb import GradientBoostingRanker
 
 class SVMRank:
     """Dummy class for SVMRank model"""
@@ -36,5 +36,6 @@ model_factory.register_member('Ridge', Ridge)
 model_factory.register_member('Lasso', Lasso)
 model_factory.register_member('DecisionTreeRegressor', DecisionTreeRegressor)
 model_factory.register_member('GradientBoostingRegressor', GradientBoostingRegressor)
+model_factory.register_member('GradientBoostingRanker', GradientBoostingRanker)
 model_factory.register_member('SVMRank', SVMRank)
 model_factory.register_member('MinWeight', MinWeight)
