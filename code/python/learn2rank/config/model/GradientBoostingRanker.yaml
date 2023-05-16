@@ -1,6 +1,5 @@
 name: GradientBoostingRanker
-trainer: XGBTrainer
-
+trainer: XGBoostTrainer
 
 # Number of gradient boosted trees. Equivalent to number of boosting rounds.
 n_estimators: 25
