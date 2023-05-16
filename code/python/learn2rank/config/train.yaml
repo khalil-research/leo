@@ -33,4 +33,4 @@ case: 0
 
 hydra:
   run:
-    dir: ${out_path[${machine}]}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${out_path[${machine}]}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${case}
