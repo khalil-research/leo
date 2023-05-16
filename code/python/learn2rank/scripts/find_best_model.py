@@ -57,27 +57,50 @@ def main(args):
         result_tr = pd.DataFrame(ranking_tr, columns=['id', 'name', 'value'])
         result_val = pd.DataFrame(ranking_val, columns=['id', 'name', 'value'])
 
-        result_summary.append([
-            cfg.task,
-            cfg.model.name,
-            "_".join(result_path.stem[8:].split("_")[1:]),
-            result['tr']['learning']['mse'],
-            result['tr']['learning']['mae'],
-            result['tr']['learning']['r2'],
-            np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
-            np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
-            np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
-            np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
-            np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
-            result['val']['learning']['mse'],
-            result['val']['learning']['mae'],
-            result['val']['learning']['r2'],
-            np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
-            np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
-            np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
-            np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-            np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values)
-        ])
+        if cfg.task == 'pair_xgbrank':
+            result_summary.append([
+                cfg.task,
+                cfg.model.name,
+                "_".join(result_path.stem[8:].split("_")[1:]),
+                None,
+                None,
+                None,
+                np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
+                None,
+                None,
+                None,
+                np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
+                np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values)
+            ])
+        else:
+            result_summary.append([
+                cfg.task,
+                cfg.model.name,
+                "_".join(result_path.stem[8:].split("_")[1:]),
+                result['tr']['learning']['mse'],
+                result['tr']['learning']['mae'],
+                result['tr']['learning']['r2'],
+                np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
+                np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
+                result['val']['learning']['mse'],
+                result['val']['learning']['mae'],
+                result['val']['learning']['r2'],
+                np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
+                np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
+                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values)
+            ])
 
     # Create summary data frame
     summary_df = pd.DataFrame(result_summary, columns=[
@@ -117,7 +140,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--model_selection', type=str, default='k-tau')
-    parser.add_argument('--model_name', type=str, default='LinearRegression')
+    # parser.add_argument('--model_name', type=str, default='LinearRegression')
 
     # parser.add_argument('--pretrained_dir', type=str, default='nn__vri')
     args = parser.parse_args()
