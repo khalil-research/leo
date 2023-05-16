@@ -60,6 +60,23 @@ def create_ensemble_models():
     return lines
 
 
+def create_xgb_rank_models():
+    lines = []
+    reg_lambda = [1, 0.1, 0.001]
+    n_estimators = [25, 50, 100, 150, 200]
+    max_depth = [3, 5, 7, 10]
+
+    for lam in reg_lambda:
+        for md in max_depth:
+            for nes in n_estimators:
+                lines.append(f'model=GradientBoostingRanker '
+                             f'model.max_depth={md} '
+                             f'model.n_estimators={nes} '
+                             f'model.reg_lambda={lam}')
+
+    return lines
+
+
 def create_knapsack_table():
     case = 1
     all_lines = []
@@ -76,6 +93,12 @@ def create_knapsack_table():
     for l in lines:
         all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} "
                          f"task=pair_svmrank "
+                         f"dataset.path=/home/rahul/Documents/projects/multiobjective_cp2016/resources/datasets/knapsack")
+        case += 1
+
+    lines = create_xgb_rank_models()
+    for l in lines:
+        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} task=pair_xgbrank "
                          f"dataset.path=/home/rahul/Documents/projects/multiobjective_cp2016/resources/datasets/knapsack")
         case += 1
 

@@ -8,9 +8,8 @@ defaults:
   - _self_
 
 # Type of ranking task
-# pointwise, pairwise or listwise
+# point_regress, pair_svmrank, pair_xgbrank, multitask
 task: point_regress
-
 
 out_path:
   cc: /home/rahulpat/scratch/l2o_resources
