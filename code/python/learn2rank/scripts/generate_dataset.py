@@ -160,6 +160,7 @@ def generate_dataset_pair_svmrank(cfg):
 
     # For each size
     for size in cfg.size:
+        print("Size: ", size)
         for split in cfg.split:
             df_label = pd.read_csv(res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv')
             print(f"Split {split}, labels shape {df_label.shape}")
@@ -215,13 +216,13 @@ def generate_dataset_pair_svmrank(cfg):
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
             # Save dataset
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_dataset_{cfg.task}_{split}.dat', 'w')
+            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
             fp.write(split_str)
 
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_n_items_{cfg.task}_{split}.dat', 'w')
+            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_n_items_{cfg.task}_{split}.dat', 'w')
             fp.write(n_items_str)
 
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_names_{cfg.task}_{split}.dat', 'w')
+            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_names_{cfg.task}_{split}.dat', 'w')
             fp.write(inst_names_str)
 
     # Save time
