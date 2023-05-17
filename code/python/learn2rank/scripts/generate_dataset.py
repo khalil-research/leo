@@ -48,10 +48,17 @@ def generate_dataset_point_regress(cfg):
                 # Prepare y
                 # Get best seed for the pid
                 label_row = df_label[df_label['pid'] == pid]
-                best_seed = label_row['seed'].values[0]
-                sample['seed'] = best_seed
-                # Save the incumbent
-                incb_dict = ast.literal_eval(label_row['incb'].values[0])
+                incb_dict = {'avg_value': 0.0, 'avg_value_by_weight': 0.0, 'max_value': 0.0, 'max_value_by_weight': 0.0,
+                             'min_value': 0.0, 'min_value_by_weight': 0.0, 'weight': -1.0}
+                best_seed = '-1'
+                sample['seed'] = '-1'
+                if label_row.shape[0]:
+                    best_seed = label_row['seed'].values[0]
+                    sample['seed'] = best_seed
+                    # Save the incumbent
+                    incb_dict = ast.literal_eval(label_row['incb'].values[0])
+                else:
+                    print(f'Missing incumbent. Using min_weight for {str(inst)}')
                 sample['y'] = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
 
                 end_time = time.time() - start_time
