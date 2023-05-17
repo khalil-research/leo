@@ -1,9 +1,9 @@
-import argparse
 import pathlib
 import pickle as pkl
 import shutil
 from pathlib import Path
 
+import hydra
 import numpy as np
 import pandas as pd
 from omegaconf import OmegaConf
@@ -39,6 +39,7 @@ def main2(args):
     print(best_cfg)
 
 
+@hydra.main(version_base='1.1', config_path='../config', config_name='find_best_model.yaml')
 def main(args):
     output_path = Path(args.output_dir)
     task_modelName = set()
@@ -46,21 +47,17 @@ def main(args):
     for result_path in output_path.rglob('results_*.pkl'):
         print(result_path)
         result = pkl.load(open(result_path, 'rb'))
-
-        cfg_path = result_path.parent / '.hydra/config.yaml'
-        cfg = OmegaConf.load(cfg_path)
-        task_modelName.add((cfg.task, cfg.model.name))
-
+        task_modelName.add((result['task'], result['model_name']))
         ranking_tr = result['tr']['ranking']
         ranking_val = result['val']['ranking']
 
         result_tr = pd.DataFrame(ranking_tr, columns=['id', 'name', 'value'])
         result_val = pd.DataFrame(ranking_val, columns=['id', 'name', 'value'])
 
-        if cfg.task == 'pair_xgbrank':
+        if result['task'] == 'pair_xgbrank':
             result_summary.append([
-                cfg.task,
-                cfg.model.name,
+                result['task'],
+                result['model_name'],
                 "_".join(result_path.stem[8:].split("_")[1:]),
                 None,
                 None,
@@ -81,8 +78,8 @@ def main(args):
             ])
         else:
             result_summary.append([
-                cfg.task,
-                cfg.model.name,
+                result['task'],
+                result['model_name'],
                 "_".join(result_path.stem[8:].split("_")[1:]),
                 result['tr']['learning']['mse'],
                 result['tr']['learning']['mae'],
@@ -124,7 +121,7 @@ def main(args):
         'top_10_common_val',
         'top_10_penalty_val'
     ])
-    summary_df.to_csv('model_summary.csv', index=False)
+    summary_df.to_csv(f'model_summary_{args.problem.size}.csv', index=False)
 
     best_model_df = pd.DataFrame(columns=summary_df.columns)
     # Select best models
@@ -133,15 +130,8 @@ def main(args):
         best_model_df = pd.concat(
             [best_model_df, _df[_df[f"{args.model_selection}_val"] == _df[f"{args.model_selection}_val"].max()]],
             ignore_index=True)
-    best_model_df.to_csv('best_model_summary.csv', index=False)
+    best_model_df.to_csv(f'best_model_summary_{args.problem.size}.csv', index=False)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--model_selection', type=str, default='k-tau')
-    # parser.add_argument('--model_name', type=str, default='LinearRegression')
-
-    # parser.add_argument('--pretrained_dir', type=str, default='nn__vri')
-    args = parser.parse_args()
-    main(args)
+    main()

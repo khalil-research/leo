@@ -29,6 +29,8 @@ class XGBoostTrainer(Trainer):
 
         self.ps = self._get_preds_store()
         self.rs = self._get_results_store()
+        self.rs['task'] = self.cfg.task
+        self.rs['model_name'] = self.cfg.model.name
 
         self.ps["tr"]["n_items"] = list(map(int, self.train_n_items_file.read_text().strip().split("\n")))
         self.ps["val"]["n_items"] = list(map(int, self.val_n_items_file.read_text().strip().split("\n")))

@@ -26,6 +26,8 @@ class SVMRankTrainer(Trainer):
 
         self.ps = self._get_preds_store()
         self.rs = self._get_results_store()
+        self.rs['task'] = self.cfg.task
+        self.rs['model_name'] = self.cfg.model.name
 
     def run(self):
         self.train()

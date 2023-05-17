@@ -22,6 +22,8 @@ class SklearnTrainer(Trainer):
         super().__init__(data, model, cfg)
 
         self.rs = self._get_results_store()
+        self.rs['task'] = self.cfg.task
+        self.rs['model_name'] = self.cfg.model.name
         self.ps = self._get_preds_store()
 
     def run(self):
@@ -121,6 +123,8 @@ class SklearnTrainer(Trainer):
     @staticmethod
     def _get_results_store():
         return {
+            'task': None,
+            'model_name': None,
             'tr': {
                 'learning': {},
                 'ranking': [],

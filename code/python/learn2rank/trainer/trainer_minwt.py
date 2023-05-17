@@ -28,6 +28,8 @@ class MinWeightTrainer(Trainer):
 
         self.rs = self._get_results_store()
         self.ps = self._get_preds_store()
+        self.rs['task'] = self.cfg.task
+        self.rs['model_name'] = self.cfg.model.name
 
     def run(self):
         y_tr, names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
