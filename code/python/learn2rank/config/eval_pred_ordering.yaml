@@ -14,8 +14,12 @@ res_path:
 
 machine: desktop
 
-pred:
-  name: linreg_predictions_5_40.pkl
+inst_path: ${res_path[${machine}]}/instances/${problem.inst_name}
+pred_path: ${res_path[${machine}]}/predictions/${problem.name}/${problem.size}
+best_model_summary_path: ${res_path[${machine}]}/model_summary/${problem.name}/best_model_${problem.size}
+
+model_type: GradientBootingRegressor
+task: point_regress
 
 bdd:
   timelimit: 300
