@@ -26,6 +26,7 @@ machine: desktop
 dataset_path:
   point_regress: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
   pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank: ${res_path[${machine}]}/datasets/${problem.name}
 
 dataset:
   path: ${dataset_path[${task}]}
