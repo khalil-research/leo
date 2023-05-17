@@ -62,9 +62,9 @@ def create_ensemble_models():
 
 def create_xgb_rank_models():
     lines = []
-    reg_lambda = [1, 0.1, 0.001]
-    n_estimators = [25, 50, 100, 150, 200]
-    max_depth = [3, 5, 7, 10]
+    reg_lambda = [0.1, 0.01]
+    n_estimators = [50, 100, 150]
+    max_depth = [5, 7]
 
     for lam in reg_lambda:
         for md in max_depth:
@@ -77,29 +77,27 @@ def create_xgb_rank_models():
     return lines
 
 
-def create_knapsack_table():
+def create_knapsack_table(args):
     case = 1
     all_lines = []
+    base = f"python -m learn2rank.scripts.train problem=knapsack problem.n_objs={args.n_objs} problem.n_vars={args.n_vars}"
 
     lines = create_min_weight_model()
     lines += create_linear_models()
     lines += create_tree_models()
     lines += create_ensemble_models()
     for l in lines:
-        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} task=point_regress")
+        all_lines.append(f"{case} {base} {l} task=point_regress")
         case += 1
 
     lines = create_svm_rank_model()
     for l in lines:
-        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} "
-                         f"task=pair_svmrank "
-                         f"dataset.path=/home/rahul/Documents/projects/multiobjective_cp2016/resources/datasets/knapsack")
+        all_lines.append(f"{case} {base} {l} task=pair_svmrank")
         case += 1
 
     lines = create_xgb_rank_models()
     for l in lines:
-        all_lines.append(f"{case} python -m learn2rank.scripts.train problem=knapsack {l} task=pair_xgbrank "
-                         f"dataset.path=/home/rahul/Documents/projects/multiobjective_cp2016/resources/datasets/knapsack")
+        all_lines.append(f"{case} {base} {l} task=pair_xgbrank")
         case += 1
 
     return all_lines
@@ -110,16 +108,18 @@ def main(args):
 
     lines = []
     if args.problem == 'knapsack':
-        lines = create_knapsack_table()
+        lines = create_knapsack_table(args)
 
     lines = "\n".join(lines)
-    with open('table.dat', 'w') as fp:
+    with open(f'train_table_{args.n_objs}_{args.n_vars}.dat', 'w') as fp:
         fp.write(lines)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--problem', type=str, default='knapsack')
+    parser.add_argument('--n_vars', type=int, default=50)
+    parser.add_argument('--n_objs', type=int, default=4)
     parser.add_argument('--seed', type=int, default=7)
     args = parser.parse_args()
 
