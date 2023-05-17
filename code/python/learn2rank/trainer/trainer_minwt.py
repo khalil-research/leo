@@ -76,12 +76,13 @@ class MinWeightTrainer(Trainer):
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
 
-        for size in self.cfg.dataset.size:
-            for v in self.data[size][split]:
-                _x, _y = v['x'], v['y']
-                n_items.append(len(_y))
-                names.append(v['name'])
-                y.append(_y)
+        size = self.cfg.problem.size
+        # for size in self.cfg.dataset.size:
+        for v in self.data[size][split]:
+            _x, _y = v['x'], v['y']
+            n_items.append(len(_y))
+            names.append(v['name'])
+            y.append(_y)
 
         sample_weights = [1] * len(y)
 

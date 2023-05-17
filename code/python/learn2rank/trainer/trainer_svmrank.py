@@ -16,14 +16,14 @@ class SVMRankTrainer(Trainer):
 
         self.data = Path(data)
 
-        self.train_data_file = self.data / f'{self.cfg.problem.name}_dataset_pair_svmrank_train.dat'
-        self.val_data_file = self.data / f'{self.cfg.problem.name}_dataset_pair_svmrank_val.dat'
+        self.train_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_train.dat'
+        self.val_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_val.dat'
 
-        self.train_n_items_file = self.data / f'{self.cfg.problem.name}_n_items_pair_svmrank_train.dat'
-        self.val_n_items_file = self.data / f'{self.cfg.problem.name}_n_items_pair_svmrank_val.dat'
+        self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_train.dat'
+        self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_val.dat'
 
-        self.train_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_train.dat'
-        self.val_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_val.dat'
+        self.train_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_train.dat'
+        self.val_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_val.dat'
 
         self.ps = self._get_preds_store()
         self.rs = self._get_results_store()

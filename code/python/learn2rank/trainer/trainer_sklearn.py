@@ -100,18 +100,18 @@ class SklearnTrainer(Trainer):
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
+        size = self.cfg.problem.size
+        # for size in self.cfg.problem.size:
+        for v in self.data[size][split]:
+            _x, _y = v['x'], v['y']
+            n_items.append(len(_y))
+            names.append(v['name'])
 
-        for size in self.cfg.dataset.size:
-            for v in self.data[size][split]:
-                _x, _y = v['x'], v['y']
-                n_items.append(len(_y))
-                names.append(v['name'])
+            x.extend(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
 
-                x.extend(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
-
-                weights = get_sample_weight(_y, bool(self.cfg.model.weights))
-                y.extend(_y)
-                wt.extend(list(weights[0]))
+            weights = get_sample_weight(_y, bool(self.cfg.model.weights))
+            y.extend(_y)
+            wt.extend(list(weights[0]))
 
         return np.asarray(x), np.asarray(y), names, n_items, np.asarray(wt)
 

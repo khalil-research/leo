@@ -23,10 +23,12 @@ res_path:
 
 machine: desktop
 
+dataset_path:
+  point_regress: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
+  pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
+
 dataset:
-  path: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
-  size:
-    - '4_50'
+  path: ${dataset_path[${task}]}
 
 case: 0
 #output_dir: ${hydra:runtime.output_dir}
