@@ -1,0 +1,16 @@
+defaults:
+  - problem: knapsack
+  - _self_
+
+
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources/
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
+  laptop: /home/rahul/PhD/Documents/projects/multiobjective_cp2016/resources
+
+
+machine: desktop
+
+output_dir: ${res_path[${machine}]}/predictions/${problem.name}/${problem.size}
+summary_path: ${res_path[${machine}]}/model_summary/${problem.name}
+model_selection: k-tau

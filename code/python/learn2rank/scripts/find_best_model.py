@@ -9,7 +9,7 @@ import pandas as pd
 from omegaconf import OmegaConf
 
 
-def main2(args):
+def main2(cfg):
     # Best params tracking
     best_path = None
     best_loss = np.infty
@@ -17,7 +17,7 @@ def main2(args):
     best_cfg = None
 
     # Iterate and find experiment with best validation loss
-    output_path = pathlib.Path(args.output_dir)
+    output_path = pathlib.Path(cfg.output_dir)
     for i, f in enumerate(output_path.rglob('*/results.pkl')):
         print(i, f)
         result = pkl.load(open(f, 'rb'))
@@ -31,7 +31,7 @@ def main2(args):
 
     # Copy the best experiment to the pretrained_dir
     shutil.copytree(best_path.parent,
-                    f'learn2rank/resources/pretrained/{args.pretrained_dir}',
+                    f'learn2rank/resources/pretrained/{cfg.pretrained_dir}',
                     dirs_exist_ok=True)
 
     print(f'Best loss: {best_loss:.4f}')
@@ -40,13 +40,17 @@ def main2(args):
 
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='find_best_model.yaml')
-def main(args):
-    output_path = Path(args.output_dir)
+def main(cfg):
+    output_path = Path(cfg.output_dir)
+    Path(cfg.summary_path).mkdir(exist_ok=True, parents=True)
     task_modelName = set()
     result_summary = []
     for result_path in output_path.rglob('results_*.pkl'):
         print(result_path)
+        pred_path = '_'.join(result_path.name.split('_')[1:])
+        pred_path = result_path.parent / f'prediction_{pred_path}'
         result = pkl.load(open(result_path, 'rb'))
+
         task_modelName.add((result['task'], result['model_name']))
         ranking_tr = result['tr']['ranking']
         ranking_val = result['val']['ranking']
@@ -74,7 +78,9 @@ def main(args):
                 np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values)
+                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
+                str(pred_path),
+                str(result_path)
             ])
         else:
             result_summary.append([
@@ -96,7 +102,9 @@ def main(args):
                 np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values)
+                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
+                str(pred_path),
+                str(result_path)
             ])
 
     # Create summary data frame
@@ -119,18 +127,20 @@ def main(args):
         'k-tau_val',
         'top_10_same_val',
         'top_10_common_val',
-        'top_10_penalty_val'
+        'top_10_penalty_val',
+        'prediction_path',
+        'results_path'
     ])
-    summary_df.to_csv(f'model_summary_{args.problem.size}.csv', index=False)
+    summary_df.to_csv(f'{cfg.summary_path}/{cfg.problem.size}.csv', index=False)
 
     best_model_df = pd.DataFrame(columns=summary_df.columns)
     # Select best models
     for task, model_name in task_modelName:
         _df = summary_df[(summary_df.task == task) & (summary_df.model_name == model_name)]
         best_model_df = pd.concat(
-            [best_model_df, _df[_df[f"{args.model_selection}_val"] == _df[f"{args.model_selection}_val"].max()]],
+            [best_model_df, _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
             ignore_index=True)
-    best_model_df.to_csv(f'best_model_summary_{args.problem.size}.csv', index=False)
+    best_model_df.to_csv(f'{cfg.summary_path}/best_model_{cfg.problem.size}.csv', index=False)
 
 
 if __name__ == '__main__':
