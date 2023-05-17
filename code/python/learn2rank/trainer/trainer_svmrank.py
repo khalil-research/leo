@@ -11,7 +11,6 @@ from .trainer import Trainer
 class SVMRankTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None):
         super().__init__(data, model, cfg)
-        self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         self.bin_path = self.res_path / 'svm_rank_bin'
 
         self.data = Path(data)
@@ -73,16 +72,21 @@ class SVMRankTrainer(Trainer):
     def train(self):
         # Train
         learn = self.bin_path / 'svm_rank_learn'
-        model = self.res_path / 'pretrained/svm_rank' / f'c-{self.cfg.model.c}.dat'
+
+        model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        model_path.mkdir(parents=True, exist_ok=True)
+        model = model_path / f'svm_rank_c-{self.cfg.model.c}.dat'
+
         os.system(f'{learn} -c {self.cfg.model.c} {self.train_data_file} {model}')
 
     def predict(self, split='train'):
         classify = self.bin_path / 'svm_rank_classify'
-        model = self.res_path / 'pretrained/svm_rank' / f'c-{self.cfg.model.c}.dat'
 
-        data = self.data / f'{self.cfg.problem.name}_dataset_pair_svmrank_{split}.dat'
-        predictions = self.res_path / 'predictions/svm_rank' / f'c-{self.cfg.model.c}_{split}.dat'
+        model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        model = model_path / f'svm_rank_c-{self.cfg.model.c}.dat'
 
+        data = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_{split}.dat'
+        predictions = self.pred_path / f'predictions/svm_rank_c-{self.cfg.model.c}_{split}.dat'
         os.system(f'{classify} {data} {model} {predictions}')
 
         return predictions

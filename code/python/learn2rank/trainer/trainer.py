@@ -1,5 +1,6 @@
 import pickle
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 
 class Trainer(ABC):
@@ -7,6 +8,13 @@ class Trainer(ABC):
         self.data = data
         self.model = model
         self.cfg = config
+
+        self.rs = {}
+        self.ps = {}
+
+        self.res_path = Path(self.cfg.res_path[self.cfg.machine])
+        self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        self.pred_path.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
     def run(self):
@@ -17,9 +25,11 @@ class Trainer(ABC):
         pass
 
     def _save_predictions(self):
-        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
+        out_path = self.pred_path / f'prediction_{self.model.id}.pkl'
+        with open(out_path, 'wb') as p:
             pickle.dump(self.ps, p)
 
     def _save_results(self):
-        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
+        out_path = self.pred_path / f'results_{self.model.id}.pkl'
+        with open(out_path, 'wb') as p:
             pickle.dump(self.rs, p)

@@ -1,5 +1,4 @@
 import logging
-import pickle
 from pathlib import Path
 
 from sklearn.datasets import load_svmlight_file
@@ -16,14 +15,12 @@ log = logging.getLogger(__name__)
 class XGBoostTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None):
         super().__init__(data, model, cfg)
-        self.res_path = Path(self.cfg.res_path[self.cfg.machine])
-
         # Load files
         self.data = Path(data)
-        self.train_data_file = str(self.data / f'{self.cfg.problem.name}_dataset_pair_svmrank_train.dat')
-        self.val_data_file = str(self.data / f'{self.cfg.problem.name}_dataset_pair_svmrank_val.dat')
-        self.train_n_items_file = self.data / f'{self.cfg.problem.name}_n_items_pair_svmrank_train.dat'
-        self.val_n_items_file = self.data / f'{self.cfg.problem.name}_n_items_pair_svmrank_val.dat'
+        self.train_data_file = str(self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_train.dat')
+        self.val_data_file = str(self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_val.dat')
+        self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_train.dat'
+        self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_val.dat'
         # self.train_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_train.dat'
         # self.val_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_val.dat'
         # Process files
@@ -145,12 +142,8 @@ class XGBoostTrainer(Trainer):
         }
 
     def _save_model(self):
-        self.model.save_model(f'{self.model.id}.txt')
+        model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        model_path.mkdir(parents=True, exist_ok=True)
+        model_path = model_path / f'model_{self.model.id}.txt'
 
-    def _save_predictions(self):
-        with open(f'./prediction_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.ps, p)
-
-    def _save_results(self):
-        with open(f'./results_{self.model.id}.pkl', 'wb') as p:
-            pickle.dump(self.rs, p)
+        self.model.save_model(model_path)

@@ -95,7 +95,10 @@ class SklearnTrainer(Trainer):
         return self.model.predict(x)
 
     def _save_model(self):
-        with open(f'./model_{self.model.id}.pkl', 'wb') as p:
+        model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        model_path.mkdir(parents=True, exist_ok=True)
+        model_path = model_path / f'model_{self.model.id}.pkl'
+        with open(model_path, 'wb') as p:
             pickle.dump(self.ps, p)
 
     def _get_split_data(self, split='train'):
