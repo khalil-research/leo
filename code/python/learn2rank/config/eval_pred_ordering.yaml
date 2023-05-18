@@ -10,7 +10,7 @@ split: train
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
   desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
-  laptop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/resources
 
 machine: desktop
 
