@@ -6,6 +6,9 @@ import pandas as pd
 
 case = 1
 
+min_weight_dict = {'avg_value': 0.0, 'avg_value_by_weight': 0.0, 'max_value': 0.0, 'max_value_by_weight': 0.0,
+                   'min_value': 0.0, 'min_value_by_weight': 0.0, 'weight': -1.0}
+
 
 def create_table_line(case=1, problem='knapsack', n_objs=3, n_vars=60, bin_name='multiobj', mode='one', seed=777,
                       n_jobs=1, cutoff=60, wallclock=300, init_incumbent='canonical', restore_run=0, new_cutoff=120,
@@ -101,8 +104,11 @@ def main(cfg):
                     traj_json = json.loads(traj_lines[-1])
                     result_seed_cost.append([pid, run_id, traj_json['cost'], traj_json['incumbent']])
                 else:
+                    traj_json = json.loads(traj_lines[0])
+                    result_seed_cost.append([pid, run_id, 1800, traj_json['incumbent']])
                     no_traj_lines += str(run_path) + "\n"
             else:
+                result_seed_cost.append([pid, run_id, 1800, min_weight_dict])
                 no_traj += str(run_path) + "\n"
 
     table_str = create_table(cfg, no_traj)
