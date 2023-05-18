@@ -88,7 +88,7 @@ class SVMRankTrainer(Trainer):
         model = model_path / f'svm_rank_c-{self.cfg.model.c}.dat'
 
         data = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_{split}.dat'
-        predictions = self.pred_path / f'predictions/svm_rank_c-{self.cfg.model.c}_{split}.dat'
+        predictions = self.pred_path / f'svm_rank_c-{self.cfg.model.c}_{split}.dat'
         os.system(f'{classify} {data} {model} {predictions}')
 
         return predictions
