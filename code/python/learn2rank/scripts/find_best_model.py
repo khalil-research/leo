@@ -79,8 +79,8 @@ def main(cfg):
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                str(pred_path),
-                str(result_path)
+                str(pred_path.name),
+                str(result_path.name)
             ])
         else:
             result_summary.append([
@@ -103,8 +103,8 @@ def main(cfg):
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                str(pred_path),
-                str(result_path)
+                pred_path.name,
+                result_path.name
             ])
 
     # Create summary data frame
