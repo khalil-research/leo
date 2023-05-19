@@ -16,10 +16,10 @@ machine: desktop
 
 inst_path: ${res_path[${machine}]}/instances/${problem.inst_name}
 pred_path: ${res_path[${machine}]}/predictions/${problem.name}/${problem.size}
-best_model_summary_path: ${res_path[${machine}]}/model_summary/${problem.name}/best_model_${problem.size}
+best_model_summary_path: ${res_path[${machine}]}/model_summary/${problem.name}/best_model_${problem.size}.csv
 eval_order_path: ${res_path[${machine}]}/eval_order/${problem.name}/${problem.size}
 
-model_name: GradientBootingRegressor
+model_name:
 task: point_regress
 
 bdd:

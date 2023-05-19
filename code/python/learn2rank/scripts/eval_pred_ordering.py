@@ -19,10 +19,10 @@ print(os.getcwd())
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_pred_ordering.yaml')
 def main(cfg: DictConfig):
     resource_path = Path(cfg.res_path[cfg.machine])
-    inst_path = Path(cfg.problem.inst_name)
+    inst_path = Path(cfg.inst_path)
     pred_path = Path(cfg.pred_path)
     best_model_summary_path = Path(cfg.best_model_summary_path)
-    df_best_model = pd.load_csv(best_model_summary_path)
+    df_best_model = pd.read_csv(best_model_summary_path, index_col=False)
 
     if cfg.model_name is None:
         model_names = df_best_model['model_name'].values
@@ -33,10 +33,10 @@ def main(cfg: DictConfig):
     results = []
     for model_name in model_names:
         row = df_best_model[df_best_model['model_name'] == model_name]
-        prediction_path = row[0, 'prediction_path']
-        predictions = pkl.load(prediction_path)
+        prediction_path = pred_path / row.iloc[0]['prediction_path']
+        # predictions = pkl.load(open(prediction_path, 'rb'))
 
-        preds = pkl.load(open(str(predictions), 'rb'))
+        preds = pkl.load(open(str(prediction_path), 'rb'))
         if cfg.split == 'train':
             preds = preds['tr']
         elif cfg.split == 'val':
@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
                                               f'pred_{model_name}',
                                               result))
 
-    eval_order_path = Path(cfg.eval_order)
+    eval_order_path = Path(cfg.eval_order_path)
     eval_order_path.mkdir(parents=True, exist_ok=True)
     eval_order_path = eval_order_path / f"pred_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.csv"
 
