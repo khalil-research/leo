@@ -26,6 +26,11 @@ class SVMRankTrainer(Trainer):
 
         self.ps = self._get_preds_store()
         self.rs = self._get_results_store()
+        self.ps['tr']['names'] = self.train_names_file.read_text().strip().split('\n')
+        self.ps['val']['names'] = self.val_names_file.read_text().strip().split('\n')
+        self.ps['tr']['n_items'] = list(map(int, self.train_n_items_file.read_text().strip().split('\n')))
+        self.ps['val']['n_items'] = list(map(int, self.train_n_items_file.read_text().strip().split('\n')))
+
         self.rs['task'] = self.cfg.task
         self.rs['model_name'] = self.cfg.model.name
 

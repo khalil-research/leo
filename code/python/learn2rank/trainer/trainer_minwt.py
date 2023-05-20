@@ -33,7 +33,12 @@ class MinWeightTrainer(Trainer):
 
     def run(self):
         y_tr, names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
+        self.ps['tr']['names'] = names_tr
+        self.ps['tr']['n_items'] = n_items_tr
+
         y_val, names_val, n_items_val, wt_val = self._get_split_data(split='val')
+        self.ps['val']['names'] = names_val
+        self.ps['val']['n_items'] = n_items_val
 
         self.ps['tr']['rank'] = self.predict(names_tr, 'train')
         self.ps['val']['rank'] = self.predict(names_val, 'val')

@@ -21,9 +21,9 @@ class XGBoostTrainer(Trainer):
         self.val_data_file = str(self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_val.dat')
         self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_train.dat'
         self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_val.dat'
-        # self.train_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_train.dat'
-        # self.val_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_val.dat'
-        # Process files
+        self.train_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_train.dat'
+        self.val_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_val.dat'
+        #Process files
         self.x_train, self.y_train = load_svmlight_file(self.train_data_file)
         self.x_val, self.y_val = load_svmlight_file(self.val_data_file)
 
@@ -32,6 +32,8 @@ class XGBoostTrainer(Trainer):
         self.rs['task'] = self.cfg.task
         self.rs['model_name'] = self.cfg.model.name
 
+        self.ps['tr']['names'] = self.train_names_file.read_text().strip().split('\n')
+        self.ps['val']['names'] = self.val_names_file.read_text().strip().split('\n')
         self.ps["tr"]["n_items"] = list(map(int, self.train_n_items_file.read_text().strip().split("\n")))
         self.ps["val"]["n_items"] = list(map(int, self.val_n_items_file.read_text().strip().split("\n")))
         self.x_train_uf, self.y_train_uf = self.unflatten_data(self.x_train,
