@@ -82,6 +82,32 @@ def main(cfg):
                 str(pred_path.name),
                 str(result_path.name)
             ])
+        elif result['model_name'] == 'SmacOne' or \
+                result['model_name'] == 'SmacAll' or \
+                result['model_name'] == 'Canonical':
+            result_summary.append([
+                result['task'],
+                result['model_name'],
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+                None,
+                None,
+                None,
+                str(pred_path.name),
+                str(result_path.name)
+            ])
         else:
             result_summary.append([
                 result['task'],

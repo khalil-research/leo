@@ -5,31 +5,12 @@ from .model_sklearn import GradientBoostingRegressor
 from .model_sklearn import Lasso
 from .model_sklearn import LinearRegression
 from .model_sklearn import Ridge
-from .model_xgb import GradientBoostingRanker
-from .model_smac import SmacOne
-from .model_smac import SmacAll
-
-
-class SVMRank:
-    """Dummy class for SVMRank model"""
-
-    def __init__(self, cfg=None):
-        self.cfg = cfg
-
-    @property
-    def id(self):
-        return f'svmrank_c-{self.cfg.c}'
-
-
-class MinWeight:
-    """Dummy class for Min-weight model"""
-
-    def __init__(self, cfg=None):
-        self.cfg = cfg
-
-    @property
-    def id(self):
-        return 'minwt'
+from .model_rank import SVMRank
+from .model_rank import GradientBoostingRanker
+from .model_baseline import SmacOne
+from .model_baseline import SmacAll
+from .model_baseline import MinWeight
+from .model_baseline import Canonical
 
 
 model_factory = Factory()
@@ -44,4 +25,5 @@ model_factory.register_member('SVMRank', SVMRank)
 model_factory.register_member('MinWeight', MinWeight)
 model_factory.register_member('SmacOne', SmacOne)
 model_factory.register_member('SmacAll', SmacAll)
+model_factory.register_member('Canonical', Canonical)
 
