@@ -98,6 +98,8 @@ class MinWeightTrainer(Trainer):
     @staticmethod
     def _get_results_store():
         return {
+            'task': None,
+            'model_name': None,
             'tr': {
                 'learning': {},
                 'ranking': [],
