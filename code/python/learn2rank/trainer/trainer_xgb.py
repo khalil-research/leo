@@ -21,9 +21,9 @@ class XGBoostTrainer(Trainer):
         self.val_data_file = str(self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_val.dat')
         self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_train.dat'
         self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_val.dat'
-        self.train_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_train.dat'
-        self.val_names_file = self.data / f'{self.cfg.problem.name}_names_pair_svmrank_val.dat'
-        #Process files
+        self.train_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_train.dat'
+        self.val_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_val.dat'
+        # Process files
         self.x_train, self.y_train = load_svmlight_file(self.train_data_file)
         self.x_val, self.y_val = load_svmlight_file(self.val_data_file)
 
