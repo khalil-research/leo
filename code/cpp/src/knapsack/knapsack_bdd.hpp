@@ -40,6 +40,9 @@ public:
 	// Generate exact BDD
 	BDD *generate_exact();
 
+	// Generate restricted BDD
+	BDD *generate_restricted();
+
 	// Destructor
 	~KnapsackBDDConstructor();
 
