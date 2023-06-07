@@ -27,12 +27,14 @@ struct MultiobjResult
 	int num_layers;
 	ParetoSet *pareto_set;
 	unsigned long int *num_pareto_sol;
+	size_t num_comparisons;
 
 	MultiobjResult(int _num_layers)
 	{
 		num_layers = _num_layers;
 		pareto_set = NULL;
 		num_pareto_sol = new unsigned long int[num_layers];
+		num_comparisons = 0;
 		// Zero-initialize
 		for (int i = 0; i < num_layers; i++)
 		{

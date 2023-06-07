@@ -356,7 +356,7 @@ BDD *BDDAlg::create_value_BDD(int length, vector<int> &arc_length)
 
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
-		//cout << "Layer " << l << endl;
+		// cout << "Layer " << l << endl;
 		states[next].clear();
 		BOOST_FOREACH (node_map::value_type i, states[iter])
 		{
@@ -402,7 +402,7 @@ BDD *BDDAlg::create_value_BDD(int length, vector<int> &arc_length)
 	}
 
 	// remove invalid terminal nodes
-	//cout << "removing terminals..." << endl;
+	// cout << "removing terminals..." << endl;
 	vector<Node *> &terminals = bdd->layers.back();
 	size_t node_count = 0;
 	while (node_count < terminals.size())
@@ -421,8 +421,8 @@ BDD *BDDAlg::create_value_BDD(int length, vector<int> &arc_length)
 			node_count++;
 		}
 	}
-	//cout << "\tsize = " << terminals.size() << endl;
-	//cout << endl;
+	// cout << "\tsize = " << terminals.size() << endl;
+	// cout << endl;
 
 	// merge terminal nodes
 	int prev = bdd->num_layers - 2;
@@ -462,7 +462,7 @@ BDD *BDDAlg::create_value_BDD(int length, vector<int> &arc_length)
 	cout << " - width = " << bdd->get_width();
 	cout << endl;
 
-	//bdd->print();
+	// bdd->print();
 
 	cout << "\tdone." << endl
 		 << endl;
@@ -512,7 +512,7 @@ BDD *BDDAlg::intersect(BDD *bddA, BDD *bddB)
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
 
-		//cout << "\tLayer " << l << " - num_states = " << states[iter].size() << endl;
+		// cout << "\tLayer " << l << " - num_states = " << states[iter].size() << endl;
 		states[next].clear();
 
 		BOOST_FOREACH (node_map::value_type it, states[iter])
@@ -576,11 +576,11 @@ BDD *BDDAlg::intersect(BDD *bddA, BDD *bddB)
 	cout << " - width = " << bdd->get_width();
 	cout << endl;
 
-	//cout << "\treducing..." << endl;
-	//reduce(bdd);
-	//cout << "\twidth after reduction = " << bdd->get_width() << endl;
+	// cout << "\treducing..." << endl;
+	// reduce(bdd);
+	// cout << "\twidth after reduction = " << bdd->get_width() << endl;
 
-	//bdd->print();d
+	// bdd->print();d
 
 	cout << "\tdone." << endl
 		 << endl;
@@ -649,7 +649,7 @@ inline vector<int> BDDAlg::longest_path_multi_obj(BDD *bdd, int obj, const vecto
 
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
-		//cout << "Layer " << l << endl;
+		// cout << "Layer " << l << endl;
 		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
 		{
 			Node *node = bdd->layers[l][i];
@@ -715,18 +715,18 @@ inline void BDDAlg::compute_ub_longest_path(BDD *bdd, int obj, const vector<vect
 
 	for (int l = bdd->num_layers - 1; l >= 0; --l)
 	{
-		//cout << "Layer " << l << endl;
+		// cout << "Layer " << l << endl;
 		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
 		{
 			Node *node = bdd->layers[l][i];
 
 			// Debug
 			/*
-      cout << "Node " << node->layer << "-" << node->index << "\n"; 
-      cout << "\tNode upper bound: " << node->ub_longest_path[obj] << "\n";
-      vector<int> tmp = longest_path_multi_obj_from_node(bdd, obj, obj_coeffs, node, l);
-      cout << "\tNode computed bound: " << tmp[obj] << "\n";
-      */
+	  cout << "Node " << node->layer << "-" << node->index << "\n";
+	  cout << "\tNode upper bound: " << node->ub_longest_path[obj] << "\n";
+	  vector<int> tmp = longest_path_multi_obj_from_node(bdd, obj, obj_coeffs, node, l);
+	  cout << "\tNode computed bound: " << tmp[obj] << "\n";
+	  */
 			assert(node != NULL);
 			if (l)
 				assert(node->zero_prev.size() > 0 || node->one_prev.size() > 0);
@@ -756,111 +756,128 @@ inline void BDDAlg::compute_ub_longest_path(BDD *bdd, int obj, const vector<vect
 	return;
 }
 
-
-
 //
 // Compute nadir points of BDD given 'n' objective functions
 // Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
 //
-vector<vector<int> >  BDDAlg::extreme_points_from_node(BDD* bdd, const vector< vector<int> >& obj_coeffs,
-						       Node* node, int layer) {
+vector<vector<int>> BDDAlg::extreme_points_from_node(BDD *bdd, const vector<vector<int>> &obj_coeffs,
+													 Node *node, int layer)
+{
 
-  //  cout << "\nNadir and Ideal points...\n";
+	//  cout << "\nNadir and Ideal points...\n";
 
-  int num_objs = obj_coeffs.size();
+	int num_objs = obj_coeffs.size();
 
-  // Pseudonadir point (index 0) and ideal point (index 1)
-  vector<vector<int> > points;
-  vector<int> nadir(num_objs,0);
-  vector<int> ideal(num_objs,0);
-  points.push_back(nadir);
-  points.push_back(ideal);
-  
-  
-  for (int o = 0; o < num_objs; ++o) {
-    vector<int> sol = longest_path_multi_obj_from_node(bdd,o,obj_coeffs,node,layer);
-    if (!o) {
-      for (int k = 0; k < num_objs; k++) {
-	points[0][k] = sol[k];
-	points[1][k] = sol[k];
-      }
-    } else {
-      for (int k = 0; k < num_objs; k++) {
-	points[0][k] = min(points[0][k],sol[k]);
-	points[1][k] = max(points[1][k],sol[k]);
-      }
-    }
-  }
-  
-  return points;
+	// Pseudonadir point (index 0) and ideal point (index 1)
+	vector<vector<int>> points;
+	vector<int> nadir(num_objs, 0);
+	vector<int> ideal(num_objs, 0);
+	points.push_back(nadir);
+	points.push_back(ideal);
+
+	for (int o = 0; o < num_objs; ++o)
+	{
+		vector<int> sol = longest_path_multi_obj_from_node(bdd, o, obj_coeffs, node, layer);
+		if (!o)
+		{
+			for (int k = 0; k < num_objs; k++)
+			{
+				points[0][k] = sol[k];
+				points[1][k] = sol[k];
+			}
+		}
+		else
+		{
+			for (int k = 0; k < num_objs; k++)
+			{
+				points[0][k] = min(points[0][k], sol[k]);
+				points[1][k] = max(points[1][k], sol[k]);
+			}
+		}
+	}
+
+	return points;
 }
-
-
 
 //
 // Compute longest path for one specific objective function from a given node
 // Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
 //
-inline vector<int> BDDAlg::longest_path_multi_obj_from_node(BDD* bdd, int obj, const vector< vector<int> >& obj_coeffs,
-							    Node* node, int layer) {
+inline vector<int> BDDAlg::longest_path_multi_obj_from_node(BDD *bdd, int obj, const vector<vector<int>> &obj_coeffs,
+															Node *node, int layer)
+{
 
-  //  cout << "\nLongest path for objective " << obj << "...\n";
-  int num_objs = obj_coeffs.size();
+	//  cout << "\nLongest path for objective " << obj << "...\n";
+	int num_objs = obj_coeffs.size();
 
-  // Initialize lenghts with very negative value for all nodes in 'layer' 
-  for (size_t i = 0; i < bdd->layers[layer].size(); ++i) {
-    for (int o = 0; o < num_objs; ++o) {
-      bdd->layers[layer][i]->multi_length[o] = -1e-9;
-    } 
-  }
-  // Initialize lengths for origin node
-  for (int o = 0; o < num_objs; ++o) {
-    node->multi_length[o] = 0;
-  } 
-  
-	for (int l = layer+1; l < bdd->num_layers; ++l) {
-		//cout << "Layer " << l << endl;
-		for (size_t i = 0; i < bdd->layers[l].size(); ++i) {
-			Node* node = bdd->layers[l][i];
+	// Initialize lenghts with very negative value for all nodes in 'layer'
+	for (size_t i = 0; i < bdd->layers[layer].size(); ++i)
+	{
+		for (int o = 0; o < num_objs; ++o)
+		{
+			bdd->layers[layer][i]->multi_length[o] = -1e-9;
+		}
+	}
+	// Initialize lengths for origin node
+	for (int o = 0; o < num_objs; ++o)
+	{
+		node->multi_length[o] = 0;
+	}
+
+	for (int l = layer + 1; l < bdd->num_layers; ++l)
+	{
+		// cout << "Layer " << l << endl;
+		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
+		{
+			Node *node = bdd->layers[l][i];
 			assert(node != NULL);
 			assert(node->zero_prev.size() > 0 || node->one_prev.size() > 0);
 
 			// initialization of node length
-			for (int o = 0; o < num_objs; ++o) {
-			  if (node->zero_prev.size() == 0) {
-			    node->multi_length[o] = node->one_prev[0]->multi_length[o] + obj_coeffs[o][l-1];
-			  } else {
-			    node->multi_length[o] = node->zero_prev[0]->multi_length[o];
-			  }
+			for (int o = 0; o < num_objs; ++o)
+			{
+				if (node->zero_prev.size() == 0)
+				{
+					node->multi_length[o] = node->one_prev[0]->multi_length[o] + obj_coeffs[o][l - 1];
+				}
+				else
+				{
+					node->multi_length[o] = node->zero_prev[0]->multi_length[o];
+				}
 			}
 
-			// compute maximum path length w.r.t. function 'obj' 
-			for (size_t j = 0; j < node->zero_prev.size(); ++j) {
-			  int k = node->zero_prev[j]->multi_length[obj];
-			  if (node->multi_length[obj] < k) {
-			    for (int o = 0; o < num_objs; ++o) {
-			      node->multi_length[o] = node->zero_prev[j]->multi_length[o];
-			    }
-			  }
+			// compute maximum path length w.r.t. function 'obj'
+			for (size_t j = 0; j < node->zero_prev.size(); ++j)
+			{
+				int k = node->zero_prev[j]->multi_length[obj];
+				if (node->multi_length[obj] < k)
+				{
+					for (int o = 0; o < num_objs; ++o)
+					{
+						node->multi_length[o] = node->zero_prev[j]->multi_length[o];
+					}
+				}
 			}
 
-			for (size_t j = 0; j < node->one_prev.size(); ++j) {
-			  int k = node->one_prev[j]->multi_length[obj] + obj_coeffs[obj][l-1];
-			  if (node->multi_length[obj] < k) {
-			    for (int o = 0; o < num_objs; ++o) {
-			      node->multi_length[o] = node->one_prev[j]->multi_length[o] + obj_coeffs[o][l-1];
-			    }
-			  }
+			for (size_t j = 0; j < node->one_prev.size(); ++j)
+			{
+				int k = node->one_prev[j]->multi_length[obj] + obj_coeffs[obj][l - 1];
+				if (node->multi_length[obj] < k)
+				{
+					for (int o = 0; o < num_objs; ++o)
+					{
+						node->multi_length[o] = node->one_prev[j]->multi_length[o] + obj_coeffs[o][l - 1];
+					}
+				}
 			}
 		}
 	}
 
 	vector<int> optimum(num_objs);
 	for (int o = 0; o < num_objs; o++)
-	  optimum[o] = bdd->layers[bdd->num_layers-1][0]->multi_length[o];
+		optimum[o] = bdd->layers[bdd->num_layers - 1][0]->multi_length[o];
 	return optimum;
 }
-
 
 //
 // Compute pareto-set solution of BDD given 'n' objective functions
@@ -886,12 +903,14 @@ MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coef
 		}
 	}
 
-	MultiobjResult* mo_result = new MultiobjResult(bdd->num_layers);
+	MultiobjResult *mo_result = new MultiobjResult(bdd->num_layers);
 
 	int bef = 0, cur = 1; // 'before' and 'current' pareto set indices
 	vector<int> shift_zero(num_objs, 0);
 	vector<int> shift_one(num_objs, 0);
 	double avg_size = 0;
+	// Save number of comparisons to enumerate the Pareto frontier
+	size_t num_comparisons = 0;
 
 	// root node
 	vector<int> x;
@@ -899,7 +918,7 @@ MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coef
 	Solution rootSolution(x, shift_zero);
 	sets[bef][0]->add(rootSolution);
 	// Record the number of pareto solutions at layer 0
-	mo_result->num_pareto_sol[0] = (unsigned long int) sets[bef][0]->sols.size();
+	mo_result->num_pareto_sol[0] = (unsigned long int)sets[bef][0]->sols.size();
 
 	for (int l = 1; l < bdd->num_layers; ++l)
 	{
@@ -913,6 +932,7 @@ MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coef
 		}
 
 		avg_size = 0;
+
 		for (vector<Node *>::iterator it = bdd->layers[l].begin(); it != bdd->layers[l].end(); ++it)
 		{
 
@@ -924,24 +944,26 @@ MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coef
 			for (vector<Node *>::iterator prev = (*it)->zero_prev.begin();
 				 prev != (*it)->zero_prev.end(); ++prev)
 			{
-				sets[cur][id]->merge(*(sets[bef][(*prev)->index]), 0, shift_zero);
+				num_comparisons += sets[cur][id]->merge(*(sets[bef][(*prev)->index]), 0, shift_zero);
 			}
 
 			// add one arc prev
 			for (vector<Node *>::iterator prev = (*it)->one_prev.begin();
 				 prev != (*it)->one_prev.end(); ++prev)
 			{
-				sets[cur][id]->merge(*(sets[bef][(*prev)->index]), 1, shift_one);
+				num_comparisons += sets[cur][id]->merge(*(sets[bef][(*prev)->index]), 1, shift_one);
 			}
 
 			avg_size += sets[cur][id]->sols.size();
 		}
 		// Record the number of pareto solutions at layer l
-		mo_result->num_pareto_sol[l] = (unsigned long int) avg_size;
+		mo_result->num_pareto_sol[l] = (unsigned long int)avg_size;
+
+		mo_result->num_comparisons = num_comparisons;
 
 		// Find average number of pareto solutions at layer l
 		avg_size /= bdd->layers[l].size();
-		
+
 		// swap sets
 		bef = !bef;
 		cur = !cur;
@@ -1083,14 +1105,14 @@ ParetoSet *BDDAlg::pareto_set_delayed(BDD *bdd, const vector<vector<int>> &obj_c
 					int id = (*it)->index;
 					if (!delayed_states[initial_layer][id]->empty())
 					{
-						//cout << "\tfound at: " << initial_layer << " - node=" << id << " - size=" << delayed_states[initial_layer][id]->sols.size() << endl;
+						// cout << "\tfound at: " << initial_layer << " - node=" << id << " - size=" << delayed_states[initial_layer][id]->sols.size() << endl;
 						undelay_states(max_delayed_states, sets[0][id], delayed_states[initial_layer][id]);
 						undelayed = true;
-						//cout << "\tafter: " << initial_layer << " - node=" << id << " - size=" << delayed_states[initial_layer][id]->sols.size() << endl;
+						// cout << "\tafter: " << initial_layer << " - node=" << id << " - size=" << delayed_states[initial_layer][id]->sols.size() << endl;
 					}
 				}
 			}
-			//cout << "\nInitial layer: " << initial_layer << endl;
+			// cout << "\nInitial layer: " << initial_layer << endl;
 
 			// if no node was undelayed, search is done
 			if (!undelayed)
@@ -1100,14 +1122,14 @@ ParetoSet *BDDAlg::pareto_set_delayed(BDD *bdd, const vector<vector<int>> &obj_c
 			initial_layer++; // adjust position
 		}
 
-		//if (iteration > 10) {
-		//exit(1);
-		//}
+		// if (iteration > 10) {
+		// exit(1);
+		// }
 
 		for (int l = initial_layer + 1; l < bdd->num_layers; ++l)
 		{
-			//cout << "\tLayer " << l << " - size = " << bdd->layers[l].size();
-			//cout << " - avg-pareto-size = " << avg_size << endl;
+			// cout << "\tLayer " << l << " - size = " << bdd->layers[l].size();
+			// cout << " - avg-pareto-size = " << avg_size << endl;
 
 			// set shift one
 			for (int o = 0; o < num_objs; ++o)
@@ -1182,21 +1204,25 @@ ParetoSet *BDDAlg::pareto_set_delayed(BDD *bdd, const vector<vector<int>> &obj_c
 // Create flow model from BDD
 //
 
-void BDDAlg::flow_model(BDD* bdd, IloModel &model, IloBoolVarArray& x, vector<int>& var_layer) {
+void BDDAlg::flow_model(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer)
+{
 	bdd->repair_node_indices();
 	IloEnv env = model.getEnv();
 
 	// create one expression for node
-	vector< vector<IloExpr> >flow_nodes(bdd->num_layers);
-	for (int l = 0; l < bdd->num_layers; ++l) {
-		for (size_t i = 0; i < bdd->layers[l].size(); ++i) {
+	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
+	for (int l = 0; l < bdd->num_layers; ++l)
+	{
+		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
+		{
 			flow_nodes[l].push_back(IloExpr(env));
 		}
 	}
 
 	// create one expression for variable
 	vector<IloExpr> var_expr(x.getSize());
-	for (int v = 0; v < x.getSize(); ++v) {
+	for (int v = 0; v < x.getSize(); ++v)
+	{
 		var_expr[v] = IloExpr(env);
 	}
 
@@ -1204,25 +1230,29 @@ void BDDAlg::flow_model(BDD* bdd, IloModel &model, IloBoolVarArray& x, vector<in
 	flow_nodes[0][0] += 1;
 
 	// terminal node
-	flow_nodes[bdd->num_layers-1][0] += -1;
+	flow_nodes[bdd->num_layers - 1][0] += -1;
 
 	// add expression constraints
-	for (int l = 0; l < bdd->num_layers-1; ++l) {
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u) {
-			Node* node = bdd->layers[l][u];
+	for (int l = 0; l < bdd->num_layers - 1; ++l)
+	{
+		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+		{
+			Node *node = bdd->layers[l][u];
 
-			if (node->zero_arc != NULL) {
+			if (node->zero_arc != NULL)
+			{
 				IloNumVar zero_arc(env, 0, 1);
-				//IloIntVar zero_arc(env, 0, 1);
+				// IloIntVar zero_arc(env, 0, 1);
 				flow_nodes[l][u] -= zero_arc;
-				flow_nodes[l+1][node->zero_arc->index] += zero_arc;
+				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
 			}
 
-			if (node->one_arc != NULL) {
+			if (node->one_arc != NULL)
+			{
 				IloNumVar one_arc(env, 0, 1);
-				//IloIntVar one_arc(env, 0, 1);
+				// IloIntVar one_arc(env, 0, 1);
 				flow_nodes[l][u] -= one_arc;
-				flow_nodes[l+1][node->one_arc->index] += one_arc;
+				flow_nodes[l + 1][node->one_arc->index] += one_arc;
 
 				var_expr[var_layer[l]] += one_arc;
 			}
@@ -1230,40 +1260,46 @@ void BDDAlg::flow_model(BDD* bdd, IloModel &model, IloBoolVarArray& x, vector<in
 	}
 
 	// add balance constraints
-	for (int l = 0; l < bdd->num_layers-1; ++l) {
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u) {
-			model.add( flow_nodes[l][u] == 0 );
+	for (int l = 0; l < bdd->num_layers - 1; ++l)
+	{
+		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+		{
+			model.add(flow_nodes[l][u] == 0);
 		}
 	}
 
 	// add variable constraints
-	for (int v = 0; v < x.getSize(); ++v) {
-		model.add( x[v] == var_expr[v] );
+	for (int v = 0; v < x.getSize(); ++v)
+	{
+		model.add(x[v] == var_expr[v]);
 	}
-
 }
 
 //
 // Create flow model from BDD. Amount of flow is controlled by a variable f
 //
-void BDDAlg::flow_model_f(BDD* bdd, IloModel &model, IloBoolVarArray& x, vector<int>& var_layer,
-		IloNumVar& z) {
+void BDDAlg::flow_model_f(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer,
+						  IloNumVar &z)
+{
 	bdd->repair_node_indices();
 	IloEnv env = model.getEnv();
 
 	char varname[256];
 
 	// create one expression for node
-	vector< vector<IloExpr> >flow_nodes(bdd->num_layers);
-	for (int l = 0; l < bdd->num_layers; ++l) {
-		for (size_t i = 0; i < bdd->layers[l].size(); ++i) {
+	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
+	for (int l = 0; l < bdd->num_layers; ++l)
+	{
+		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
+		{
 			flow_nodes[l].push_back(IloExpr(env));
 		}
 	}
 
 	// create one expression for variable
 	vector<IloExpr> var_expr(x.getSize());
-	for (int v = 0; v < x.getSize(); ++v) {
+	for (int v = 0; v < x.getSize(); ++v)
+	{
 		var_expr[v] = IloExpr(env);
 	}
 
@@ -1271,64 +1307,74 @@ void BDDAlg::flow_model_f(BDD* bdd, IloModel &model, IloBoolVarArray& x, vector<
 	flow_nodes[0][0] += z;
 
 	// terminal node
-	flow_nodes[bdd->num_layers-1][0] -= z;
+	flow_nodes[bdd->num_layers - 1][0] -= z;
 
 	// negative terminal node
-	//IloExpr negflow(env);
-	//negflow -= (1-z);
+	// IloExpr negflow(env);
+	// negflow -= (1-z);
 
 	// add expression constraints
-	for (int l = 0; l < bdd->num_layers-1; ++l) {
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u) {
-			Node* node = bdd->layers[l][u];
+	for (int l = 0; l < bdd->num_layers - 1; ++l)
+	{
+		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+		{
+			Node *node = bdd->layers[l][u];
 
-			if (node->zero_arc != NULL) {
+			if (node->zero_arc != NULL)
+			{
 				sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
 				IloNumVar zero_arc(env, 0, 1, varname);
-				//IloIntVar zero_arc(env, 0, 1);
+				// IloIntVar zero_arc(env, 0, 1);
 				flow_nodes[l][u] -= zero_arc;
-				flow_nodes[l+1][node->zero_arc->index] += zero_arc;
-			} else {
+				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
+			}
+			else
+			{
 				/*sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
-                IloNumVar zero_arc(env, 0, 1, varname);
-                flow_nodes[l][u] -= zero_arc;
-                negflow += zero_arc;*/
+				IloNumVar zero_arc(env, 0, 1, varname);
+				flow_nodes[l][u] -= zero_arc;
+				negflow += zero_arc;*/
 			}
 
-			if (node->one_arc != NULL) {
+			if (node->one_arc != NULL)
+			{
+				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
+				IloNumVar one_arc(env, 0, 1, varname);
+				// IloIntVar one_arc(env, 0, 1);
+				flow_nodes[l][u] -= one_arc;
+				flow_nodes[l + 1][node->one_arc->index] += one_arc;
+
+				// cout << "l = " << l << " " << bdd->num_layers << " --> " << var_layer.size() << endl;
+
+				var_expr[var_layer[l]] += one_arc;
+			}
+			else
+			{
+				/*
 				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
 				IloNumVar one_arc(env, 0, 1, varname);
 				//IloIntVar one_arc(env, 0, 1);
 				flow_nodes[l][u] -= one_arc;
-				flow_nodes[l+1][node->one_arc->index] += one_arc;
-
-				//cout << "l = " << l << " " << bdd->num_layers << " --> " << var_layer.size() << endl;
-
+				negflow += one_arc;
 				var_expr[var_layer[l]] += one_arc;
-			} else {
-				/*
-                sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
-                IloNumVar one_arc(env, 0, 1, varname);
-                //IloIntVar one_arc(env, 0, 1);
-                flow_nodes[l][u] -= one_arc;
-                negflow += one_arc;
-                var_expr[var_layer[l]] += one_arc;
 				 */
 			}
 		}
 	}
 
 	// add balance constraints
-	for (int l = 0; l < bdd->num_layers; ++l) {
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u) {
-			model.add( flow_nodes[l][u] == 0 );
+	for (int l = 0; l < bdd->num_layers; ++l)
+	{
+		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+		{
+			model.add(flow_nodes[l][u] == 0);
 		}
 	}
-	//model.add( negflow == 0 );
+	// model.add( negflow == 0 );
 
 	// add variable constraints
-	for (int v = 0; v < x.getSize(); ++v) {
-		model.add( x[v] >= var_expr[v] );
+	for (int v = 0; v < x.getSize(); ++v)
+	{
+		model.add(x[v] >= var_expr[v]);
 	}
-
 }

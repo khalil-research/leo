@@ -99,6 +99,9 @@ struct BDD
 	// Get number of arcs
 	int get_num_arcs();
 
+	// Get average in-degree
+	double get_average_in_degree();
+
 	// Get number of nodes per layer
 	// int *get_num_nodes_per_layer();
 
@@ -131,7 +134,7 @@ struct BDD
 		{
 			for (size_t i = 0; i < layers[l].size(); ++i)
 			{
-				//delete layers[l][i]->pareto_set;
+				// delete layers[l][i]->pareto_set;
 				delete layers[l][i];
 			}
 		}
@@ -358,7 +361,7 @@ inline void BDD::repair_node_indices()
 //
 inline int BDD::get_num_nodes()
 {
-	int num_nodes = 0;
+	size_t num_nodes = 0;
 	for (int l = 0; l < num_layers; ++l)
 	{
 		num_nodes += layers[l].size();
@@ -371,7 +374,7 @@ inline int BDD::get_num_nodes()
 //
 inline int BDD::get_num_arcs()
 {
-	int num_arcs = 0;
+	size_t num_arcs = 0;
 	for (int l = 0; l < num_layers; ++l)
 	{
 		for (int m = 0; m < layers[l].size(); ++m)
@@ -387,6 +390,23 @@ inline int BDD::get_num_arcs()
 		}
 	}
 	return num_arcs;
+}
+
+inline double BDD::get_average_in_degree()
+{
+	double avg = 0;
+	size_t count = 0;
+	for (int l = 0; l < num_layers; ++l)
+	{
+		for (int m = 0; m < layers[l].size(); ++m)
+		{
+			avg += layers[l][m]->zero_prev.size() + layers[l][m]->one_prev.size();
+			count += 1;
+		}
+	}
+	avg = avg / count;
+
+	return avg;
 }
 
 //
