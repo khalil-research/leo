@@ -1,3 +1,4 @@
+import ast
 import json
 import random
 from operator import itemgetter
@@ -5,7 +6,7 @@ from operator import itemgetter
 import numpy as np
 
 from .const import KnapsackPropertyWeights
-
+import pandas as pd
 
 def get_order(data):
     order = {
@@ -394,15 +395,11 @@ def get_baseline_order(data, cfg, resource_path, pid):
             orders.append(random_order)
 
     elif cfg.order_type == 'smac':
-        run_path = get_smac_path(cfg, resource_path, pid)
-        traj_path = run_path / 'traj.json'
-        if traj_path.exists():
-            # Get property weight
-            traj = traj_path.open('r')
-            lines = traj.readlines()
-            property_weight = json.loads(lines[-1])
-            order, _ = get_variable_order_from_weights(data, property_weight['incumbent'])
-            orders.append(order)
+        label_path = resource_path / 'labels' / cfg.problem.name / cfg.problem.size / f'label_{cfg.problem.size}.csv'
+        df = pd.read_csv(label_path)
+        incb = ast.literal_eval(df[df['pid'] == pid].iloc[0, 'incb'])
+        order, _ = get_variable_order_from_weights(data, incb)
+        orders.append(order)
 
     elif cfg.order_type == 'smac_all':
         run_path = get_smac_all_path(cfg, resource_path)

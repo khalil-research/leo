@@ -6,7 +6,7 @@ from learn2rank.utils.data import read_data_from_file
 from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
-from learn2rank.utils.order import get_variable_rank_from_weights
+from learn2rank.utils.order import get_variable_order_from_weights
 from learn2rank.utils.order import pred_score2order
 from .trainer import Trainer
 import pandas as pd
@@ -20,7 +20,6 @@ class SmacAllTrainer(Trainer):
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         self.inst_root_path = self.res_path / 'instances' / cfg.problem.name
         self.traj_path = self.res_path / 'smac_all_output' / cfg.problem.name / cfg.problem.size
-        self.traj_path = self.traj_path / cfg.smac_all_path
         self.traj_path = self.traj_path / f'{cfg.problem.acronym}_7_{cfg.problem.size}_0' / 'run_777' / 'traj.json'
         self.incb = ast.literal_eval(self.traj_path.read_text().strip().split('\n')[-1])["incumbent"]
 
@@ -39,8 +38,8 @@ class SmacAllTrainer(Trainer):
         self.ps['val']['names'] = names_val
         self.ps['val']['n_items'] = n_items_val
 
-        self.ps['tr']['rank'] = self.predict(names_tr, 'train')
-        self.ps['val']['rank'] = self.predict(names_val, 'val')
+        self.ps['tr']['order'] = self.predict(names_tr, 'train')
+        self.ps['val']['order'] = self.predict(names_val, 'val')
 
         self._save_predictions()
         self._save_results()
@@ -55,8 +54,7 @@ class SmacAllTrainer(Trainer):
 
                 inst = self.inst_root_path / size / split / f'{name}.dat'
                 data = read_data_from_file(acronym, inst)
-                y_pred = get_variable_rank_from_weights(data, self.incb,
-                                                        normalized=False)
+                y_pred, _ = get_variable_order_from_weights(data, self.incb)
                 y_pred_lst.append(y_pred)
 
         return y_pred_lst
