@@ -69,8 +69,8 @@ def main(cfg: DictConfig):
     eval_order_path = eval_order_path / f"pred_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.csv"
 
     df = pd.DataFrame(results, columns=['problem', 'size', 'split', 'pid', 'order_type', 'run_id',
-                                        'nnds', 'iw', 'rw', 'inc', 'rnc', 'iac', 'rac',
-                                        'comp_time', 'red_time', 'pareto_time', 'nnds_per_layer'])
+                                        'nnds', 'iw', 'rw', 'inc', 'rnc', 'iac', 'rac', 'iid', 'rid',
+                                        'comp', 'comp_time', 'red_time', 'pareto_time', 'nnds_per_layer'])
     if eval_order_path.exists():
         df_old = pd.read_csv(eval_order_path)
         df = pd.concat([df, df_old], ignore_index=True)
