@@ -7,6 +7,8 @@ import numpy as np
 
 log = logging.getLogger(__name__)
 
+NUM_TOKENS = 13
+
 
 def limit_virtual_memory():
     # Maximal virtual memory for subprocesses (in bytes).
@@ -64,17 +66,17 @@ def run_bdd_builder(instance, order, prob_id=None, preprocess=None, bin_path=Non
                 log.info("MEMOUT/MASKED")
 
                 status = "TIMEOUT"
-                result = time_limit if get_runtime else [time_limit] * 11
+                result = time_limit if get_runtime else [time_limit] * NUM_TOKENS
             else:
                 log.info("MEMOUT/ABORT")
 
                 status = "ABORT"
-                result = -1 if get_runtime else [-1] * 11
+                result = -1 if get_runtime else [-1] * NUM_TOKENS
 
     except TimeoutExpired:
         log.info("TIMEOUT")
 
         status = "TIMEOUT"
-        result = time_limit if get_runtime else [time_limit] * 11
+        result = time_limit if get_runtime else [time_limit] * NUM_TOKENS
 
     return status, result
