@@ -1,0 +1,4 @@
+machine: desktop
+objective: XGBObjective
+n_trials: 1
+time_limit: 300
