@@ -13,7 +13,11 @@ class Trainer(ABC):
         self.ps = {}
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
-        self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/{self.cfg.problem.size}'
+        if self.cfg.dataset.fused:
+            self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}'
+        else:
+            self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/{self.cfg.problem.size}'
+            
         self.pred_path.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod

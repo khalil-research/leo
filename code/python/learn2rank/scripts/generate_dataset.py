@@ -154,7 +154,7 @@ def generate_dataset_multitask(cfg):
 
 
 def generate_dataset_pair_svmrank(cfg):
-    print(f"Fuse mode: {cfg.fuse}")
+    print(f"Fuse mode: {cfg.fused}")
 
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
@@ -232,7 +232,7 @@ def generate_dataset_pair_svmrank(cfg):
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
             # Separate dataset for each size
-            if not cfg.fuse:
+            if not cfg.fused:
                 fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
                 fp.write(split_str)
 
@@ -243,7 +243,7 @@ def generate_dataset_pair_svmrank(cfg):
                 fp.write(inst_names_str)
 
         # Single dataset for all sizes
-        if cfg.fuse:
+        if cfg.fused:
             fp = open(res_path / f'datasets/{cfg.problem.name}/dataset_{cfg.task}_{split}.dat', 'w')
             fp.write(split_str)
 
@@ -252,7 +252,6 @@ def generate_dataset_pair_svmrank(cfg):
 
             fp = open(res_path / f'datasets/{cfg.problem.name}/names_{cfg.task}_{split}.dat', 'w')
             fp.write(inst_names_str)
-
 
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])
@@ -276,7 +275,7 @@ def main(cfg: DictConfig):
         generate_dataset_point_regress(cfg)
     elif cfg.task == 'multitask':
         generate_dataset_multitask(cfg)
-    elif cfg.task == 'pair_svmrank':
+    elif cfg.task == 'pair_svmrank' or cfg.task == 'pair_svmrank_all':
         generate_dataset_pair_svmrank(cfg)
 
 

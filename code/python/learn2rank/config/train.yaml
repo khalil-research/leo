@@ -1,15 +1,19 @@
 defaults:
   - hydra: train
   - problem: knapsack
-  - model: LinearRegression
+  - model: GradientBoostingRanker
   - optimizer: adam
   - run: default
   - wandb: default
   - _self_
 
+# Use optuna to tune the hyperparameters of the XGBoost model
+tune_params: 1
+
 # Type of ranking task
 # point_regress, pair_svmrank, pair_xgbrank, multitask
-task: point_regress
+# pair_xgbrank_all
+task: pair_xgbrank_all
 
 out_path:
   cc: /home/rahulpat/scratch/l2o_resources
@@ -27,9 +31,11 @@ dataset_path:
   point_regress: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
   pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
   pair_xgbrank: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank_all: ${res_path[${machine}]}/datasets/${problem.name}
 
 dataset:
   path: ${dataset_path[${task}]}
+  fused: 1
 
 case: 0
 #output_dir: ${hydra:runtime.output_dir}
