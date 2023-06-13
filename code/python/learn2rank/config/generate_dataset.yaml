@@ -3,12 +3,24 @@ defaults:
   - featurizer: knapsack
   - problem: knapsack
 
+# Flag to decide if we want to create a single dataset
+# for all sizes
+fuse: 1
+
 size:
+  - '5_40'
+  - '6_40'
+  - '7_40'
   - '4_50'
+  - '3_60'
+  - '3_70'
+  - '3_80'
+
 
 split:
   - 'train'
   - 'val'
+  - 'test'
 
 normalize_rank: 0
 

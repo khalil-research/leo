@@ -154,21 +154,32 @@ def generate_dataset_multitask(cfg):
 
 
 def generate_dataset_pair_svmrank(cfg):
+    print(f"Fuse mode: {cfg.fuse}")
+
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
     time_dataset = []
 
-    # For each size
-    for size in cfg.size:
-        print("Size: ", size)
-        for split in cfg.split:
-            df_label = pd.read_csv(res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv')
-            print(f"Split {split}, labels shape {df_label.shape}")
+    # For each split
+    for split in cfg.split:
+        print("Split: ", split)
 
-            split_str = ''
-            n_items_str = ''
-            inst_names_str = ''
-            qid = 1
+        split_str = ''
+        n_items_str = ''
+        inst_names_str = ''
+        qid = 1
+
+        # For each size
+        for size in cfg.size:
+            print("Size: ", size)
+            n_items = int(size.split('_')[-1])
+
+            df_label = None
+            label_path = res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv'
+            if label_path.exists():
+                df_label = pd.read_csv(label_path)
+                print(f"Labels shape {df_label.shape}")
+
             inst_path = inst_root_path / size / split
             for inst in inst_path.iterdir():
                 pid = int(inst.stem.split('.')[0].split('_')[-1])
@@ -182,16 +193,21 @@ def generate_dataset_pair_svmrank(cfg):
                 features = featurizer.get()
 
                 # Get best seed for the pid
-                label_row = df_label[df_label['pid'] == pid]
-                best_seed = label_row['seed'].values[0]
+                ranks = None
+                best_seed = None
+                if df_label is not None:
+                    label_row = df_label[df_label['pid'] == pid]
+                    best_seed = label_row['seed'].values[0]
 
-                # Get variable order
-                incb_dict = ast.literal_eval(label_row['incb'].values[0])
-                # A lower ranks means the variable is used higher up in the DD construction
-                # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
-                # Hence, modified_rank = n_items - original_rank
-                ranks = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
-                n_items = len(ranks)
+                    # Get variable order
+                    incb_dict = ast.literal_eval(label_row['incb'].values[0])
+                    # A lower ranks means the variable is used higher up in the DD construction
+                    # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
+                    # Hence, modified_rank = n_items - original_rank
+                    ranks = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
+                # For the test set
+                ranks = [n_items] * n_items if ranks is None else ranks
+
                 n_items_str += f'{int(n_items)}\n'
                 for item_id, r in enumerate(ranks):
                     fid = 1
@@ -215,15 +231,28 @@ def generate_dataset_pair_svmrank(cfg):
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
-            # Save dataset
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
+            # Separate dataset for each size
+            if not cfg.fuse:
+                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
+                fp.write(split_str)
+
+                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_n_items_{cfg.task}_{split}.dat', 'w')
+                fp.write(n_items_str)
+
+                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_names_{cfg.task}_{split}.dat', 'w')
+                fp.write(inst_names_str)
+
+        # Single dataset for all sizes
+        if cfg.fuse:
+            fp = open(res_path / f'datasets/{cfg.problem.name}/dataset_{cfg.task}_{split}.dat', 'w')
             fp.write(split_str)
 
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_n_items_{cfg.task}_{split}.dat', 'w')
+            fp = open(res_path / f'datasets/{cfg.problem.name}/n_items_{cfg.task}_{split}.dat', 'w')
             fp.write(n_items_str)
 
-            fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_names_{cfg.task}_{split}.dat', 'w')
+            fp = open(res_path / f'datasets/{cfg.problem.name}/names_{cfg.task}_{split}.dat', 'w')
             fp.write(inst_names_str)
+
 
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])
