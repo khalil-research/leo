@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -22,12 +23,16 @@ class XGBoostTrainer(Trainer):
         dataset_str = 'dataset_pair_svmrank'
         names_str = 'names_pair_svmrank'
         n_items_str = 'n_items_pair_svmrank'
-
-        if self.cfg.dataset.fused:  # Load fused dataset
+        if self.cfg.dataset.fused and 'context' not in self.cfg.task:  # Load fused dataset
             dataset_str += '_all'
             names_str += '_all'
             n_items_str += '_all'
+        elif self.cfg.dataset.fused and 'context' in self.cfg.task:  # Load fused dataset
+            dataset_str += '_all_context'
+            names_str += '_all_context'
+            n_items_str += '_all_context'
 
+        if self.cfg.dataset.fused:
             self.train_data_file = str(self.data / f'{dataset_str}_train.dat')
             self.val_data_file = str(self.data / f'{dataset_str}_val.dat')
             self.test_data_file = self.data / f'{dataset_str}_test.dat'
@@ -91,24 +96,30 @@ class XGBoostTrainer(Trainer):
             self.x_test_uf = self.unflatten_data(self.x_test, self.ps["test"]["n_items"])
 
     def run(self):
+        self.rs['time']['train'] = time.time()
         self.model.fit(
             self.x_train,
             self.y_train,
-            self.ps["tr"]["n_items"],
+            group=self.ps["tr"]["n_items"],
             eval_set=[(self.x_val, self.y_val)],
             eval_group=[self.ps["val"]["n_items"]],
         )
+        self.rs['time']['train'] = time.time() - self.rs['time']['train']
 
         # Train pred
         for x in self.x_train_uf:
             self.ps["tr"]["score"].append(self.model.predict(x))
 
         # Val pred
+        self.rs['time']['val'] = time.time()
         for x in self.x_val_uf:
             self.ps["val"]["score"].append(self.model.predict(x))
+        self.rs['time']['val'] = time.time() - self.rs['time']['val']
 
+        self.rs['time']['test'] = time.time()
         for x in self.x_test_uf:
             self.ps["test"]["score"].append(self.model.predict(x))
+        self.rs['time']['test'] = time.time() - self.rs['time']['test']
 
         # Eval learning metrics
         # log.info(f"* {self.cfg.model.name} Results")
@@ -204,8 +215,10 @@ class XGBoostTrainer(Trainer):
         }
 
     def _save_model(self):
-        if self.cfg.dataset.fused:
-            model_path = self.res_path / f'pretrained/{self.cfg.problem.name}'
+        if self.cfg.dataset.fused and 'context' not in self.cfg.task:
+            model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/all'
+        elif self.cfg.dataset.fused and 'context' in self.cfg.task:
+            model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/all_context'
         else:
             model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
         model_path.mkdir(parents=True, exist_ok=True)

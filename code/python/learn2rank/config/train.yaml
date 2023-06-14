@@ -35,6 +35,7 @@ dataset_path:
   pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
   pair_xgbrank: ${res_path[${machine}]}/datasets/${problem.name}
   pair_xgbrank_all: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank_all_context: ${res_path[${machine}]}/datasets/${problem.name}
 
 dataset:
   path: ${dataset_path[${task}]}

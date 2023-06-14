@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, TimeoutExpired
 
 import hydra
 import optuna
@@ -6,19 +6,20 @@ from omegaconf import DictConfig
 
 
 class XGBObjective:
-    def __init__(self, machine, time_limit):
+    def __init__(self, machine, task, time_limit):
         self.machine = machine
+        self.task = task
         self.time_limit = time_limit
 
     def __call__(self, trial):
         model_options = f'model=GradientBoostingRanker '
 
         # Number of gradient boosted trees. Equivalent to number of boosting rounds.
-        n_estimators = trial.suggest_int("n_estimators", 50, 300, step=25)
+        n_estimators = trial.suggest_int("n_estimators", 75, 200, step=25)
         model_options += f'model.n_estimators={n_estimators} '
 
         # Boosting learning rate (xgb's "eta")
-        learning_rate = trial.suggest_float("eta", 1e-8, 1.0, log=True)
+        learning_rate = trial.suggest_float("eta", 1e-4, 1.0, log=True)
         model_options += f'model.learning_rate={learning_rate} '
 
         # (min_split_loss) Minimum loss reduction required to make a further partition on a leaf node of the tree.
@@ -42,7 +43,7 @@ class XGBObjective:
         model_options += f'model.colsample_bytree={colsample_bytree} '
 
         # L2 regularization weight.
-        reg_lambda = trial.suggest_float("lambda", 1e-8, 1.0, log=True)
+        reg_lambda = trial.suggest_float("lambda", 1e-4, 1.0, log=True)
         model_options += f'model.reg_lambda={reg_lambda} '
 
         # L1 regularization weight.
@@ -53,24 +54,31 @@ class XGBObjective:
 
         cmd = "python -m learn2rank.scripts.train mode=TUNE model.verbosity=1 "
         cmd += f'machine={self.machine} '
+        cmd += f'task={self.task} '
         cmd += model_options
         print(cmd)
-        io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
 
-        # Call target algorithm with cutoff time
-        (stdout_, stderr_) = io.communicate(self.time_limit)
-        stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
-        val_tau = float(stdout.strip().split('val_tau:')[1].strip())
+        try:
+            io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
 
-        return val_tau
+            # Call target algorithm with cutoff time
+            (stdout_, stderr_) = io.communicate(self.time_limit)
+            stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
+            val_tau = float(stdout.strip().split('val_tau:')[1].strip())
+            return val_tau
+
+        except TimeoutExpired:
+            return 0
 
 
 @hydra.main(version_base='1.2', config_path='../config', config_name='tune.yaml')
 def main(cfg: DictConfig):
     study = optuna.create_study(direction='maximize')
     study.optimize(globals()[cfg.objective](cfg.machine,
-                                            cfg.time_limit),
-                   n_trials=cfg.n_trials)
+                                            cfg.task,
+                                            cfg.time_limit_per_trial),
+                   n_trials=cfg.n_trials,
+                   timeout=cfg.time_limit_study)
 
     print("Number of finished trials: ", len(study.trials))
     print("Best trial:")

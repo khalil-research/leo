@@ -13,8 +13,10 @@ class Trainer(ABC):
         self.ps = {}
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
-        if self.cfg.dataset.fused:
-            self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}'
+        if self.cfg.dataset.fused and 'context' not in self.cfg.task:
+            self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/all'
+        elif self.cfg.dataset.fused and 'context' in self.cfg.task:
+            self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/all_context'
         else:
             self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/{self.cfg.problem.size}'
             

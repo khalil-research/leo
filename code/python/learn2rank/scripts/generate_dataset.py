@@ -221,6 +221,11 @@ def generate_dataset_pair_svmrank(cfg):
                         features_str += f"{fid}:{f} "
                         fid += 1
 
+                    if 'context' in cfg.task:
+                        for f in features['inst'][item_id]:
+                            features_str += f"{fid}:{f} "
+                            fid += 1
+
                     # Rank modified to be consistent with the convention of SVMRank
                     modified_rank = int(n_items - r)
                     split_str += f'{modified_rank} qid:{qid} {features_str}\n'
@@ -275,7 +280,9 @@ def main(cfg: DictConfig):
         generate_dataset_point_regress(cfg)
     elif cfg.task == 'multitask':
         generate_dataset_multitask(cfg)
-    elif cfg.task == 'pair_svmrank' or cfg.task == 'pair_svmrank_all':
+    elif cfg.task == 'pair_svmrank' or \
+            cfg.task == 'pair_svmrank_all' or \
+            cfg.task == 'pair_svmrank_all_context':
         generate_dataset_pair_svmrank(cfg)
 
 
