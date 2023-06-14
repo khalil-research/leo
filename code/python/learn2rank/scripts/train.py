@@ -11,10 +11,20 @@ from learn2rank.utils import set_seed
 
 # A logger for this file
 log = logging.getLogger(__name__)
+MODE_TUNE = 'TUNE'
+MODE_TRAIN = 'TRAIN'
+
+LOG_INFO = 'INFO'
+LOG_CRITICAL = 'CRITICAL'
 
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='train.yaml')
 def main(cfg: DictConfig):
+    if cfg.mode == MODE_TUNE:
+        cfg.logging_level = LOG_CRITICAL
+        cfg.save = 0
+
+    log.setLevel(getattr(logging, cfg.logging_level.upper()))
     log.info(f'* Learn2rank BDD: problem {cfg.problem.name}, '
              f'max objectives {cfg.problem.n_max_objs}, '
              f'max variables {cfg.problem.n_max_vars}\n')
@@ -42,7 +52,8 @@ def main(cfg: DictConfig):
 
     log.info(f'* Starting trainer...')
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
-    trainer.run()
+    val_tau = trainer.run()
+    print('val_tau: ', val_tau)
 
 
 if __name__ == '__main__':

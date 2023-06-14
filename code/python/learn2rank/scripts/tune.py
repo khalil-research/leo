@@ -55,7 +55,7 @@ class XGBObjective:
         grow_policy = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
         model_options += f'model.grow_policy={grow_policy}'
 
-        cmd = "python -m learn2rank.scripts.train "
+        cmd = "python -m learn2rank.scripts.train mode=TUNE "
         cmd += f'machine={self.machine} '
         cmd += model_options
         io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
@@ -63,8 +63,9 @@ class XGBObjective:
         # Call target algorithm with cutoff time
         (stdout_, stderr_) = io.communicate(self.time_limit)
         stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
+        val_tau = float(stdout.strip().split('val_tau:')[1].strip())
 
-        return 1
+        return val_tau
 
 
 @hydra.main(version_base='1.2', config_path='../config', config_name='tune.yaml')

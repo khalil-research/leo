@@ -8,7 +8,12 @@ defaults:
   - _self_
 
 # Use optuna to tune the hyperparameters of the XGBoost model
-tune_params: 1
+# TRAIN | TUNE
+mode: TRAIN
+# INFO | CRITICAL
+logging_level: INFO
+# Save models, predictions and results
+save: 1
 
 # Type of ranking task
 # point_regress, pair_svmrank, pair_xgbrank, multitask

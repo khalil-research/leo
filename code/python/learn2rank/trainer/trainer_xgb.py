@@ -10,11 +10,12 @@ from learn2rank.utils.order import pred_score2rank
 from .trainer import Trainer
 
 log = logging.getLogger(__name__)
-
+import pandas as pd
 
 class XGBoostTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None):
         super().__init__(data, model, cfg)
+        log.setLevel(getattr(logging, cfg.logging_level.upper()))
         # Load files
         self.data = Path(data)
 
@@ -71,7 +72,6 @@ class XGBoostTrainer(Trainer):
         self.ps['val']['names'] = self.val_names_file.read_text().strip().split('\n')
         if self.test_data_file is not None:
             self.ps['test']['names'] = self.test_names_file.read_text().strip().split('\n')
-        print(self.train_n_items_file)
         self.ps['tr']['n_items'] = list(map(int, self.train_n_items_file.read_text().strip().split('\n')))
 
         self.ps['val']['n_items'] = list(map(int, self.val_n_items_file.read_text().strip().split('\n')))
@@ -150,11 +150,16 @@ class XGBoostTrainer(Trainer):
                                                            self.ps["val"]["rank"],
                                                            self.ps["val"]["n_items"]))
 
+
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
-        self._save_model()
-        self._save_predictions()
-        self._save_results()
+        if self.cfg.save:
+            self._save_model()
+            self._save_predictions()
+            self._save_results()
+
+        df = pd.DataFrame(self.rs["val"]["ranking"], columns=['id', 'metric_type', 'metric_value'])
+        return df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()
 
     def predict(self, *args, **kwargs):
         pass
