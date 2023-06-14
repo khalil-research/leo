@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import pandas as pd
 from sklearn.datasets import load_svmlight_file
 
 from learn2rank.utils.metrics import eval_order_metrics
@@ -10,12 +11,11 @@ from learn2rank.utils.order import pred_score2rank
 from .trainer import Trainer
 
 log = logging.getLogger(__name__)
-import pandas as pd
+
 
 class XGBoostTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None):
         super().__init__(data, model, cfg)
-        log.setLevel(getattr(logging, cfg.logging_level.upper()))
         # Load files
         self.data = Path(data)
 
@@ -149,7 +149,6 @@ class XGBoostTrainer(Trainer):
         self.rs["val"]["ranking"].extend(eval_rank_metrics(val_rank,
                                                            self.ps["val"]["rank"],
                                                            self.ps["val"]["n_items"]))
-
 
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 

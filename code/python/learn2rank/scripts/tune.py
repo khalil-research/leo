@@ -1,12 +1,8 @@
-import logging
+from subprocess import Popen, PIPE
 
 import hydra
-from omegaconf import DictConfig
-
-# A logger for this file
-log = logging.getLogger(__name__)
-from subprocess import Popen, PIPE
 import optuna
+from omegaconf import DictConfig
 
 
 class XGBObjective:
@@ -55,9 +51,10 @@ class XGBObjective:
         grow_policy = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
         model_options += f'model.grow_policy={grow_policy}'
 
-        cmd = "python -m learn2rank.scripts.train mode=TUNE "
+        cmd = "python -m learn2rank.scripts.train mode=TUNE model.verbosity=1 "
         cmd += f'machine={self.machine} '
         cmd += model_options
+        print(cmd)
         io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
 
         # Call target algorithm with cutoff time
@@ -74,6 +71,15 @@ def main(cfg: DictConfig):
     study.optimize(globals()[cfg.objective](cfg.machine,
                                             cfg.time_limit),
                    n_trials=cfg.n_trials)
+
+    print("Number of finished trials: ", len(study.trials))
+    print("Best trial:")
+    trial = study.best_trial
+
+    print("  Value: {}".format(trial.value))
+    print("  Params: ")
+    for key, value in trial.params.items():
+        print("    {}: {}".format(key, value))
 
 
 if __name__ == '__main__':

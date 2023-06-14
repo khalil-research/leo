@@ -10,8 +10,6 @@ defaults:
 # Use optuna to tune the hyperparameters of the XGBoost model
 # TRAIN | TUNE
 mode: TRAIN
-# INFO | CRITICAL
-logging_level: INFO
 # Save models, predictions and results
 save: 1
 
