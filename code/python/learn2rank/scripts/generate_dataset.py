@@ -238,6 +238,7 @@ def generate_dataset_pair_svmrank(cfg):
 
             # Separate dataset for each size
             if not cfg.fused:
+                print(len(inst_names_str.split('\n')))
                 fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
                 fp.write(split_str)
 
@@ -246,6 +247,12 @@ def generate_dataset_pair_svmrank(cfg):
 
                 fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_names_{cfg.task}_{split}.dat', 'w')
                 fp.write(inst_names_str)
+
+                # Reset
+                split_str = ''
+                n_items_str = ''
+                inst_names_str = ''
+                qid = 1
 
         # Single dataset for all sizes
         if cfg.fused:
