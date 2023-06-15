@@ -19,7 +19,20 @@ class GradientBoostingRanker(XGBRanker):
             **OmegaConf.to_container(cfg, resolve=True)
         )
         self.cfg = cfg
+        self.id_str = None
 
     @property
     def id(self):
-        return f"xgb_nes-{self.cfg.n_estimators}_md-{self.cfg.max_depth}_rlam-{self.cfg.reg_lambda}"
+        id_str = f"nes-{self.cfg.n_estimators}_"
+        id_str += f"md-{self.cfg.max_depth}_"
+        id_str += f"rlam-{self.cfg.reg_lambda}_"
+        id_str += f"lr-{self.cfg.learning_rate}_"
+        id_str += f"gma-{self.cfg.gamma}_"
+        id_str += f"mcw-{self.cfg.min_child_weight}_"
+        id_str += f"raph-{self.cfg.reg_alpha}_"
+        id_str += f"ss-{self.cfg.subsample}_"
+        id_str += f"csbt-{self.cfg.colsample_bytree}_"
+        id_str += f"gp-{self.cfg.grow_policy}"
+        self.id_str = id_str
+
+        return f"xgb_{id_str}"
