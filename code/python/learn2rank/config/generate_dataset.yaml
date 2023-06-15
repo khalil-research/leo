@@ -5,7 +5,7 @@ defaults:
 
 # Flag to decide if we want to create a single dataset
 # for all sizes
-fused: 1
+fused: 0
 
 size:
   - '5_40'
@@ -18,8 +18,6 @@ size:
 
 
 split:
-  - 'train'
-  - 'val'
   - 'test'
 
 normalize_rank: 0
@@ -34,7 +32,8 @@ iinc: min_weight
 # 3. multitask: Generates dataset for the multitask learning. Stores the cost
 #               and config along with rank
 # 4. pair_svmrank_all:
-task: pair_svmrank_all
+# 5. pair_svmrank_all_context
+task: pair_svmrank
 
 padding: False
 
