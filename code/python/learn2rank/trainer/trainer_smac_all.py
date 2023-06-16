@@ -1,20 +1,13 @@
+import ast
 from pathlib import Path
 
-import numpy as np
-
 from learn2rank.utils.data import read_data_from_file
-from learn2rank.utils.metrics import eval_learning_metrics
-from learn2rank.utils.metrics import eval_order_metrics
-from learn2rank.utils.metrics import eval_rank_metrics
 from learn2rank.utils.order import get_variable_order_from_weights
-from learn2rank.utils.order import pred_score2order
 from .trainer import Trainer
-import pandas as pd
-import ast
 
 
 class SmacAllTrainer(Trainer):
-    def __init__(self, data=None, model=None, cfg=None):
+    def __init__(self, data=None, model=None, cfg=None, rs=None, ps=None):
         super(SmacAllTrainer, self).__init__(data, model, cfg)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
@@ -23,13 +16,18 @@ class SmacAllTrainer(Trainer):
         self.traj_path = self.traj_path / f'{cfg.problem.acronym}_7_{cfg.problem.size}_0' / 'run_777' / 'traj.json'
         self.incb = ast.literal_eval(self.traj_path.read_text().strip().split('\n')[-1])["incumbent"]
 
-
-        self.rs = self._get_results_store()
-        self.ps = self._get_preds_store()
+        self.rs = rs
+        self.rs = self._get_results_store() if self.rs is None else self.rs
         self.rs['task'] = self.cfg.task
         self.rs['model_name'] = self.cfg.model.name
+        if 'test' not in self.rs:
+            self.rs['test'] = {'learning': {}, 'ranking': []}
 
-    def run(self):
+        self.ps = ps
+        self.ps = self._get_preds_store() if self.ps is None else self.ps
+        if 'test' not in self.ps:
+            self.ps['test'] = {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []}
+
         names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
         self.ps['tr']['names'] = names_tr
         self.ps['tr']['n_items'] = n_items_tr
@@ -38,16 +36,23 @@ class SmacAllTrainer(Trainer):
         self.ps['val']['names'] = names_val
         self.ps['val']['n_items'] = n_items_val
 
-        self.ps['tr']['order'] = self.predict(names_tr, 'train')
-        self.ps['val']['order'] = self.predict(names_val, 'val')
+        names_test, n_items_test, wt_test = self._get_split_data(split='test')
+        self.ps['test']['names'] = names_test
+        self.ps['test']['n_items'] = n_items_test
+
+    def run(self):
+        self.ps['tr']['order'] = self.predict(split='train')
+        self.ps['val']['order'] = self.predict(split='val')
 
         self._save_predictions()
         self._save_results()
 
-    def predict(self, names, split):
+    def predict(self, split='test'):
+        split = 'tr' if split == 'train' else split
+
         y_pred_lst = []
 
-        for name in names:
+        for name in self.ps[split]['names']:
             acronym, _, a, b, pid = name.split("_")
             if acronym == 'kp':
                 size = f'{a}_{b}'
@@ -109,6 +114,13 @@ class SmacAllTrainer(Trainer):
                 'order': []
             },
             'val': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'rank': [],
+                'order': []
+            },
+            'test': {
                 'names': [],
                 'n_items': [],
                 'score': [],
