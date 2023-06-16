@@ -12,7 +12,7 @@ from .trainer import Trainer
 
 
 class MinWeightTrainer(Trainer):
-    def __init__(self, data=None, model=None, cfg=None):
+    def __init__(self, data=None, model=None, cfg=None, ps=None, rs=None):
         super(MinWeightTrainer, self).__init__(data, model, cfg)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
@@ -26,48 +26,65 @@ class MinWeightTrainer(Trainer):
                                 'min_value_by_weight': 0.0,
                                 'weight': -1.0}
 
-        self.rs = self._get_results_store()
-        self.ps = self._get_preds_store()
+        self.rs = rs
+        self.rs = self._get_results_store() if self.rs is None else self.rs
         self.rs['task'] = self.cfg.task
         self.rs['model_name'] = self.cfg.model.name
+        if 'test' not in self.rs:
+            self.rs['test'] = {'learning': {}, 'ranking': []}
 
-    def run(self):
-        y_tr, names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
+        self.ps = ps
+        self.ps = self._get_preds_store() if self.ps is None else self.ps
+        if 'test' not in self.ps:
+            self.ps['test'] = {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []}
+
+        self.y_tr, names_tr, n_items_tr, self.wt_tr = self._get_split_data(split='train')
         self.ps['tr']['names'] = names_tr
         self.ps['tr']['n_items'] = n_items_tr
 
-        y_val, names_val, n_items_val, wt_val = self._get_split_data(split='val')
+        self.y_val, names_val, n_items_val, self.wt_val = self._get_split_data(split='val')
         self.ps['val']['names'] = names_val
         self.ps['val']['n_items'] = n_items_val
 
-        self.ps['tr']['rank'] = self.predict(names_tr, 'train')
-        self.ps['val']['rank'] = self.predict(names_val, 'val')
+        self.y_test, names_test, n_items_test, self.wt_test = self._get_split_data(split='test')
+        self.ps['test']['names'] = names_test
+        self.ps['test']['n_items'] = n_items_test
 
-        self.rs['tr']['learning'] = eval_learning_metrics(y_tr, self.ps['tr']['rank'], wt_tr)
-        self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['rank'], wt_val)
+    def run(self):
+        self.ps['tr']['rank'] = self.predict(split='train')
+        self.ps['val']['rank'] = self.predict(split='val')
 
-        y_tr_order = pred_score2order(y_tr)
+        self.rs['tr']['learning'] = eval_learning_metrics(self.y_tr, self.ps['tr']['rank'], self.wt_tr)
+        self.rs['val']['learning'] = eval_learning_metrics(self.y_val, self.ps['val']['rank'], self.wt_val)
+
+        y_tr_order = pred_score2order(self.y_tr)
         self.ps['tr']['order'] = pred_score2order(self.ps['tr']['rank'])
-        y_val_order = pred_score2order(y_val)
+        y_val_order = pred_score2order(self.y_val)
         self.ps['val']['order'] = pred_score2order(self.ps['val']['rank'])
 
         # Ranking metrics
         self.rs['tr']['ranking'].extend(eval_order_metrics(y_tr_order,
                                                            self.ps['tr']['order'],
-                                                           n_items_tr))
-        self.rs['tr']['ranking'].extend(eval_rank_metrics(y_tr, self.ps['tr']['rank'], n_items_tr))
+                                                           self.ps['tr']['n_items']))
+        self.rs['tr']['ranking'].extend(eval_rank_metrics(self.y_tr,
+                                                          self.ps['tr']['rank'],
+                                                          self.ps['tr']['n_items']))
 
         self.rs['val']['ranking'].extend(eval_order_metrics(y_val_order,
                                                             self.ps['val']['order'],
-                                                            n_items_val))
-        self.rs['val']['ranking'].extend(eval_rank_metrics(y_val, self.ps['val']['rank'], n_items_val))
+                                                            self.ps['val']['n_items']))
+        self.rs['val']['ranking'].extend(eval_rank_metrics(self.y_val,
+                                                           self.ps['val']['rank'],
+                                                           self.ps['val']['n_items']))
 
         self._save_predictions()
         self._save_results()
 
-    def predict(self, names, split):
+    def predict(self, split='test'):
         y_pred_lst = []
-        for name in names:
+
+        split = 'tr' if split == 'train' else split
+        for name in self.ps[split]['names']:
             acronym, _, a, b, pid = name.split("_")
             if acronym == 'kp':
                 size = f'{a}_{b}'
@@ -130,6 +147,13 @@ class MinWeightTrainer(Trainer):
                 'order': []
             },
             'val': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'rank': [],
+                'order': []
+            },
+            'test': {
                 'names': [],
                 'n_items': [],
                 'score': [],
