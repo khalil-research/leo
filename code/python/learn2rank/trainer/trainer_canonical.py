@@ -34,8 +34,8 @@ class CanonicalTrainer(Trainer):
         self.ps['test']['n_items'] = n_items_test
 
     def run(self):
-        self.ps['tr']['order'] = self.predict(split='train')
-        self.ps['val']['order'] = self.predict(split='val')
+        self.ps['tr']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['tr']['names']]
+        self.ps['val']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['val']['names']]
 
         self._save_predictions()
         self._save_results()
@@ -43,7 +43,9 @@ class CanonicalTrainer(Trainer):
     def predict(self, split='test'):
         split = 'tr' if split == 'train' else split
 
-        return [list(range(self.cfg.problem.n_vars)) for _ in self.ps[split]['names']]
+        self.ps[split]['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps[split]['names']]
+        self._save_predictions()
+        self._save_results()
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
@@ -52,7 +54,7 @@ class CanonicalTrainer(Trainer):
         # for size in self.cfg.dataset.size:
         for v in self.data[size][split]:
             _y = v['y']
-            n_items.append(len(_y))
+            n_items.append(self.cfg.problem.n_vars)
             names.append(v['name'])
             y.append(_y)
 
@@ -95,6 +97,13 @@ class CanonicalTrainer(Trainer):
                 'order': []
             },
             'val': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'rank': [],
+                'order': []
+            },
+            'test': {
                 'names': [],
                 'n_items': [],
                 'score': [],

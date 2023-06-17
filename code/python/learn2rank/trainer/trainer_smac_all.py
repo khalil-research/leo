@@ -41,13 +41,20 @@ class SmacAllTrainer(Trainer):
         self.ps['test']['n_items'] = n_items_test
 
     def run(self):
-        self.ps['tr']['order'] = self.predict(split='train')
-        self.ps['val']['order'] = self.predict(split='val')
+        self.ps['tr']['order'] = self._get_split_order(split='train')
+        self.ps['val']['order'] = self._get_split_order(split='val')
 
         self._save_predictions()
         self._save_results()
 
     def predict(self, split='test'):
+        split = 'tr' if split == 'train' else split
+        self.ps[split]['order'] = self._get_split_order(split=split)
+
+        self._save_predictions()
+        self._save_results()
+
+    def _get_split_order(self, split='train'):
         split = 'tr' if split == 'train' else split
 
         y_pred_lst = []
@@ -71,7 +78,7 @@ class SmacAllTrainer(Trainer):
         # for size in self.cfg.dataset.size:
         for v in self.data[size][split]:
             _y = v['y']
-            n_items.append(len(_y))
+            n_items.append(self.cfg.problem.n_vars)
             names.append(v['name'])
             y.append(_y)
 

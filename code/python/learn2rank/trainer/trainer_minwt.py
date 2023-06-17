@@ -35,8 +35,6 @@ class MinWeightTrainer(Trainer):
 
         self.ps = ps
         self.ps = self._get_preds_store() if self.ps is None else self.ps
-        if 'test' not in self.ps:
-            self.ps['test'] = {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []}
 
         self.y_tr, names_tr, n_items_tr, self.wt_tr = self._get_split_data(split='train')
         self.ps['tr']['names'] = names_tr
@@ -51,8 +49,8 @@ class MinWeightTrainer(Trainer):
         self.ps['test']['n_items'] = n_items_test
 
     def run(self):
-        self.ps['tr']['rank'] = self.predict(split='train')
-        self.ps['val']['rank'] = self.predict(split='val')
+        self.ps['tr']['rank'] = self._get_split_ranks(split='train')
+        self.ps['val']['rank'] = self._get_split_ranks(split='val')
 
         self.rs['tr']['learning'] = eval_learning_metrics(self.y_tr, self.ps['tr']['rank'], self.wt_tr)
         self.rs['val']['learning'] = eval_learning_metrics(self.y_val, self.ps['val']['rank'], self.wt_val)
@@ -81,10 +79,19 @@ class MinWeightTrainer(Trainer):
         self._save_results()
 
     def predict(self, split='test'):
+        _split = 'tr' if split == 'train' else split
+
+        self.ps[_split]['rank'] = self._get_split_ranks(split=_split)
+        self.ps[_split]['order'] = pred_score2order(self.ps['test']['rank'])
+
+        self._save_predictions()
+        self._save_results()
+
+    def _get_split_ranks(self, split):
         y_pred_lst = []
 
-        split = 'tr' if split == 'train' else split
-        for name in self.ps[split]['names']:
+        _split = 'tr' if split == 'train' else split
+        for name in self.ps[_split]['names']:
             acronym, _, a, b, pid = name.split("_")
             if acronym == 'kp':
                 size = f'{a}_{b}'
@@ -104,7 +111,7 @@ class MinWeightTrainer(Trainer):
         # for size in self.cfg.dataset.size:
         for v in self.data[size][split]:
             _x, _y = v['x'], v['y']
-            n_items.append(len(_y))
+            n_items.append(self.cfg.problem.n_vars)
             names.append(v['name'])
             y.append(_y)
 
