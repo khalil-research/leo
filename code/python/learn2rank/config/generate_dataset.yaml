@@ -5,7 +5,7 @@ defaults:
 
 # Flag to decide if we want to create a single dataset
 # for all sizes
-fused: 0
+fused:
 
 size:
   - '5_40'
@@ -18,6 +18,8 @@ size:
 
 
 split:
+  - 'train'
+  - 'val'
   - 'test'
 
 normalize_rank: 0
@@ -28,12 +30,12 @@ iinc: min_weight
 # Task for which you want to generate the dataset
 # Options:
 # 1. point_regress: Generates dataset to do pointwise regression
-# 2. pair_svmrank: Generates dataset for SVM Rank
-# 3. multitask: Generates dataset for the multitask learning. Stores the cost
+# 2. pair_rank: Generates pairwise ranking dataset for a fixed size
+# 3. pair_rank_all: Generates pairwise ranking dataset for all sizes
+# 4. pair_rank_all_context: Generates pairwise ranking dataset for all sizes with context features
+# 5. multitask: Generates dataset for the multitask learning. Stores the cost
 #               and config along with rank
-# 4. pair_svmrank_all:
-# 5. pair_svmrank_all_context
-task: pair_svmrank
+task: point_regress
 
 padding: False
 

@@ -24,14 +24,20 @@ def generate_dataset_point_regress(cfg):
 
     # For each size
     for size in cfg.size:
+        print()
+        print('Size: ', size)
         if size in dataset:
-            print("Overwriting dataset for size ", size, "... \n")
+            print("Overwriting dataset... \n")
         dataset[size] = {}
 
         for split in cfg.split:
+            print(f"Split {split}")
             dataset[size][split] = []
-            df_label = pd.read_csv(res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv')
-            print(f"Split {split}, labels shape {df_label.shape}")
+
+            df_label = None
+            if split != 'test':
+                df_label = pd.read_csv(res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv')
+                print(f"labels shape {df_label.shape}")
 
             inst_path = inst_root_path / size / split
             for inst in inst_path.iterdir():
@@ -47,19 +53,22 @@ def generate_dataset_point_regress(cfg):
 
                 # Prepare y
                 # Get best seed for the pid
-                label_row = df_label[df_label['pid'] == pid]
-                incb_dict = {'avg_value': 0.0, 'avg_value_by_weight': 0.0, 'max_value': 0.0, 'max_value_by_weight': 0.0,
-                             'min_value': 0.0, 'min_value_by_weight': 0.0, 'weight': -1.0}
-                best_seed = '-1'
-                sample['seed'] = '-1'
-                if label_row.shape[0]:
-                    best_seed = label_row['seed'].values[0]
-                    sample['seed'] = best_seed
-                    # Save the incumbent
-                    incb_dict = ast.literal_eval(label_row['incb'].values[0])
-                else:
-                    print(f'Missing incumbent. Using min_weight for {str(inst)}')
-                sample['y'] = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
+                best_seed = None
+                if df_label is not None:
+                    label_row = df_label[df_label['pid'] == pid]
+                    incb_dict = {'avg_value': 0.0, 'avg_value_by_weight': 0.0, 'max_value': 0.0,
+                                 'max_value_by_weight': 0.0,
+                                 'min_value': 0.0, 'min_value_by_weight': 0.0, 'weight': -1.0}
+                    best_seed = '-1'
+                    sample['seed'] = '-1'
+                    if label_row.shape[0]:
+                        best_seed = label_row['seed'].values[0]
+                        sample['seed'] = best_seed
+                        # Save the incumbent
+                        incb_dict = ast.literal_eval(label_row['incb'].values[0])
+                    else:
+                        print(f'Missing incumbent. Using min_weight for {str(inst)}')
+                    sample['y'] = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
 
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
@@ -67,13 +76,14 @@ def generate_dataset_point_regress(cfg):
                 # Append sample to dataset
                 dataset[size][split].append(sample)
 
+    dataset_root_path = res_path / f'datasets/{cfg.problem.name}'
+    dataset_root_path.mkdir(exist_ok=True, parents=True)
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])
-    time_df.to_csv(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_time_dataset_{cfg.task}.csv',
+    time_df.to_csv(dataset_root_path / f'{cfg.problem.name}_time_dataset_{cfg.task}.csv',
                    index=False)
-
     # Save dataset
-    with open(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_dataset_{cfg.task}.pkl', 'wb') as fp:
+    with open(dataset_root_path / f'{cfg.problem.name}_dataset_{cfg.task}.pkl', 'wb') as fp:
         pkl.dump(dataset, fp)
 
 
@@ -153,21 +163,20 @@ def generate_dataset_multitask(cfg):
         pkl.dump(dataset, fp)
 
 
-def generate_dataset_pair_svmrank(cfg):
+def generate_dataset_pair_rank(cfg):
+    if 'all' in cfg.task:
+        cfg.fused = 1
     print(f"Fuse mode: {cfg.fused}")
 
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
+    dataset_root_path = res_path / 'datasets' / cfg.problem.name
     time_dataset = []
 
     # For each split
     for split in cfg.split:
         print("Split: ", split)
-
-        split_str = ''
-        n_items_str = ''
-        inst_names_str = ''
-        qid = 1
+        split_str, n_items_str, inst_names_str, qid = '', '', '', 1
 
         # For each size
         for size in cfg.size:
@@ -178,12 +187,13 @@ def generate_dataset_pair_svmrank(cfg):
             label_path = res_path / 'labels' / cfg.problem.name / size / f'label_{size}_{split}.csv'
             if label_path.exists():
                 df_label = pd.read_csv(label_path)
-                print(f"Labels shape {df_label.shape}")
+                print(f"Labels shape: {df_label.shape}")
 
             inst_path = inst_root_path / size / split
             for inst in inst_path.iterdir():
                 pid = int(inst.stem.split('.')[0].split('_')[-1])
                 inst_names_str += f'{inst.stem}\n'
+                n_items_str += f'{int(n_items)}\n'
 
                 start_time = time.time()
 
@@ -208,7 +218,6 @@ def generate_dataset_pair_svmrank(cfg):
                 # For the test set
                 ranks = [n_items] * n_items if ranks is None else ranks
 
-                n_items_str += f'{int(n_items)}\n'
                 for item_id, r in enumerate(ranks):
                     fid = 1
                     features_str = ''
@@ -238,37 +247,21 @@ def generate_dataset_pair_svmrank(cfg):
 
             # Separate dataset for each size
             if not cfg.fused:
-                print(len(inst_names_str.split('\n')))
-                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_dataset_{cfg.task}_{split}.dat', 'w')
-                fp.write(split_str)
-
-                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_n_items_{cfg.task}_{split}.dat', 'w')
-                fp.write(n_items_str)
-
-                fp = open(res_path / f'datasets/{cfg.problem.name}/{size}_names_{cfg.task}_{split}.dat', 'w')
-                fp.write(inst_names_str)
-
+                dataset_root_path.joinpath(f'{size}_dataset_{cfg.task}_{split}.dat').write_text(split_str)
+                dataset_root_path.joinpath(f'{size}_n_items_{cfg.task}_{split}.dat').write_text(n_items_str)
+                dataset_root_path.joinpath(f'{size}_names_{cfg.task}_{split}.dat').write_text(inst_names_str)
                 # Reset
-                split_str = ''
-                n_items_str = ''
-                inst_names_str = ''
-                qid = 1
+                split_str, n_items_str, inst_names_str, qid = '', '', '', 1
 
         # Single dataset for all sizes
         if cfg.fused:
-            fp = open(res_path / f'datasets/{cfg.problem.name}/dataset_{cfg.task}_{split}.dat', 'w')
-            fp.write(split_str)
-
-            fp = open(res_path / f'datasets/{cfg.problem.name}/n_items_{cfg.task}_{split}.dat', 'w')
-            fp.write(n_items_str)
-
-            fp = open(res_path / f'datasets/{cfg.problem.name}/names_{cfg.task}_{split}.dat', 'w')
-            fp.write(inst_names_str)
+            dataset_root_path.joinpath(f'dataset_{cfg.task}_{split}.dat').write_text(split_str)
+            dataset_root_path.joinpath(f'n_items_{cfg.task}_{split}.dat').write_text(n_items_str)
+            dataset_root_path.joinpath(f'names_{cfg.task}_{split}.dat').write_text(inst_names_str)
 
     # Save time
     time_df = pd.DataFrame(time_dataset, columns=["size", "pid", "best_seed", "split", "time"])
-    time_df.to_csv(res_path / f'datasets/{cfg.problem.name}/{cfg.problem.name}_time_dataset_{cfg.task}.csv',
-                   index=False)
+    time_df.to_csv(dataset_root_path / f'time_dataset_{cfg.task}.csv', index=False)
 
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='generate_dataset.yaml')
@@ -287,10 +280,10 @@ def main(cfg: DictConfig):
         generate_dataset_point_regress(cfg)
     elif cfg.task == 'multitask':
         generate_dataset_multitask(cfg)
-    elif cfg.task == 'pair_svmrank' or \
-            cfg.task == 'pair_svmrank_all' or \
-            cfg.task == 'pair_svmrank_all_context':
-        generate_dataset_pair_svmrank(cfg)
+    elif cfg.task == 'pair_rank' or \
+            cfg.task == 'pair_rank_all' or \
+            cfg.task == 'pair_rank_all_context':
+        generate_dataset_pair_rank(cfg)
 
 
 if __name__ == '__main__':
