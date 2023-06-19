@@ -10,6 +10,7 @@ import pandas as pd
 from omegaconf import DictConfig
 
 from learn2rank.featurizer.factory import featurizer_factory
+from learn2rank.utils import set_machine
 from learn2rank.utils.data import read_data_from_file
 from learn2rank.utils.order import get_variable_rank_from_weights
 from learn2rank.utils.order import property_weight_dict2array
@@ -276,6 +277,7 @@ def main(cfg: DictConfig):
     -------
 
     """
+    set_machine(cfg)
     if cfg.task == 'point_regress':
         generate_dataset_point_regress(cfg)
     elif cfg.task == 'multitask':

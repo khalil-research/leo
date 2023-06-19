@@ -7,7 +7,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
-from learn2rank.utils import set_seed
+from learn2rank.utils import set_seed, set_machine
 from learn2rank.utils.data import load_dataset
 
 log = logging.getLogger(__name__)
@@ -42,12 +42,15 @@ class GradientBoostingRankerObj:
         # Build trainer and run
         log.info(f'* Starting trainer...')
         trainer = trainer_factory.create(self.cfg.model.trainer, model=model, data=self.data, cfg=self.cfg)
-        val_tau = trainer.run()
-        return val_tau
+        trainer.run()
+
+        return trainer.val_tau
 
 
 @hydra.main(version_base='1.2', config_path='../config', config_name='tune.yaml')
 def main(cfg: DictConfig):
+    set_machine(cfg)
+
     log.info(f'* Learn2rank BDD: problem {cfg.problem.name}')
     log.info(f'* Script: tune.py')
     log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')

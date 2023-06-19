@@ -9,6 +9,8 @@ from smac.configspace import ConfigurationSpace
 from smac.facade.smac_ac_facade import SMAC4AC
 from smac.scenario.scenario import Scenario
 
+from learn2rank.utils import set_machine
+
 
 class TestCallback(IncorporateRunResultCallback):
     def __init__(self):
@@ -118,6 +120,7 @@ def run_smac(instances, base_scenario_dict, opts):
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='smac_runner.yaml')
 def main(cfg):
+    set_machine(cfg)
     logger = get_logger(cfg.verbose) if cfg.verbose else None
 
     # Set environment variables

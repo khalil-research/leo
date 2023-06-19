@@ -1,14 +1,11 @@
 import logging
-import pickle as pkl
-from pathlib import Path
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from learn2rank.utils.data import load_svmlight_data
 from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
-from learn2rank.utils import set_seed
+from learn2rank.utils import set_seed, set_machine
 from learn2rank.utils.data import load_dataset
 
 # A logger for this file
@@ -17,6 +14,8 @@ log = logging.getLogger(__name__)
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='train.yaml')
 def main(cfg: DictConfig):
+    set_machine(cfg)
+
     log.info(f'* Learn2rank BDD: problem {cfg.problem.name}')
     log.info(f'* Script: train.py')
     log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')

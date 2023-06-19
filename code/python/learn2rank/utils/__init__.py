@@ -1,3 +1,4 @@
+import hashlib
 import random
 from operator import itemgetter
 
@@ -9,7 +10,6 @@ from .data import read_data_from_file
 from .metrics import eval_learning_metrics, eval_order_metrics
 from .order import get_variable_rank_from_weights
 from .order import property_weight_dict2array
-import hashlib
 
 
 class Factory:
@@ -29,6 +29,12 @@ class Factory:
 
 def hashit(x):
     return hashlib.blake2s(x.encode('utf-8'), digest_size=32).hexdigest()
+
+
+def set_machine(cfg):
+    if 'machine' in cfg:
+        import os
+        cfg.machine = os.environ.get('machine')
 
 
 def set_seed(seed):

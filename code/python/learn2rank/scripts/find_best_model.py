@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from omegaconf import OmegaConf
 
+from learn2rank.utils import set_machine
+
 
 def main2(cfg):
     # Best params tracking
@@ -41,24 +43,23 @@ def main2(cfg):
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='find_best_model.yaml')
 def main(cfg):
+    set_machine(cfg)
     output_path = Path(cfg.output_dir)
     Path(cfg.summary_path).mkdir(exist_ok=True, parents=True)
     task_modelName = set()
     result_summary = []
     for result_path in output_path.rglob('results_*.pkl'):
-        print(result_path)
-        pred_path = '_'.join(result_path.name.split('_')[1:])
-        pred_path = result_path.parent / f'prediction_{pred_path}'
+        model_id = '_'.join(result_path.name.split('_')[1:])
         result = pkl.load(open(result_path, 'rb'))
 
         task_modelName.add((result['task'], result['model_name']))
-        ranking_tr = result['tr']['ranking']
+        ranking_tr = result['train']['ranking']
         ranking_val = result['val']['ranking']
 
         result_tr = pd.DataFrame(ranking_tr, columns=['id', 'name', 'value'])
         result_val = pd.DataFrame(ranking_val, columns=['id', 'name', 'value'])
 
-        if result['task'] == 'pair_xgbrank':
+        if result['task'] == 'pair_rank':
             result_summary.append([
                 result['task'],
                 result['model_name'],
@@ -79,8 +80,7 @@ def main(cfg):
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                str(pred_path.name),
-                str(result_path.name)
+                model_id
             ])
         elif result['model_name'] == 'SmacOne' or \
                 result['model_name'] == 'SmacAll' or \
@@ -105,17 +105,16 @@ def main(cfg):
                 None,
                 None,
                 None,
-                str(pred_path.name),
-                str(result_path.name)
+                model_id
             ])
         else:
             result_summary.append([
                 result['task'],
                 result['model_name'],
                 "_".join(result_path.stem[8:].split("_")[1:]),
-                result['tr']['learning']['mse'],
-                result['tr']['learning']['mae'],
-                result['tr']['learning']['r2'],
+                result['train']['learning']['mse'],
+                result['train']['learning']['mae'],
+                result['train']['learning']['r2'],
                 np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
                 np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
                 np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
@@ -129,8 +128,7 @@ def main(cfg):
                 np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
                 np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                pred_path.name,
-                result_path.name
+                model_id
             ])
 
     # Create summary data frame
@@ -154,8 +152,7 @@ def main(cfg):
         'top_10_same_val',
         'top_10_common_val',
         'top_10_penalty_val',
-        'prediction_path',
-        'results_path'
+        'model_id'
     ])
     summary_df.to_csv(f'{cfg.summary_path}/{cfg.problem.size}.csv', index=False)
 

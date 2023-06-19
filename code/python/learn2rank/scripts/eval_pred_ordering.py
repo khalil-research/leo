@@ -2,11 +2,12 @@ import logging
 import os
 import pickle as pkl
 from pathlib import Path
-import pandas as pd
 
 import hydra
+import pandas as pd
 from omegaconf import DictConfig
 
+from learn2rank.utils import set_machine
 from learn2rank.utils.bdd import run_bdd_builder
 from learn2rank.utils.order import make_result_column
 
@@ -18,6 +19,7 @@ print(os.getcwd())
 
 @hydra.main(version_base='1.1', config_path='../config', config_name='eval_pred_ordering.yaml')
 def main(cfg: DictConfig):
+    set_machine(cfg)
     resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = Path(cfg.inst_path)
     pred_path = Path(cfg.pred_path)

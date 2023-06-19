@@ -3,13 +3,13 @@ import pickle as pkl
 from pathlib import Path
 
 import hydra
-import numpy as np
 import pandas as pd
 from omegaconf import DictConfig
-from learn2rank.utils.data import load_svmlight_data
+
 from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
-from learn2rank.utils import set_seed
+from learn2rank.utils import set_seed, set_machine
+from learn2rank.utils.data import load_svmlight_data
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -114,6 +114,8 @@ def load_model(cfg, model_path_prefix, best_model_row):
 
 @hydra.main(version_base='1.2', config_path='../config', config_name='test.yaml')
 def main(cfg: DictConfig):
+    set_machine(cfg)
+
     log.info(f'* Setting seed to {cfg.run.seed} for reproducibility')
     set_seed(cfg.run.seed)
 
