@@ -237,29 +237,6 @@ class PyTorchTrainer(Trainer):
 
         return loss_dict
 
-    @staticmethod
-    def _get_results_store():
-        return {
-            'tr': {
-                'loss': []
-            },
-            'val': {
-                'loss': []
-            },
-            'test': {
-                'loss': []
-            },
-            'best': {
-                'loss': {'total': np.infty, 'rank': np.infty, 'weight': np.infty, 'time': np.infty},
-                'epoch': None
-            },
-            'time': {
-                'train': 0.0,
-                'test': 0.0,
-                'eval': 0.0
-            }
-        }
-
 
 def nesteddict_list2str(d):
     for k, v in d.items():

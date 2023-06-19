@@ -110,13 +110,14 @@ class XGBoostTrainer(Trainer):
                                                            self.ps['val']['rank'],
                                                            self.ps['val']['n_items']))
 
+        df = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
+        self.val_tau = df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()
+        self.cfg.val_tau = float(self.val_tau)
+
         if self.cfg.save:
             self._save_model()
             self._save_predictions()
             self._save_results()
-
-        df = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
-        return df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()
 
     def predict(self, *args, **kwargs):
         split = kwargs['split']
@@ -149,32 +150,6 @@ class XGBoostTrainer(Trainer):
 
     def eval_learning_metrics(self, split="train"):
         pass
-
-    @staticmethod
-    def _get_preds_store():
-        return {
-            'train': {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []},
-            'val': {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []},
-            'test': {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []}
-        }
-
-    @staticmethod
-    def _get_results_store():
-        return {
-            'train': {
-                'learning': {'mse': None, 'r2': None, 'mae': None, 'mape': None},
-                'ranking': [],
-            },
-            'val': {
-                'learning': {'mse': None, 'r2': None, 'mae': None, 'mape': None},
-                'ranking': [],
-            },
-            'test': {
-                'learning': {'mse': None, 'r2': None, 'mae': None, 'mape': None},
-                'ranking': [],
-            },
-            'time': {'train': 0.0, 'test': 0.0, 'eval': 0.0},
-        }
 
     def _save_model(self):
         if self.cfg.dataset.fused and 'context' not in self.cfg.task:
