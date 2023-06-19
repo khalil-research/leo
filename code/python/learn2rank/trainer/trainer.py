@@ -2,6 +2,9 @@ import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 
 class Trainer(ABC):
     def __init__(self, data, model, config, ps, rs):
@@ -21,6 +24,10 @@ class Trainer(ABC):
         self.pred_path.mkdir(parents=True, exist_ok=True)
 
         self.val_tau = None
+        if self.rs is not None and 'val' in self.rs and 'ranking' in self.rs['val']:
+            df = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'name', 'value'])
+            if df.shape[0]:
+                self.val_tau = np.mean(df.query("name == 'kendall-coeff'")['value'])
 
     @abstractmethod
     def run(self):
@@ -49,7 +56,7 @@ class Trainer(ABC):
             'model_name': self.cfg.model.name,
             'model_id': self.model.id,
             'model_params': str(self.model),
-            'tr': {
+            'train': {
                 'names': [],
                 'n_items': [],
                 'score': [],
@@ -78,7 +85,7 @@ class Trainer(ABC):
             'model_name': self.cfg.model.name,
             'model_id': self.model.id,
             'model_params': str(self.model),
-            'tr': {
+            'train': {
                 'learning': {'mse': None, 'r2': None, 'mae': None, 'mape': None},
                 'ranking': [],
             },
