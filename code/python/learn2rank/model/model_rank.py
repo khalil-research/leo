@@ -1,5 +1,6 @@
 from omegaconf import OmegaConf
 from xgboost import XGBRanker
+from learn2rank.utils import hashit
 
 
 class SVMRank:
@@ -8,9 +9,12 @@ class SVMRank:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
+    def __str__(self):
+        return f'svmrank_c-{self.cfg.c}'
+
     @property
     def id(self):
-        return f'svmrank_c-{self.cfg.c}'
+        return hashit(str(self))
 
 
 class GradientBoostingRanker(XGBRanker):
@@ -22,7 +26,7 @@ class GradientBoostingRanker(XGBRanker):
         self.id_str = None
 
     @property
-    def id(self):
+    def __str__(self):
         id_str = f"nes-{self.cfg.n_estimators}_"
         id_str += f"md-{self.cfg.max_depth}_"
         id_str += f"rlam-{self.cfg.reg_lambda}_"
@@ -36,3 +40,7 @@ class GradientBoostingRanker(XGBRanker):
         self.id_str = id_str
 
         return f"xgb_{id_str}"
+
+    @property
+    def id(self):
+        return hashit(str(self))

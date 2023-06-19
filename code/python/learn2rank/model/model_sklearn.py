@@ -1,6 +1,7 @@
 import sklearn.ensemble as skensem
 import sklearn.linear_model as sklm
 import sklearn.tree as sktree
+from learn2rank.utils import hashit
 
 
 class LinearRegression(sklm.LinearRegression):
@@ -8,9 +9,12 @@ class LinearRegression(sklm.LinearRegression):
         super(LinearRegression, self).__init__()
         self.cfg = cfg
 
+    def __str__(self):
+        return f"lr_wt-{self.cfg.weights}"
+
     @property
     def id(self):
-        return f"lr_wt-{self.cfg.weights}"
+        return hashit(str(self))
 
 
 class Lasso(sklm.Lasso):
@@ -20,9 +24,12 @@ class Lasso(sklm.Lasso):
                                     tol=cfg.tol)
         self.cfg = cfg
 
+    def __str__(self):
+        return f"lasso_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
+
     @property
     def id(self):
-        return f"lasso_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
+        return hashit(str(self))
 
 
 class Ridge(sklm.Ridge):
@@ -32,9 +39,12 @@ class Ridge(sklm.Ridge):
                                     tol=cfg.tol)
         self.cfg = cfg
 
+    def __str__(self):
+        return f"ridge_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
+
     @property
     def id(self):
-        return f"ridge_a-{self.cfg.alpha}_wt-{self.cfg.weights}"
+        return hashit(str(self))
 
 
 class DecisionTreeRegressor(sktree.DecisionTreeRegressor):
@@ -47,9 +57,12 @@ class DecisionTreeRegressor(sktree.DecisionTreeRegressor):
                                                     max_features=cfg.max_features)
         self.cfg = cfg
 
+    def __str__(self):
+        return f"dtreer_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
+
     @property
     def id(self):
-        return f"dtreer_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
+        return hashit(str(self))
 
 
 class GradientBoostingRegressor(skensem.GradientBoostingRegressor):
@@ -70,6 +83,9 @@ class GradientBoostingRegressor(skensem.GradientBoostingRegressor):
     def _make_estimator(self, append=True):
         raise NotImplementedError()
 
+    def __str__(self):
+        return f"gbr_nes-{self.cfg.n_estimators}_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
+
     @property
     def id(self):
-        return f"gbr_nes-{self.cfg.n_estimators}_md-{self.cfg.max_depth}_mf-{self.cfg.max_features}"
+        return hashit(str(self))
