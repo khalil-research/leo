@@ -4,13 +4,12 @@ from pathlib import Path
 
 
 class Trainer(ABC):
-    def __init__(self, data, model, config):
+    def __init__(self, data, model, config, ps, rs):
         self.data = data
         self.model = model
         self.cfg = config
-
-        self.rs = {}
-        self.ps = {}
+        self.rs = rs
+        self.ps = ps
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         if self.cfg.dataset.fused and 'context' not in self.cfg.task:
@@ -19,7 +18,7 @@ class Trainer(ABC):
             self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/all_context'
         else:
             self.pred_path = self.res_path / f'predictions/{self.cfg.problem.name}/{self.cfg.problem.size}'
-            
+
         self.pred_path.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod

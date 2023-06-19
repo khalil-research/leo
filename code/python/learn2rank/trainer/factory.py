@@ -1,12 +1,12 @@
 from learn2rank.utils import Factory
+from .trainer_canonical import CanonicalTrainer
 from .trainer_minwt import MinWeightTrainer
 from .trainer_pytorch import PyTorchTrainer
 from .trainer_sklearn import SklearnTrainer
-from .trainer_svmrank import SVMRankTrainer
-from .trainer_xgb import XGBoostTrainer
 from .trainer_smac import SmacOneTrainer
 from .trainer_smac_all import SmacAllTrainer
-from .trainer_canonical import CanonicalTrainer
+from .trainer_svmrank import SVMRankTrainer
+from .trainer_xgb import XGBoostTrainer
 
 # Factory to hold trainers
 trainer_factory = Factory()

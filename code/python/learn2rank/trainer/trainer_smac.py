@@ -1,12 +1,11 @@
+import ast
 from pathlib import Path
 
-import numpy as np
+import pandas as pd
 
 from learn2rank.utils.data import read_data_from_file
 from learn2rank.utils.order import get_variable_order_from_weights
 from .trainer import Trainer
-import pandas as pd
-import ast
 
 
 class SmacOneTrainer(Trainer):
@@ -116,6 +115,13 @@ class SmacOneTrainer(Trainer):
                 'order': []
             },
             'val': {
+                'names': [],
+                'n_items': [],
+                'score': [],
+                'rank': [],
+                'order': []
+            },
+            'test': {
                 'names': [],
                 'n_items': [],
                 'score': [],
