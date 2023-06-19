@@ -3,6 +3,8 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
+from sklearn.datasets import load_svmlight_file
+import pickle as pkl
 
 ROOT_PATH = Path(__file__).parent.parent
 
@@ -60,6 +62,48 @@ def read_data_from_file(problem_acronym, file_path):
 
     else:
         raise ValueError('Invalid problem!')
+
+    return data
+
+
+def load_svmlight_data(files, split_types, file_types):
+    i = 0
+    data = {}
+    for st in split_types:
+        for ft in file_types:
+            if ft == 'dataset':
+                data[st, ft] = load_svmlight_file(str(files[i])) if files[i].exists() else None
+            elif ft == 'n_items':
+                data[st, ft] = list(map(int, files[i].read_text().strip().split('\n'))) \
+                    if files[i].exists() else None
+            elif ft == 'names':
+                data[st, ft] = files[i].read_text().strip().split('\n') if files[i].exists() else None
+
+            i += 1
+
+    return data
+
+
+def load_dataset(cfg):
+    dp = Path(cfg.dataset.path)
+    data = None
+    data = pkl.load(open(dp, 'rb')) if dp.suffix == 'pkl' else data
+    if data is None and 'rank' in cfg.task:
+        split_types = ['train', 'val', 'test']
+        file_types = ['dataset', 'n_items', 'names']
+
+        suffix = 'pair_rank'
+        if cfg.dataset.fused and 'context' not in cfg.task:  # Load fused dataset
+            suffix += '_all'
+        elif cfg.dataset.fused and 'context' in cfg.task:  # Load fused dataset
+            suffix += '_all_context'
+
+        splits_suffix = list(map(lambda x: f'{suffix}_{x}.dat', split_types))
+        files_prefix = [f'{ft}_{ss}' for ss in splits_suffix for ft in file_types]
+        if not cfg.dataset.fused:
+            files_prefix = [f'{cfg.problem.size}_{fp}' for fp in files_prefix]
+        files = [dp / fp for fp in files_prefix]
+        data = load_svmlight_data(files, split_types, file_types)
 
     return data
 
