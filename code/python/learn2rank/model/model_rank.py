@@ -1,5 +1,6 @@
 from omegaconf import OmegaConf
 from xgboost import XGBRanker
+
 from learn2rank.utils import hashit
 
 
@@ -25,7 +26,6 @@ class GradientBoostingRanker(XGBRanker):
         self.cfg = cfg
         self.id_str = None
 
-    @property
     def __str__(self):
         id_str = f"nes-{self.cfg.n_estimators}_"
         id_str += f"md-{self.cfg.max_depth}_"

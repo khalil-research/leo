@@ -57,13 +57,17 @@ class XGBoostTrainer(Trainer):
     def run(self):
         self.rs['time']['train'] = time.time()
         # Train
+        feature_weights = self._get_feature_importance(self.cfg.model.feature_importance,
+                                                       self.x_train.shape[1])
         self.model.fit(
             self.x_train,
             self.y_train,
+            feature_weights=feature_weights,
             group=self.ps['train']['n_items'],
             eval_set=[(self.x_val, self.y_val)],
             eval_group=[self.ps['val']['n_items']],
         )
+
         self.rs['time']['train'] = time.time() - self.rs['time']['train']
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
@@ -183,3 +187,16 @@ class XGBoostTrainer(Trainer):
         model_path = model_path / f'model_{self.model.id}.txt'
 
         self.model.save_model(model_path)
+
+    @staticmethod
+    def _get_feature_importance(get_weights, size):
+        imp = None
+        if get_weights:
+            if size == 18:
+                imp = [1] * 18
+            elif size == 37:
+                imp = [0.5] * 18
+                imp.extend([1, 1])
+                imp.extend([0.6] * 17)
+
+        return imp
