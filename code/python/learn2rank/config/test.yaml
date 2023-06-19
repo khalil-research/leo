@@ -1,9 +1,43 @@
 defaults:
-  - _self_
-  - hydra: test
   - problem: knapsack
-  - model: nrm
-  - wandb: default
+  - model: GradientBoostingRanker
+  - run: default
+  - _self_
 
-pretrained_dir: nn__vri
-map_location: cpu
+
+# Type of ranking task
+# point_regress, pair_svmrank, pair_xgbrank, multitask
+# pair_xgbrank_all
+# pair_xgbrank_all_context
+task: pair_xgbrank
+
+save: 1
+
+
+out_path:
+  cc: /home/rahulpat/scratch/l2o_resources
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016
+
+res_path:
+  cc: /home/rahulpat/scratch/l2o_resources/
+  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/resources
+
+machine: desktop
+
+dataset_path:
+  point_regress: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
+  pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank_all: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_xgbrank_all_context: ${res_path[${machine}]}/datasets/${problem.name}
+
+dataset:
+  path: ${dataset_path[${task}]}
+  fused: 0
+
+case: 0
+
+#pretrained_dir: nn__vri
+#map_location: cpu

@@ -8,8 +8,6 @@ defaults:
   - _self_
 
 # Use optuna to tune the hyperparameters of the XGBoost model
-# TRAIN | TUNE
-mode: TRAIN
 # Save models, predictions and results
 save: 1
 
@@ -39,7 +37,10 @@ dataset_path:
 
 dataset:
   path: ${dataset_path[${task}]}
-  fused: 1
+  fused: 0
+
+# Load configs from this path
+tuned_model:
 
 case: 0
 #output_dir: ${hydra:runtime.output_dir}
