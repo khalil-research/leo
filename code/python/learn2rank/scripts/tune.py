@@ -1,82 +1,69 @@
 from subprocess import Popen, PIPE, TimeoutExpired
+import logging
 
 import hydra
 import optuna
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
+from learn2rank.utils import set_seed
+from learn2rank.utils.data import load_dataset
+from learn2rank.model.factory import model_factory
+from learn2rank.trainer.factory import trainer_factory
+from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 
-class XGBObjective:
-    def __init__(self, machine, task, time_limit):
-        self.machine = machine
-        self.task = task
-        self.time_limit = time_limit
+class GradientBoostingRankerObj:
+    def __init__(self, cfg, data):
+        self.cfg = cfg
+        self.data = data
 
     def __call__(self, trial):
-        model_options = f'model=GradientBoostingRanker '
+        # Set model params
+        self.cfg.model.verbosity = 1
+        self.cfg.model.n_estimators = trial.suggest_int("n_estimators", 75, 200, step=25)
+        self.cfg.model.learning_rate = trial.suggest_float("eta", 1e-4, 1.0, log=True)
+        self.cfg.model.gamma = trial.suggest_int("gamma", 0, 5)
+        self.cfg.model.max_depth = trial.suggest_int("max_depth", 3, 9, step=2)
+        self.cfg.model.min_child_weight = trial.suggest_int("min_child_weight", 0, 5)
+        self.cfg.model.subsample = trial.suggest_float("subsample", 0.2, 1.0)
+        self.cfg.model.colsample_bytree = trial.suggest_float("colsample_bytree", 0.2, 1.0)
+        self.cfg.model.reg_lambda = trial.suggest_float("lambda", 1e-4, 1.0, log=True)
+        self.cfg.model.grow_policy = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
 
-        # Number of gradient boosted trees. Equivalent to number of boosting rounds.
-        n_estimators = trial.suggest_int("n_estimators", 75, 200, step=25)
-        model_options += f'model.n_estimators={n_estimators} '
+        # Build model
+        log.info(f'* Building model...')
+        model = model_factory.create(self.cfg.model.name, cfg=self.cfg.model)
+        log.info(OmegaConf.to_yaml(self.cfg.model, resolve=True))
+        log.info('')
 
-        # Boosting learning rate (xgb's "eta")
-        learning_rate = trial.suggest_float("eta", 1e-4, 1.0, log=True)
-        model_options += f'model.learning_rate={learning_rate} '
-
-        # (min_split_loss) Minimum loss reduction required to make a further partition on a leaf node of the tree.
-        gamma = trial.suggest_int("gamma", 0, 5)
-        model_options += f'model.gamma={gamma} '
-
-        # Maximum tree depth for base learners.
-        max_depth = trial.suggest_int("max_depth", 3, 9, step=2)
-        model_options += f'model.max_depth={max_depth} '
-
-        # Minimum sum of instance weight (hessian) needed in a child.
-        min_child_weight = trial.suggest_int("min_child_weight", 0, 5)
-        model_options += f'model.min_child_weight={min_child_weight} '
-
-        # sampling ratio for training data.
-        subsample = trial.suggest_float("subsample", 0.2, 1.0)
-        model_options += f'model.subsample={subsample} '
-
-        # sampling according to each tree.
-        colsample_bytree = trial.suggest_float("colsample_bytree", 0.2, 1.0)
-        model_options += f'model.colsample_bytree={colsample_bytree} '
-
-        # L2 regularization weight.
-        reg_lambda = trial.suggest_float("lambda", 1e-4, 1.0, log=True)
-        model_options += f'model.reg_lambda={reg_lambda} '
-
-        # L1 regularization weight.
-        # reg_alpha = trial.suggest_float("alpha", 1e-8, 1.0, log=True)
-
-        grow_policy = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
-        model_options += f'model.grow_policy={grow_policy}'
-
-        cmd = "python -m learn2rank.scripts.train mode=TUNE model.verbosity=1 "
-        cmd += f'machine={self.machine} '
-        cmd += f'task={self.task} '
-        cmd += model_options
-        print(cmd)
-
-        try:
-            io = Popen(cmd.split(" "), stdout=PIPE, stderr=PIPE)
-
-            # Call target algorithm with cutoff time
-            (stdout_, stderr_) = io.communicate(self.time_limit)
-            stdout, stderr = stdout_.decode('utf-8'), stderr_.decode('utf-8')
-            val_tau = float(stdout.strip().split('val_tau:')[1].strip())
-            return val_tau
-
-        except TimeoutExpired:
-            return 0
+        # Build trainer and run
+        log.info(f'* Starting trainer...')
+        trainer = trainer_factory.create(self.cfg.model.trainer, model=model, data=self.data, cfg=self.cfg)
+        val_tau = trainer.run()
+        return val_tau
 
 
 @hydra.main(version_base='1.2', config_path='../config', config_name='tune.yaml')
 def main(cfg: DictConfig):
+    log.info(f'* Learn2rank BDD: problem {cfg.problem.name}')
+    log.info(f'* Script: tune.py')
+    log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')
+    if 'all' in cfg.task:
+        cfg.dataset.fused = 1
+    else:
+        cfg.dataset.fused = 0
+        log.info(f'* Size: {cfg.problem.size}')
+
+    log.info(f'* Setting seed to {cfg.run.seed} for reproducibility \n')
+    set_seed(cfg.run.seed)
+
+    log.info(f'* Loading data...')
+    log.info(f'* Dataset: {cfg.dataset.path}')
+    data = load_dataset(cfg)
+
     study = optuna.create_study(direction='maximize')
-    study.optimize(globals()[cfg.objective](cfg.machine,
-                                            cfg.task,
-                                            cfg.time_limit_per_trial),
+    study.optimize(globals()[f'{cfg.model.name}Obj'](cfg, data),
                    n_trials=cfg.n_trials,
                    timeout=cfg.time_limit_study)
 
@@ -88,6 +75,14 @@ def main(cfg: DictConfig):
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
+        cfg.model[key] = value
+
+    # Save the best model config with <model_id>.yaml
+    model = model_factory.create(cfg.model.name, cfg=cfg.model)
+    best_model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model.id}.yaml'
+    best_cfg_yaml = OmegaConf.to_yaml(cfg, resolve=True)
+    with open(best_model_cfg_path, "w") as fp:
+        OmegaConf.save(best_cfg_yaml, fp)
 
 
 if __name__ == '__main__':
