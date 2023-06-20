@@ -22,8 +22,14 @@ def main(cfg: DictConfig):
     set_machine(cfg)
     resource_path = Path(cfg.res_path[cfg.machine])
     inst_path = Path(cfg.inst_path)
-    pred_path = Path(cfg.pred_path)
-    best_model_summary_path = Path(cfg.best_model_summary_path)
+
+    suffix = cfg.problem.size
+    if cfg.task == 'pair_rank_all':
+        suffix = 'all'
+    elif cfg.task == 'pair_rank_all_context':
+        suffix = 'all_context'
+    pred_path = Path(cfg.pred_path) / suffix
+    best_model_summary_path = Path(cfg.best_model_summary_path) / f'best_model_{suffix}.csv'
     df_best_model = pd.read_csv(best_model_summary_path, index_col=False)
 
     if cfg.model_name is None:
@@ -35,18 +41,11 @@ def main(cfg: DictConfig):
     results = []
     for model_name in model_names:
         row = df_best_model[df_best_model['model_name'] == model_name]
-        prediction_path = pred_path / row.iloc[0]['prediction_path']
+        prediction_path = pred_path / f"prediction_{row.iloc[0]['model_id']}.pkl"
         # predictions = pkl.load(open(prediction_path, 'rb'))
 
         preds = pkl.load(open(str(prediction_path), 'rb'))
-        if cfg.split == 'train':
-            preds = preds['tr']
-        elif cfg.split == 'val':
-            preds = preds['val']
-        else:
-            preds = preds['test']
-
-        names, n_items, order = preds['names'], preds['n_items'], preds['order']
+        names, n_items, order = preds[cfg.split]['names'], preds[cfg.split]['n_items'], preds[cfg.split]['order']
         for _name, _n_item, _order in zip(names, n_items, order):
             _, _, n_objs, n_vars, pid = _name.split('_')
             pid = int(pid)
@@ -66,7 +65,7 @@ def main(cfg: DictConfig):
                                               f'pred_{model_name}',
                                               result))
 
-    eval_order_path = Path(cfg.eval_order_path)
+    eval_order_path = Path(cfg.eval_order_path) / suffix
     eval_order_path.mkdir(parents=True, exist_ok=True)
     eval_order_path = eval_order_path / f"pred_{cfg.split}_{cfg.from_pid}_{cfg.to_pid}.csv"
 
