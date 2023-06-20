@@ -38,8 +38,10 @@ def main(cfg: DictConfig):
 
     log.info(f'* Starting trainer...')
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
-    val_tau = trainer.run()
-    print('val_tau: ', val_tau)
+    trainer.run()
+    cfg.val_tau = float(trainer.val_tau)
+
+    print('val_tau: ', trainer.val_tau)
 
 
 if __name__ == '__main__':
