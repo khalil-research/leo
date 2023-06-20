@@ -30,8 +30,8 @@ class GradientBoostingRankerObj:
         self.cfg.model.colsample_bytree = trial.suggest_float("colsample_bytree", 0.2, 1.0)
         self.cfg.model.reg_lambda = trial.suggest_float("reg_lambda", 1e-4, 1.0, log=True)
         self.cfg.model.grow_policy = trial.suggest_categorical("grow_policy", ["depthwise", "lossguide"])
-        if 'context' in self.cfg.task:
-            self.cfg.model.feature_importance = trial.suggest_int("feature_importance", 0, 1)
+        # if 'context' in self.cfg.task:
+        #     self.cfg.model.feature_importance = trial.suggest_int("feature_importance", 0, 1)
 
         # Build model
         log.info(f'* Building model...')
@@ -77,6 +77,8 @@ def main(cfg: DictConfig):
     trial = study.best_trial
 
     print("  Value: {}".format(trial.value))
+    cfg.val_tau = float(trial.val_tau)
+
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))

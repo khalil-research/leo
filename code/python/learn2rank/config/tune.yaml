@@ -47,6 +47,8 @@ dataset:
 n_trials: 100000
 time_limit_study: 10800
 
+val_tau:
+
 case: 0
 #output_dir: ${hydra:runtime.output_dir}
 
