@@ -4,7 +4,7 @@ from pathlib import Path
 
 import hydra
 import pandas as pd
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
@@ -45,65 +45,19 @@ model_ext = {
 }
 
 
-def update_model_cfg(cfg, params):
-    # TODO: Add params of other models
-    if type(params) == str and len(params.strip()):
-        for p in params.split('_'):
-            k, v = p.split('-')
-            v = v.strip()
-            if k == 'nes':
-                cfg.model.n_estimators = int(v)
-            elif k == 'md':
-                cfg.model.max_depth = int(v)
-            elif k == 'lr':
-                cfg.model.learning_rate = float(v)
-            elif k == 'gma':
-                cfg.model.gamma = int(v)
-            elif k == 'mcw':
-                cfg.model.min_child_weight = int(v)
-            elif k == 'rlam':
-                cfg.model.reg_lambda = float(v)
-            elif k == 'raph':
-                cfg.model.reg_alpha = float(v)
-            elif k == 'ss':
-                cfg.model.subsample = float(v)
-            elif k == 'csbt':
-                cfg.model.colsample_bytree = float(v)
-            elif k == 'gp':
-                cfg.model.grow_policy = str(v)
+def load_model(cfg, model_cfg_path_prefix, model_path_prefix, best_model_row):
+    model_cfg_path = model_cfg_path_prefix / f"{best_model_row.iloc[0]['model_id']}.yaml"
 
-    return cfg
-
-
-# def load_svmlight_data(files, split_types, file_types):
-#     i = 0
-#     data = {}
-#     for st in split_types:
-#         for ft in file_types:
-#             if ft == 'dataset':
-#                 data[st, ft] = load_svmlight_file(str(files[i])) if files[i].exists() else None
-#             elif ft == 'n_items':
-#                 data[st, ft] = list(map(int, files[i].read_text().strip().split('\n'))) \
-#                     if files[i].exists() else None
-#             elif ft == 'names':
-#                 data[st, ft] = files[i].read_text().strip().split('\n') if files[i].exists() else None
-#
-#             i += 1
-#
-#     return data
-
-
-def load_model(cfg, model_path_prefix, best_model_row):
-    prefix = model_prefix.get(cfg.model.name)
-    params = best_model_row.iloc[0]['model_params']
-    cfg = update_model_cfg(cfg, params)
     ext = model_ext.get(cfg.model.name)
+    model_path = model_path_prefix / f"model_{best_model_row.iloc[0]['model_id']}{ext}"
+
+    best_model_cfg = OmegaConf.load(model_cfg_path)
+    for k in dict(best_model_cfg.model).keys():
+        if k in cfg.model:
+            cfg.model[k] = best_model_cfg.model[k]
 
     model = model_factory.create(cfg.model.name, cfg=cfg.model)
     if ext is not None:
-        model_id = f"{prefix}_{params}"
-        model_path = model_path_prefix / f'model_{model_id}{ext}'
-
         if ext == '.pkl':
             model = pkl.load(open(model_path, 'rb'))
         elif ext == '.txt' and 'Ranker' in cfg.model.name:
@@ -119,9 +73,12 @@ def main(cfg: DictConfig):
     log.info(f'* Setting seed to {cfg.run.seed} for reproducibility')
     set_seed(cfg.run.seed)
 
-    log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')
-    if not cfg.dataset.fused:
+    if '_all' in cfg.task:
+        cfg.dataset.fused = 1
+    else:
+        cfg.dataset.fused = 0
         log.info(f'* Size: {cfg.problem.size}')
+    log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')
 
     # Set paths
     resource_path = Path(cfg.res_path[cfg.machine])
@@ -133,18 +90,17 @@ def main(cfg: DictConfig):
     else:
         path_suffix /= cfg.problem.size
 
-    model_path_prefix = resource_path / 'pretrained' / path_suffix
-    pred_path_prefix = resource_path / 'predictions' / path_suffix
     path_suffix_best = path_suffix.parent / f'best_model_{path_suffix.stem}.csv'
     best_model_summary_path = resource_path / 'model_summary' / path_suffix_best
-
     # Read best model summary
     df_best_model = pd.read_csv(best_model_summary_path, index_col=False)
     assert cfg.model.name in df_best_model['model_name'].values
     best_model_row = df_best_model[df_best_model['model_name'] == cfg.model.name]
 
+    model_cfg_path_prefix = resource_path / 'model_cfg'
+    model_path_prefix = resource_path / 'pretrained' / path_suffix
     # Load model
-    model = load_model(cfg, model_path_prefix, best_model_row)
+    model = load_model(cfg, model_cfg_path_prefix, model_path_prefix, best_model_row)
 
     # Load data
     dp = Path(cfg.dataset.path)
@@ -154,7 +110,7 @@ def main(cfg: DictConfig):
         split_types = ['train', 'val', 'test']
         file_types = ['dataset', 'n_items', 'names']
 
-        suffix = 'pair_svmrank'
+        suffix = 'pair_rank'
         if cfg.dataset.fused and 'context' not in cfg.task:  # Load fused dataset
             suffix += '_all'
         elif cfg.dataset.fused and 'context' in cfg.task:  # Load fused dataset
@@ -167,10 +123,11 @@ def main(cfg: DictConfig):
         files = [dp / fp for fp in files_prefix]
         data = load_svmlight_data(files, split_types, file_types)
 
-    prediction_path = pred_path_prefix / best_model_row.iloc[0]['prediction_path']
+    pred_path_prefix = resource_path / 'predictions' / path_suffix
+    prediction_path = pred_path_prefix / f"prediction_{best_model_row.iloc[0]['model_id']}.pkl"
     pred_store = pkl.load(open(prediction_path, 'rb'))
 
-    result_path = pred_path_prefix / best_model_row.iloc[0]['results_path']
+    result_path = pred_path_prefix / f"results_{best_model_row.iloc[0]['model_id']}.pkl"
     result_store = pkl.load(open(result_path, 'rb'))
 
     log.info(f'* Starting trainer...')
