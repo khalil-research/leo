@@ -158,41 +158,41 @@ def main(cfg):
         'model_params',
         'model_id'
     ])
-    for gname, gdf in summary_df.groupby('task'):
-        if gname == 'pair_rank_all_context' or gname == 'pair_rank_all':
-            name = 'all_context' if gname == 'pair_rank_all_context' else 'all'
-            summary_path = Path(cfg.summary_path) / f'{name}.csv'
-            gdf.to_csv(summary_path, index=False)
+
+    summary_df.to_csv(f"{cfg.summary_path}/summary.csv", index=False)
+
+    for task in ['pair_rank_all', 'pair_rank_all_context']:
+        name = 'all_context' if task == 'pair_rank_all_context' else 'all'
+        summary_path = Path(cfg.summary_path) / f'{name}.csv'
+
+        summary_task = summary_df.query(f"task == '{task}'")
+        if summary_task.shape[0]:
+            summary_task.to_csv(summary_path, index=False)
 
             best_model_df = pd.DataFrame(columns=summary_df.columns)
-            for mn in gdf['model_name']:
-                _df = gdf[(gdf.model_name == mn)]
-                best_model_df = pd.concat(
-                    [best_model_df, _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
-                    ignore_index=True)
-                best_model_df.to_csv(f'{cfg.summary_path}/best_model_{name}.csv', index=False)
-
-        elif gname == 'pair_rank' or gname == 'point_regress':
-            for gname2, gdf2 in gdf.group_by(['size']):
-                summary_path = Path(cfg.summary_path) / f'{gname2}.csv'
-                gdf2.to_csv(summary_path, index=False)
-
-                best_model_df = pd.DataFrame(columns=summary_df.columns)
-                for mn in gdf2['model_name']:
-                    _df = gdf2[(gdf2.model_name == mn)]
+            for mn in summary_task['model_name']:
+                _df = summary_task[(summary_task.model_name == mn)]
+                if _df.shape[0]:
                     best_model_df = pd.concat(
                         [best_model_df,
                          _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
                         ignore_index=True)
-                    best_model_df.to_csv(f'{cfg.summary_path}/best_model_{gname2}.csv', index=False)
+            best_model_df.to_csv(f'{cfg.summary_path}/best_model_{name}.csv', index=False)
 
-        # # Select best models
-        # for task, model_name in task_modelName:
-        #     _df = summary_df[(summary_df.task == task) & (summary_df.model_name == model_name)]
-        #     best_model_df = pd.concat(
-        #         [best_model_df, _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
-        #         ignore_index=True)
-        # best_model_df.to_csv(f'{cfg.summary_path}/best_model_{cfg.problem.size}.csv', index=False)
+    summary_sizes = summary_df.query(f"task != 'pair_rank_all'")
+    summary_sizes = summary_sizes.query("task != 'pair_rank_all_context'")
+    for gname, gdf in summary_sizes.groupby('size'):
+        summary_path = Path(cfg.summary_path) / f'{gname}.csv'
+        gdf.to_csv(summary_path, index=False)
+
+        best_model_df = pd.DataFrame(columns=summary_df.columns)
+        for mn in set(gdf.model_name.values):
+            _df = gdf[(gdf.model_name == mn)]
+            best_model_df = pd.concat(
+                [best_model_df,
+                 _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
+                ignore_index=True)
+        best_model_df.to_csv(f'{cfg.summary_path}/best_model_{gname}.csv', index=False)
 
 
 if __name__ == '__main__':
