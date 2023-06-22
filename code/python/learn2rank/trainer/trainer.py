@@ -1,3 +1,4 @@
+import logging
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -5,14 +6,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+log = logging.getLogger(__name__)
+
 
 class Trainer(ABC):
     def __init__(self, data, model, config, ps, rs):
         self.data = data
         self.model = model
         self.cfg = config
-        self.rs = rs
         self.ps = ps
+        self.rs = rs
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         if self.cfg.dataset.fused and 'context' not in self.cfg.task:
@@ -103,6 +106,29 @@ class Trainer(ABC):
                 'eval': 0.0
             }
         }
+
+    def print_rank_rank(self, df):
+        log.info(f"Top 10 Common  : {df[df['metric_type'] == 'top_10_common']['metric_value'].mean()} +/- "
+                 f"{df[df['metric_type'] == 'top_10_common']['metric_value'].std()} ")
+        log.info(
+            f"Top 10 Same : {df[df['metric_type'] == 'top_10_same']['metric_value'].mean()} +/- "
+            f"{df[df['metric_type'] == 'top_10_same']['metric_value'].std()} ")
+        log.info(
+            f"Top 10 Penalty    : {df[df['metric_type'] == 'top_10_penalty']['metric_value'].mean()} +/- "
+            f"{df[df['metric_type'] == 'top_10_penalty']['metric_value'].std()} ")
+        log.info(
+            f"Top 5 Common   : {df[df['metric_type'] == 'top_5_common']['metric_value'].mean()} +/- "
+            f"{df[df['metric_type'] == 'top_5_common']['metric_value'].std()} ")
+        log.info(
+            f"Top 5 Same  : {df[df['metric_type'] == 'top_5_same']['metric_value'].mean()} +/- "
+            f"{df[df['metric_type'] == 'top_5_same']['metric_value'].std()} ")
+        log.info(
+            f"Top 5 Penalty     : {df[df['metric_type'] == 'top_5_penalty']['metric_value'].mean()} +/- "
+            f"{df[df['metric_type'] == 'top_5_penalty']['metric_value'].std()} ")
+        log.info(f"Spearman Correlation    : {df[df['metric_type'] == 'spearman-coeff']['metric_value'].mean()} +/- "
+                 f"{df[df['metric_type'] == 'spearman-coeff']['metric_value'].std()}")
+        log.info(f"Kendall Correlation     : {df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()} +/- "
+                 f"{df[df['metric_type'] == 'kendall-coeff']['metric_value'].std()}")
 
     # @staticmethod
     # def _get_results_store():

@@ -1,6 +1,8 @@
 import logging
 import time
 
+import pandas as pd
+
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
 from learn2rank.utils.order import pred_score2order
@@ -98,6 +100,9 @@ class XGBoostTrainer(Trainer):
         self.rs['train']['ranking'].extend(eval_rank_metrics(train_rank,
                                                              self.ps['train']['rank'],
                                                              self.ps['train']['n_items']))
+        df_train = pd.DataFrame(self.rs['train']['ranking'],
+                                columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_rank(df_train)
 
         log.info('** Val metrics:')
         self.rs['val']['ranking'].extend(eval_order_metrics(val_order,
@@ -107,6 +112,10 @@ class XGBoostTrainer(Trainer):
                                                            self.ps['val']['rank'],
                                                            self.ps['val']['n_items']))
 
+        df_val = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_rank(df_train)
+
+        self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
         if self.cfg.save:
             self._save_model()
             self._save_predictions()

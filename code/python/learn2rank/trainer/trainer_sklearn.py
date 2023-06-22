@@ -3,6 +3,7 @@ import pickle
 import time
 
 import numpy as np
+import pandas as pd
 
 # from learn2rank.utils.data import flatten_data, unflatten_data
 # from learn2rank.utils.data import get_n_items, get_sample_weight
@@ -18,20 +19,23 @@ log = logging.getLogger(__name__)
 
 
 class SklearnTrainer(Trainer):
-    def __init__(self, data=None, model=None, cfg=None):
-        super().__init__(data, model, cfg)
+    def __init__(self, data=None, model=None, cfg=None, ps=None, rs=None):
+        super().__init__(data, model, cfg, ps, rs)
 
-        self.rs = self._get_results_store()
-        self.rs['task'] = self.cfg.task
-        self.rs['model_name'] = self.cfg.model.name
-        self.ps = self._get_preds_store()
+        if self.rs is None:
+            self.rs = self._get_results_store()
+            self.rs['task'] = self.cfg.task
+            self.rs['model_name'] = self.cfg.model.name
+
+        if self.ps is None:
+            self.ps = self._get_preds_store()
 
     def run(self):
         x_tr, y_tr, names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
         x_val, y_val, names_val, n_items_val, wt_val = self._get_split_data(split='val')
-        self.ps['tr']['names'], self.ps['tr']['n_items'] = names_tr, n_items_tr
+        self.ps['train']['names'], self.ps['train']['n_items'] = names_tr, n_items_tr
         self.ps['val']['names'], self.ps['val']['n_items'] = names_val, n_items_val
-        # self.ps['tr']['n_items'] = get_n_items(y_tr)
+        # self.ps['train']['n_items'] = get_n_items(y_tr)
         # self.ps['val']['n_items'] = get_n_items(y_val)
         # wt_tr = get_sample_weight(y_tr, self.cfg.model.weights)
         # wt_val = get_sample_weight(y_val, self.cfg.model.weights)
@@ -46,55 +50,72 @@ class SklearnTrainer(Trainer):
         self.rs['time']['train'] = _time
 
         # Predict
-        self.ps['tr']['score'] = self.model.predict(x_tr)
+        self.ps['train']['score'] = self.model.predict(x_tr)
         self.ps['val']['score'] = self.model.predict(x_val)
 
         # Eval learning metrics
         log.info(f"* {self.cfg.model.name} Results")
         log.info("** Train learning metrics:")
-        self.rs['tr']['learning'] = eval_learning_metrics(y_tr, self.ps['tr']['score'], sample_weight=wt_tr)
+        self.rs['train']['learning'] = eval_learning_metrics(y_tr, self.ps['train']['score'], sample_weight=wt_tr)
         log.info("** Validation learning metrics:")
         self.rs['val']['learning'] = eval_learning_metrics(y_val, self.ps['val']['score'], sample_weight=wt_val)
 
         # Unflatten data
-        y_tr, self.ps['tr']['score'] = unflatten_data([y_tr, self.ps['tr']['score']],
-                                                      n_items=self.ps['tr']['n_items'])
+        y_tr, self.ps['train']['score'] = unflatten_data([y_tr, self.ps['train']['score']],
+                                                         n_items=self.ps['train']['n_items'])
         y_val, self.ps['val']['score'] = unflatten_data([y_val, self.ps['val']['score']],
                                                         n_items=self.ps['val']['n_items'])
 
         # Transform scores to ranks
-        self.ps['tr']['rank'] = pred_score2rank(self.ps['tr']['score'])
+        self.ps['train']['rank'] = pred_score2rank(self.ps['train']['score'])
         self.ps['val']['rank'] = pred_score2rank(self.ps['val']['score'])
 
         # Transform scores to order
         y_tr_order = pred_score2order(y_tr)
-        self.ps['tr']['order'] = pred_score2order(self.ps['tr']['score'])
+        self.ps['train']['order'] = pred_score2order(self.ps['train']['score'])
         y_val_order = pred_score2order(y_val)
         self.ps['val']['order'] = pred_score2order(self.ps['val']['score'])
 
         # Eval rank predictions
         log.info("** Train order metrics:")
-        self.rs['tr']['ranking'].extend(eval_order_metrics(y_tr_order,
-                                                           self.ps['tr']['order'],
-                                                           self.ps['tr']['n_items']))
-        self.rs['tr']['ranking'].extend(eval_rank_metrics(y_tr, self.ps['tr']['rank'], self.ps['tr']['n_items']))
+        self.rs['train']['ranking'].extend(eval_order_metrics(y_tr_order,
+                                                              self.ps['train']['order'],
+                                                              self.ps['train']['n_items']))
+        self.rs['train']['ranking'].extend(
+            eval_rank_metrics(y_tr, self.ps['train']['rank'], self.ps['train']['n_items']))
+        df_train = pd.DataFrame(self.rs['train']['ranking'],
+                                columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_rank(df_train)
 
         log.info("** Val order metrics:")
         self.rs['val']['ranking'].extend(eval_order_metrics(y_val_order,
                                                             self.ps['val']['order'],
                                                             self.ps['val']['n_items']))
         self.rs['val']['ranking'].extend(eval_rank_metrics(y_val, self.ps['val']['rank'], self.ps['val']['n_items']))
+        df_val = pd.DataFrame(self.rs['val']['ranking'],
+                              columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_rank(df_val)
 
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
+        self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
         self._save_model()
         self._save_predictions()
         self._save_results()
 
-    def predict(self, x=None):
-        assert x is not None
+    def predict(self, *args, **kwargs):
+        split = kwargs['split']
 
-        return self.model.predict(x)
+        x, y, names, n_items, wt = self._get_split_data(split=split)
+        self.ps[split]['names'], self.ps[split]['n_items'] = names, n_items
+        self.ps[split]['score'] = self.model.predict(x)
+
+        self.ps[split]['score'] = unflatten_data([self.ps[split]['score']], n_items=self.ps[split]['n_items'])
+        self.ps[split]['rank'] = pred_score2rank(self.ps[split]['score'])
+        self.ps[split]['order'] = pred_score2order(self.ps[split]['score'])
+
+        self._save_predictions()
+        self._save_results()
 
     def _save_model(self):
         model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
