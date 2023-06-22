@@ -29,41 +29,48 @@ def main(cfg: DictConfig):
     elif cfg.task == 'pair_rank_all_context':
         suffix = 'all_context'
     pred_path = Path(cfg.pred_path) / suffix
-    best_model_summary_path = Path(cfg.best_model_summary_path) / f'best_model_{suffix}.csv'
-    df_best_model = pd.read_csv(best_model_summary_path, index_col=False)
 
-    if cfg.model_name is None:
-        model_names = df_best_model['model_name'].values
+    if cfg.mode == 'all':
+        assert cfg.model_id is not None
+
+        model_summary_path = Path(cfg.model_summary_path) / f'summary.csv'
+        df_summary = pd.read_csv(model_summary_path, index_col=False)
+        row = df_summary.query("model_id == '{}'".format(cfg.model_id))
+    elif cfg.mode == 'best':
+        assert cfg.model_name is not None
+
+        model_summary_path = Path(cfg.model_summary_path) / f'best_model_{suffix}.csv'
+        df_summary = pd.read_csv(model_summary_path, index_col=False)
+        row = df_summary.query("model_name == '{}'".format(cfg.model_name))
     else:
-        assert cfg.model_name in df_best_model['model_name'].values
-        model_names = [cfg.model_name]
+        raise ValueError('Invalid mode!')
 
     results = []
-    for model_name in model_names:
-        row = df_best_model[df_best_model['model_name'] == model_name]
-        prediction_path = pred_path / f"prediction_{row.iloc[0]['model_id']}.pkl"
-        # predictions = pkl.load(open(prediction_path, 'rb'))
+    # for model_name in model_names:
+    # row = df_best_model[df_best_model['model_name'] == model_name]
+    prediction_path = pred_path / f"prediction_{row.iloc[0]['model_id']}.pkl"
+    # predictions = pkl.load(open(prediction_path, 'rb'))
 
-        preds = pkl.load(open(str(prediction_path), 'rb'))
-        names, n_items, order = preds[cfg.split]['names'], preds[cfg.split]['n_items'], preds[cfg.split]['order']
-        for _name, _n_item, _order in zip(names, n_items, order):
-            _, _, n_objs, n_vars, pid = _name.split('_')
-            pid = int(pid)
-            if pid < cfg.from_pid or pid >= cfg.to_pid:
-                continue
+    preds = pkl.load(open(str(prediction_path), 'rb'))
+    names, n_items, order = preds[cfg.split]['names'], preds[cfg.split]['n_items'], preds[cfg.split]['order']
+    for _name, _n_item, _order in zip(names, n_items, order):
+        _, _, n_objs, n_vars, pid = _name.split('_')
+        pid = int(pid)
+        if pid < cfg.from_pid or pid >= cfg.to_pid:
+            continue
 
-            log.info(f'Processing {_name}')
-            dat_path = inst_path / cfg.problem.size / f'{cfg.split}/{_name}.dat'
+        log.info(f'Processing {_name}')
+        dat_path = inst_path / cfg.problem.size / f'{cfg.split}/{_name}.dat'
 
-            status, result = run_bdd_builder(str(dat_path), _order[:_n_item], bin_path=str(resource_path),
-                                             prob_id=str(cfg.problem.id), preprocess=str(cfg.problem.preprocess),
-                                             time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
-            results.append(make_result_column(cfg.problem.name,
-                                              cfg.problem.size,
-                                              cfg.split,
-                                              pid,
-                                              f'pred_{model_name}',
-                                              result))
+        status, result = run_bdd_builder(str(dat_path), _order[:_n_item], bin_path=str(resource_path),
+                                         prob_id=str(cfg.problem.id), preprocess=str(cfg.problem.preprocess),
+                                         time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
+        results.append(make_result_column(cfg.problem.name,
+                                          cfg.problem.size,
+                                          cfg.split,
+                                          pid,
+                                          f'pred_{row.model_name.values[0]}',
+                                          result))
 
     eval_order_path = Path(cfg.eval_order_path) / suffix
     eval_order_path.mkdir(parents=True, exist_ok=True)

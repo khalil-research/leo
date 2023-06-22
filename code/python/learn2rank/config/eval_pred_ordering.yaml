@@ -16,9 +16,14 @@ machine: desktop
 
 inst_path: ${res_path[${machine}]}/instances/${problem.inst_name}
 pred_path: ${res_path[${machine}]}/predictions/${problem.name}
-best_model_summary_path: ${res_path[${machine}]}/model_summary/${problem.name}
+model_summary_path: ${res_path[${machine}]}/model_summary/${problem.name}
 eval_order_path: ${res_path[${machine}]}/eval_order/${problem.name}
 
+
+# best: select the best model based on the name
+# all: select the model based on model id
+mode: all
+model_id:
 model_name:
 task: point_regress
 
