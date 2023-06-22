@@ -4,6 +4,8 @@ from pathlib import Path
 import hydra
 import pandas as pd
 
+from learn2rank.utils import set_machine
+
 case = 1
 
 min_weight_dict = {'avg_value': 0.0, 'avg_value_by_weight': 0.0, 'max_value': 0.0, 'max_value_by_weight': 0.0,
@@ -79,6 +81,7 @@ def main(cfg):
     #   test/
     #       kp_7_4_50_1100/
     #           run_777/
+    set_machine(cfg)
     smac_run_path = Path(cfg.smac_run_path)
 
     # Valid run_ids to use to generate the label file
