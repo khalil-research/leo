@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -40,6 +41,11 @@ def main(cfg: DictConfig):
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
     trainer.run()
     cfg.val_tau = float(trainer.val_tau)
+
+    model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model.id}.yaml'
+    model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(model_cfg_path, "w") as fp:
+        OmegaConf.save(cfg, fp)
 
     print('val_tau: ', trainer.val_tau)
 

@@ -106,7 +106,7 @@ class SklearnTrainer(Trainer):
     def predict(self, *args, **kwargs):
         split = kwargs['split']
 
-        x, y, names, n_items, wt = self._get_split_data(split=split)
+        x, _, names, n_items, _ = self._get_split_data(split=split)
         self.ps[split]['names'], self.ps[split]['n_items'] = names, n_items
         self.ps[split]['score'] = self.model.predict(x)
 
@@ -122,21 +122,23 @@ class SklearnTrainer(Trainer):
         model_path.mkdir(parents=True, exist_ok=True)
         model_path = model_path / f'model_{self.model.id}.pkl'
         with open(model_path, 'wb') as p:
-            pickle.dump(self.ps, p)
+            pickle.dump(self.model, p)
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
         size = self.cfg.problem.size
         # for size in self.cfg.problem.size:
+        n_objs, n_vars = list(map(int, size.split('_')))
         for v in self.data[size][split]:
-            _x, _y = v['x'], v['y']
-            n_items.append(len(_y))
+            _x = v['x']
+            n_items.append(n_vars)
             names.append(v['name'])
-
             x.extend(np.hstack((_x['var'], _x['vrank'], _x['inst'])))
 
-            weights = get_sample_weight(_y, bool(self.cfg.model.weights))
-            y.extend(_y)
-            wt.extend(list(weights[0]))
+            if split != 'test':
+                _y = v['y']
+                weights = get_sample_weight(_y, bool(self.cfg.model.weights))
+                y.extend(_y)
+                wt.extend(list(weights[0]))
 
         return np.asarray(x), np.asarray(y), names, n_items, np.asarray(wt)

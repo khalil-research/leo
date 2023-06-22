@@ -1,15 +1,22 @@
 defaults:
   - problem: knapsack
-  - model: GradientBoostingRanker
   - run: default
   - _self_
 
+# Mode
+# all: Get the predictions for all the models in the summary files
+# one: Get the predictions for a specific model
+# best: Get the predictions for the best models
+mode: best
+
+# To be set when `mode` is one
+model_id:
 
 # Type of ranking task
 # point_regress, pair_rank,
 # pair_rank_all
 # pair_rank_all_context
-task: pair_rank_all_context
+task: pair_rank
 
 save: 1
 

@@ -1,10 +1,10 @@
+import pickle as pkl
 from pathlib import Path
 
 import numpy as np
 import torch
-from torch.utils.data.dataset import Dataset
 from sklearn.datasets import load_svmlight_file
-import pickle as pkl
+from torch.utils.data.dataset import Dataset
 
 ROOT_PATH = Path(__file__).parent.parent
 
@@ -87,7 +87,7 @@ def load_svmlight_data(files, split_types, file_types):
 def load_dataset(cfg):
     dp = Path(cfg.dataset.path)
     data = None
-    data = pkl.load(open(dp, 'rb')) if dp.suffix == 'pkl' else data
+    data = pkl.load(open(dp, 'rb')) if dp.suffix == '.pkl' else data
     if data is None and 'rank' in cfg.task:
         split_types = ['train', 'val', 'test']
         file_types = ['dataset', 'n_items', 'names']
