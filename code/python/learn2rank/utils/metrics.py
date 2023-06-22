@@ -73,25 +73,6 @@ def eval_order_metrics(y_orders, y_orders_pred, n_items):
         metrics.append([idx, 'top_5_same', top_5_same])
         metrics.append([idx, 'top_5_penalty', top_5_penalty])
 
-    df = pd.DataFrame(metrics, columns=['id', 'metric_type', 'metric_value'])
-    log.info(f"Top 10 Common  : {df[df['metric_type'] == 'top_10_common']['metric_value'].mean()} +/- "
-             f"{df[df['metric_type'] == 'top_10_common']['metric_value'].std()} ")
-    log.info(
-        f"Top 10 Same : {df[df['metric_type'] == 'top_10_same']['metric_value'].mean()} +/- "
-        f"{df[df['metric_type'] == 'top_10_same']['metric_value'].std()} ")
-    log.info(
-        f"Top 10 Penalty    : {df[df['metric_type'] == 'top_10_penalty']['metric_value'].mean()} +/- "
-        f"{df[df['metric_type'] == 'top_10_penalty']['metric_value'].std()} ")
-    log.info(
-        f"Top 5 Common   : {df[df['metric_type'] == 'top_5_common']['metric_value'].mean()} +/- "
-        f"{df[df['metric_type'] == 'top_5_common']['metric_value'].std()} ")
-    log.info(
-        f"Top 5 Same  : {df[df['metric_type'] == 'top_5_same']['metric_value'].mean()} +/- "
-        f"{df[df['metric_type'] == 'top_5_same']['metric_value'].std()} ")
-    log.info(
-        f"Top 5 Penalty     : {df[df['metric_type'] == 'top_5_penalty']['metric_value'].mean()} +/- "
-        f"{df[df['metric_type'] == 'top_5_penalty']['metric_value'].std()} ")
-
     return metrics
 
 
@@ -109,9 +90,5 @@ def eval_rank_metrics(y_ranks, y_ranks_pred, n_items):
         metrics.append([idx, 'kendall-p', p])
 
     df = pd.DataFrame(metrics, columns=['id', 'metric_type', 'metric_value'])
-    log.info(f"Spearman Correlation    : {df[df['metric_type'] == 'spearman-coeff']['metric_value'].mean()} +/- "
-             f"{df[df['metric_type'] == 'spearman-coeff']['metric_value'].std()}")
-    log.info(f"Kendall Correlation     : {df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()} +/- "
-             f"{df[df['metric_type'] == 'kendall-coeff']['metric_value'].std()}")
 
     return metrics
