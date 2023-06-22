@@ -12,9 +12,8 @@ defaults:
 save: 1
 
 # Type of ranking task
-# point_regress, pair_svmrank, pair_xgbrank, multitask
-# pair_xgbrank_all
-task: pair_xgbrank_all
+# point_regress, pair_rank, pair_rank_all, pair_rank_all_context, multitask
+task: pair_rank
 
 out_path:
   cc: /home/rahulpat/scratch/l2o_resources
@@ -30,10 +29,9 @@ machine: desktop
 
 dataset_path:
   point_regress: ${res_path[${machine}]}/datasets/${problem.name}/${problem.name}_dataset_${task}.pkl
-  pair_svmrank: ${res_path[${machine}]}/datasets/${problem.name}
-  pair_xgbrank: ${res_path[${machine}]}/datasets/${problem.name}
-  pair_xgbrank_all: ${res_path[${machine}]}/datasets/${problem.name}
-  pair_xgbrank_all_context: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_rank: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_rank_all: ${res_path[${machine}]}/datasets/${problem.name}
+  pair_rank_all_context: ${res_path[${machine}]}/datasets/${problem.name}
 
 dataset:
   path: ${dataset_path[${task}]}
