@@ -110,7 +110,7 @@ class SklearnTrainer(Trainer):
         self.ps[split]['names'], self.ps[split]['n_items'] = names, n_items
         self.ps[split]['score'] = self.model.predict(x)
 
-        self.ps[split]['score'] = unflatten_data([self.ps[split]['score']], n_items=self.ps[split]['n_items'])
+        [self.ps[split]['score']] = unflatten_data([self.ps[split]['score']], n_items=self.ps[split]['n_items'])
         self.ps[split]['rank'] = pred_score2rank(self.ps[split]['score'])
         self.ps[split]['order'] = pred_score2order(self.ps[split]['score'])
 
