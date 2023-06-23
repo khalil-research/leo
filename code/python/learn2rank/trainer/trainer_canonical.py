@@ -5,44 +5,39 @@ from .trainer import Trainer
 
 class CanonicalTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None, ps=None, rs=None):
-        super(CanonicalTrainer, self).__init__(data, model, cfg)
+        super(CanonicalTrainer, self).__init__(data, model, cfg, ps, rs)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
 
-        self.rs = rs
-        self.rs = self._get_results_store() if self.rs is None else self.rs
-        self.rs['task'] = self.cfg.task
-        self.rs['model_name'] = self.cfg.model.name
-        if 'test' not in self.rs:
-            self.rs['test'] = {'learning': {}, 'ranking': []}
+        if self.rs is None:
+            self.rs = self._get_results_store()
+            self.rs['task'] = self.cfg.task
+            self.rs['model_name'] = self.cfg.model.name
 
-        self.ps = ps
-        self.ps = self._get_preds_store() if self.ps is None else self.ps
-        if 'test' not in self.ps:
-            self.ps['test'] = {'names': [], 'n_items': [], 'score': [], 'rank': [], 'order': []}
+        if self.ps is None:
+            self.ps = self._get_preds_store()
 
-        names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
-        self.ps['tr']['names'] = names_tr
-        self.ps['tr']['n_items'] = n_items_tr
+            names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
+            self.ps['train']['names'] = names_tr
+            self.ps['train']['n_items'] = n_items_tr
 
-        names_val, n_items_val, wt_val = self._get_split_data(split='val')
-        self.ps['val']['names'] = names_val
-        self.ps['val']['n_items'] = n_items_val
+            names_val, n_items_val, wt_val = self._get_split_data(split='val')
+            self.ps['val']['names'] = names_val
+            self.ps['val']['n_items'] = n_items_val
 
-        names_test, n_items_test, wt_test = self._get_split_data(split='test')
-        self.ps['test']['names'] = names_test
-        self.ps['test']['n_items'] = n_items_test
+            names_test, n_items_test, wt_test = self._get_split_data(split='test')
+            self.ps['test']['names'] = names_test
+            self.ps['test']['n_items'] = n_items_test
 
     def run(self):
-        self.ps['tr']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['tr']['names']]
+        self.ps['train']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['train']['names']]
         self.ps['val']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['val']['names']]
+        self.val_tau = -1
 
         self._save_predictions()
         self._save_results()
 
     def predict(self, split='test'):
-        split = 'tr' if split == 'train' else split
-
         self.ps[split]['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps[split]['names']]
         self._save_predictions()
         self._save_results()
