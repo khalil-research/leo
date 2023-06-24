@@ -87,9 +87,10 @@ def main(cfg: DictConfig):
     # Save the best model config with <model_id>.yaml
     model = model_factory.create(cfg.model.name, cfg=cfg.model)
     best_model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model.id}.yaml'
-    best_model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(best_model_cfg_path, "w") as fp:
-        OmegaConf.save(cfg, fp)
+    if not best_model_cfg_path.exists():
+        best_model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(best_model_cfg_path, "w") as fp:
+            OmegaConf.save(cfg.model, fp)
 
 
 if __name__ == '__main__':

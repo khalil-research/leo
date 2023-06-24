@@ -43,9 +43,10 @@ def main(cfg: DictConfig):
     cfg.val_tau = float(trainer.val_tau)
 
     model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model.id}.yaml'
-    model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(model_cfg_path, "w") as fp:
-        OmegaConf.save(cfg, fp)
+    if not model_cfg_path.exists():
+        model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(model_cfg_path, "w") as fp:
+            OmegaConf.save(cfg.model, fp)
 
     print('val_tau: ', trainer.val_tau)
 

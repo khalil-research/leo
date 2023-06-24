@@ -86,8 +86,7 @@ def load_svmlight_data(files, split_types, file_types):
 
 def load_dataset(cfg):
     dp = Path(cfg.dataset.path)
-    data = None
-    data = pkl.load(open(dp, 'rb')) if dp.suffix == '.pkl' else data
+    data = pkl.load(open(dp, 'rb')) if dp.suffix == '.pkl' else None
     if data is None and 'rank' in cfg.task:
         split_types = ['train', 'val', 'test']
         file_types = ['dataset', 'n_items', 'names']

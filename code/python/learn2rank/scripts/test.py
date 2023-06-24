@@ -9,7 +9,7 @@ from omegaconf import DictConfig, OmegaConf
 from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
 from learn2rank.utils import set_seed, set_machine
-from learn2rank.utils.data import load_svmlight_data
+from learn2rank.utils.data import load_dataset
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ def main(cfg: DictConfig):
     model_ids, model_names = [], []
     if cfg.mode == 'all':
         # path_suffix = path_suffix.parent / f'{path_suffix}.csv'
-        summary_path = resource_path / 'model_summary' / f'{path_suffix}.csv'
+        summary_path = resource_path / 'model_summary' / cfg.problem.name / f'{path_suffix}.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
         df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}'")
 
@@ -98,7 +98,7 @@ def main(cfg: DictConfig):
 
     elif cfg.mode == 'one':
         # path_suffix = path_suffix.parent / f'summary.csv'
-        summary_path = resource_path / 'model_summary' / 'summary.csv'
+        summary_path = resource_path / 'model_summary' / cfg.problem.name / 'summary.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
         df_summary = df_summary.query(f"model_id == '{cfg.model_id}'")
         cfg.task = df_summary.iloc[0]['task']
@@ -109,7 +109,7 @@ def main(cfg: DictConfig):
 
     elif cfg.mode == 'best':
         # path_suffix = path_suffix.parent / f'best_model_{path_suffix.stem}.csv'
-        summary_path = resource_path / 'model_summary' / f'best_model_{path_suffix.stem}.csv'
+        summary_path = resource_path / 'model_summary' / cfg.problem.name / f'best_model_{path_suffix.stem}.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
         df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}'")
 
@@ -122,24 +122,7 @@ def main(cfg: DictConfig):
     # for task in set(tasks):
 
     # Load data
-    dp = Path(cfg.dataset.path)
-    data = pkl.load(open(dp, 'rb')) if dp.suffix == '.pkl' else None
-    if data is None and 'rank' in cfg.task:
-        split_types = ['train', 'val', 'test']
-        file_types = ['dataset', 'n_items', 'names']
-
-        suffix = 'pair_rank'
-        if cfg.dataset.fused and 'context' not in cfg.task:  # Load fused dataset
-            suffix += '_all'
-        elif cfg.dataset.fused and 'context' in cfg.task:  # Load fused dataset
-            suffix += '_all_context'
-
-        splits_suffix = list(map(lambda x: f'{suffix}_{x}.dat', split_types))
-        files_prefix = [f'{ft}_{ss}' for ss in splits_suffix for ft in file_types]
-        if not cfg.dataset.fused:
-            files_prefix = [f'{cfg.problem.size}_{fp}' for fp in files_prefix]
-        files = [dp / fp for fp in files_prefix]
-        data = load_svmlight_data(files, split_types, file_types)
+    data = load_dataset(cfg)
 
     # Select models to run
     # _selected = [(x, y) for x, y, z in zip(model_ids, model_names, tasks) if z == task]
@@ -150,6 +133,11 @@ def main(cfg: DictConfig):
 
         model_path_prefix = resource_path / 'pretrained' / cfg.problem.name / path_suffix.stem
         model_cfg = OmegaConf.load(model_cfg_path_prefix / f"{model_id}.yaml")
+        # Load model conf to conf
+        cfg_dict = OmegaConf.to_container(cfg)
+        model_cfg_dict = OmegaConf.to_container(model_cfg)
+        cfg_dict['model'] = model_cfg_dict['model']
+        cfg = OmegaConf.create(cfg_dict)
 
         # Load model
         model = load_model(model_cfg, model_path_prefix, model_id, model_name)
@@ -163,7 +151,7 @@ def main(cfg: DictConfig):
 
         # Predict on test set
         log.info(f'* Starting trainer...')
-        trainer = trainer_factory.create(model_cfg.model.trainer, model=model, data=data, cfg=model_cfg,
+        trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg,
                                          ps=pred_store, rs=result_store)
         trainer.predict(split='test')
 
