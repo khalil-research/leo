@@ -70,7 +70,7 @@ def generate_dataset_point_regress(cfg):
                     else:
                         print(f'Missing incumbent. Using min_weight for {str(inst)}')
                     sample['y'] = get_variable_rank(data=data, property_weights=incb_dict,
-                                                    normalized=bool(cfg.normalize_rank))
+                                                    normalized=bool(cfg.normalize_rank))[0]
 
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
@@ -149,7 +149,7 @@ def generate_dataset_multitask(cfg):
 
                     # Save rank of the incumbent configuration
                     sample['y'][-1]['rank'] = get_variable_rank(data=data, property_weights=run['incumbent'],
-                                                                normalized=bool(cfg.normalize_rank))
+                                                                normalized=bool(cfg.normalize_rank))[0]
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
@@ -168,6 +168,11 @@ def generate_dataset_multitask(cfg):
 def generate_dataset_pair_rank(cfg):
     print(f"Fuse mode: {cfg.fused}")
 
+    if cfg.fused == 1 and cfg.context == 1:
+        cfg.task += 'all_context'
+    elif cfg.fused == 1 and cfg.context == 0:
+        cfg.task += 'all'
+        
     res_path = Path(cfg.res_path[cfg.machine])
     inst_root_path = res_path / 'instances' / cfg.problem.name
     dataset_root_path = res_path / 'datasets' / cfg.problem.name
@@ -215,7 +220,7 @@ def generate_dataset_pair_rank(cfg):
                     # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
                     # Hence, modified_rank = n_items - original_rank
                     ranks = get_variable_rank(data=data, property_weights=incb_dict,
-                                              normalized=bool(cfg.normalize_rank))
+                                              normalized=bool(cfg.normalize_rank))[0]
                 # For the test set
                 ranks = [n_items] * n_items if ranks is None else ranks
 
@@ -265,7 +270,7 @@ def generate_dataset_pair_rank(cfg):
     time_df.to_csv(dataset_root_path / f'time_dataset_{cfg.task}.csv', index=False)
 
 
-@hydra.main(version_base='1.1', config_path='../config', config_name='generate_dataset.yaml')
+@hydra.main(version_base='1.2', config_path='../config', config_name='generate_dataset.yaml')
 def main(cfg: DictConfig):
     """Generate dataset
 
