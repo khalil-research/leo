@@ -107,7 +107,8 @@ class Trainer(ABC):
             }
         }
 
-    def print_rank_rank(self, df):
+    @staticmethod
+    def print_rank_metrics(df):
         log.info(f"Top 10 Common  : {df[df['metric_type'] == 'top_10_common']['metric_value'].mean()} +/- "
                  f"{df[df['metric_type'] == 'top_10_common']['metric_value'].std()} ")
         log.info(
