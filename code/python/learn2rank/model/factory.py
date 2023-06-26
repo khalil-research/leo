@@ -1,9 +1,9 @@
 from learn2rank.utils import Factory
 from .ann import NeuralRankingMachine
 from .model_baseline import Canonical
-from .model_baseline import MinWeight
 from .model_baseline import SmacAll
 from .model_baseline import SmacOne
+from .model_baseline import HeuristicOrder
 from .model_rank import GradientBoostingRanker
 from .model_rank import SVMRank
 from .model_sklearn import DecisionTreeRegressor
@@ -21,7 +21,9 @@ model_factory.register_member('DecisionTreeRegressor', DecisionTreeRegressor)
 model_factory.register_member('GradientBoostingRegressor', GradientBoostingRegressor)
 model_factory.register_member('GradientBoostingRanker', GradientBoostingRanker)
 model_factory.register_member('SVMRank', SVMRank)
-model_factory.register_member('MinWeight', MinWeight)
+model_factory.register_member('HeuristicWeight', HeuristicOrder)
+model_factory.register_member('HeuristicValue', HeuristicOrder)
+model_factory.register_member('HeuristicValueByWeight', HeuristicOrder)
 model_factory.register_member('SmacOne', SmacOne)
 model_factory.register_member('SmacAll', SmacAll)
 model_factory.register_member('Canonical', Canonical)

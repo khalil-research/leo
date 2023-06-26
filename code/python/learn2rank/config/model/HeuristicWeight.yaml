@@ -1,0 +1,6 @@
+name: HeuristicWeight
+trainer: HeuristicOrderTrainer
+
+# Ascending (asc)
+# Descending (des)
+sort: asc

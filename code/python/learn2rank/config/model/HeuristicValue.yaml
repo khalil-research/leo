@@ -1,0 +1,11 @@
+name: HeuristicValue
+trainer: HeuristicOrderTrainer
+
+# mean: Average value
+# min: Min value
+# max: Max value
+agg: min
+
+# Ascending (asc)
+# Descending (des)
+sort: asc

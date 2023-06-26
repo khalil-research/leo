@@ -25,14 +25,16 @@ class SmacAll:
         return hashit(str(self))
 
 
-class MinWeight:
-    """Dummy class for Min-weight model"""
+class HeuristicOrder:
 
     def __init__(self, cfg=None):
         self.cfg = cfg
 
     def __str__(self):
-        return 'minwt'
+        if self.cfg.name == 'HeuristicWeight':
+            return "{}_{}".format(self.cfg.name, self.cfg.sort)
+        else:
+            return "{}_{}_{}".format(self.cfg.name, self.cfg.agg, self.cfg.sort)
 
     @property
     def id(self):

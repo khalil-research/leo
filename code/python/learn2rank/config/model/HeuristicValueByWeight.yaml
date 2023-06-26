@@ -1,0 +1,12 @@
+name: HeuristicValueByWeight
+trainer: HeuristicOrderTrainer
+
+# mean: Average value / weight
+# min: Min value / weight
+# max: Max value / weight
+agg: min
+
+
+# Ascending (asc)
+# Descending (des)
+sort: asc
