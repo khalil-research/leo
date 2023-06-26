@@ -4,6 +4,7 @@ import numpy as np
 
 from learn2rank.utils.const import KnapsackStaticOrderings
 from .featurizer import Featurizer
+from learn2rank.utils.data import feat_names
 
 
 class KnapsackFeaturizer(Featurizer):
@@ -17,7 +18,6 @@ class KnapsackFeaturizer(Featurizer):
         self.n_objs, self.n_vars = self.norm_value.shape
 
     def _get_instance_features(self):
-        # TODO: Divide by self.cfg.n_max_objs/vars later
         inst_feat = [self.n_objs / 7,
                      self.n_vars / 100,
                      (np.ceil(self.norm_weight.sum()) / 2) / self.n_vars,  # Normalized capacity
@@ -136,18 +136,22 @@ class KnapsackFeaturizer(Featurizer):
                               self.norm_weight,
                               np.repeat(self.data['capacity'] / self.norm_const, self.n_vars).reshape(1, -1)))
         feat['raw'] = raw_feat.T
+        assert feat['raw'].shape[1] == self.data['n_objs'] + 2
 
         inst_feat = self._get_instance_features()
         inst_feat = inst_feat.reshape((1, -1))
         inst_feat = np.repeat(inst_feat, self.n_vars, axis=0)
         feat['inst'] = inst_feat
+        assert feat['inst'].shape[1] == len(feat_names['inst'])
 
         # Calculate item features
         var_feat = self._get_variable_features()
         feat['var'] = var_feat.T
         # print(item_feat.shape)
+        assert feat['var'].shape[1] == len(feat_names['var'])
 
         var_rank_feat = self._get_heuristic_variable_rank_features()
         feat['vrank'] = var_rank_feat.T
+        assert feat['vrank'].shape[1] == len(feat_names['vrank'])
 
         return feat

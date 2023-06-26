@@ -264,3 +264,42 @@ def get_dummy_data(cfg):
             'rank': np.random.rand(100, cfg.n_max_vars)
         }
     }
+
+
+feat_names = {'inst': ['n_objs',
+                       'n_vars',
+                       'capacity',
+                       'weight.mean',
+                       'weight.min',
+                       'weight.max',
+                       'weight.std',
+                       '<value.mean_per_obj>.mean',
+                       '<value.mean_per_obj>.min',
+                       '<value.mean_per_obj>.max',
+                       '<value.mean_per_obj>.std',
+                       '<value.min_per_obj>.mean',
+                       '<value.min_per_obj>.min',
+                       '<value.min_per_obj>.max',
+                       '<value.min_per_obj>.std',
+                       '<value.max_per_obj>.mean',
+                       '<value.max_per_obj>.min',
+                       '<value.max_per_obj>.max',
+                       '<value.max_per_obj>.std'],
+              'var': ['weight',
+                      'value.mean',
+                      'value.min',
+                      'value.max',
+                      'value.std',
+                      'value.mean/wt',
+                      'value.max/wt',
+                      'value.min/wt'],
+              'vrank': ['rk_des_weight'
+                        'rk_asc_weight'
+                        'rk_des_value.mean'
+                        'rk_asc_value.mean'
+                        'rk_des_value.max'
+                        'rk_asc_value.max'
+                        'rk_des_value.min'
+                        'rk_asc_value.min'
+                        'rk_des_value.mean/wt'
+                        'rk_des_value.max/wt']}
