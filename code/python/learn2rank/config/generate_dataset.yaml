@@ -1,31 +1,7 @@
 defaults:
-  - _self_
   - featurizer: knapsack
   - problem: knapsack
-
-# Flag to decide if we want to create a single dataset
-# for all sizes
-fused:
-
-size:
-  - '5_40'
-  - '6_40'
-  - '7_40'
-  - '4_50'
-  - '3_60'
-  - '3_70'
-  - '3_80'
-
-
-split:
-  - 'train'
-  - 'val'
-  - 'test'
-
-normalize_rank: 0
-
-# Initial incumbent
-iinc: min_weight
+  - _self_
 
 # Task for which you want to generate the dataset
 # Options:
@@ -35,9 +11,33 @@ iinc: min_weight
 # 4. pair_rank_all_context: Generates pairwise ranking dataset for all sizes with context features
 # 5. multitask: Generates dataset for the multitask learning. Stores the cost
 #               and config along with rank
+# 6. heuristic: Generates dataset with heuristic orders
 task: point_regress
 
 padding: False
+
+size:
+  - '5_40'
+  - '6_40'
+  - '7_40'
+  - '4_50'
+  - '3_60'
+  - '3_70'
+  - '3_80'
+split:
+  - 'train'
+  - 'val'
+  - 'test'
+normalize_rank: 0
+# Flag to decide if we want to create a single dataset
+# for all sizes
+fused: 0
+# Use context features
+context: 0
+
+# Initial incumbent
+iinc: min_weight
+
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
@@ -52,5 +52,4 @@ out_path:
 machine: desktop
 
 hydra:
-  run:
-    dir: ${out_path[${machine}]}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  output_subdir: null

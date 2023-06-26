@@ -293,13 +293,13 @@ feat_names = {'inst': ['n_objs',
                       'value.mean/wt',
                       'value.max/wt',
                       'value.min/wt'],
-              'vrank': ['rk_des_weight'
-                        'rk_asc_weight'
-                        'rk_des_value.mean'
-                        'rk_asc_value.mean'
-                        'rk_des_value.max'
-                        'rk_asc_value.max'
-                        'rk_des_value.min'
-                        'rk_asc_value.min'
-                        'rk_des_value.mean/wt'
+              'vrank': ['rk_des_weight',
+                        'rk_asc_weight',
+                        'rk_des_value.mean',
+                        'rk_asc_value.mean',
+                        'rk_des_value.max',
+                        'rk_asc_value.max',
+                        'rk_des_value.min',
+                        'rk_asc_value.min',
+                        'rk_des_value.mean/wt',
                         'rk_des_value.max/wt']}
