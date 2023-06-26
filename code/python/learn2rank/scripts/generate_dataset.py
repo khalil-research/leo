@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 from learn2rank.featurizer.factory import featurizer_factory
 from learn2rank.utils import set_machine
 from learn2rank.utils.data import read_data_from_file
-from learn2rank.utils.order import get_variable_rank_from_weights
+from learn2rank.utils.order import get_variable_rank
 from learn2rank.utils.order import property_weight_dict2array
 
 
@@ -69,7 +69,8 @@ def generate_dataset_point_regress(cfg):
                         incb_dict = ast.literal_eval(label_row['incb'].values[0])
                     else:
                         print(f'Missing incumbent. Using min_weight for {str(inst)}')
-                    sample['y'] = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
+                    sample['y'] = get_variable_rank(data=data, property_weights=incb_dict,
+                                                    normalized=bool(cfg.normalize_rank))
 
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
@@ -147,8 +148,8 @@ def generate_dataset_multitask(cfg):
                         sample['y'][-1]['pwt'] = property_weight_dict2array(run['incumbent'], cast_to_numpy=True)
 
                     # Save rank of the incumbent configuration
-                    sample['y'][-1]['rank'] = get_variable_rank_from_weights(data, run['incumbent'],
-                                                                             normalized=bool(cfg.normalize_rank))
+                    sample['y'][-1]['rank'] = get_variable_rank(data=data, property_weights=run['incumbent'],
+                                                                normalized=bool(cfg.normalize_rank))
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
@@ -165,8 +166,6 @@ def generate_dataset_multitask(cfg):
 
 
 def generate_dataset_pair_rank(cfg):
-    if 'all' in cfg.task:
-        cfg.fused = 1
     print(f"Fuse mode: {cfg.fused}")
 
     res_path = Path(cfg.res_path[cfg.machine])
@@ -215,7 +214,8 @@ def generate_dataset_pair_rank(cfg):
                     # A lower ranks means the variable is used higher up in the DD construction
                     # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
                     # Hence, modified_rank = n_items - original_rank
-                    ranks = get_variable_rank_from_weights(data, incb_dict, normalized=bool(cfg.normalize_rank))
+                    ranks = get_variable_rank(data=data, property_weights=incb_dict,
+                                              normalized=bool(cfg.normalize_rank))
                 # For the test set
                 ranks = [n_items] * n_items if ranks is None else ranks
 
@@ -231,7 +231,7 @@ def generate_dataset_pair_rank(cfg):
                         features_str += f"{fid}:{f} "
                         fid += 1
 
-                    if 'context' in cfg.task:
+                    if cfg.context:
                         for f in features['inst'][item_id]:
                             features_str += f"{fid}:{f} "
                             fid += 1
@@ -282,9 +282,7 @@ def main(cfg: DictConfig):
         generate_dataset_point_regress(cfg)
     elif cfg.task == 'multitask':
         generate_dataset_multitask(cfg)
-    elif cfg.task == 'pair_rank' or \
-            cfg.task == 'pair_rank_all' or \
-            cfg.task == 'pair_rank_all_context':
+    elif cfg.task == 'pair_rank':
         generate_dataset_pair_rank(cfg)
 
 
