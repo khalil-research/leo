@@ -8,7 +8,7 @@ import torch
 from .const import numpy_dataset_paths
 from .data import read_data_from_file
 from .metrics import eval_learning_metrics, eval_order_metrics
-from .order import get_variable_rank_from_weights
+from .order import get_variable_rank
 from .order import property_weight_dict2array
 
 
