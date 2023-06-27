@@ -56,10 +56,14 @@ class SmacITrainer(Trainer):
         self.ps['train']['rank'] = get_variable_rank(scores=self.ps['train']['score'], reverse=True)
         self.ps['val']['rank'] = get_variable_rank(scores=self.ps['val']['score'], reverse=True)
 
-        self.rs['ranking']['val'] = [[0, 'kendall-coeff', 1]]
+        self.rs['val']['ranking'] = [[0, 'kendall-coeff', 1]]
+        self.val_tau = 1
 
         self._save_predictions()
         self._save_results()
+
+    def predict(self, *args, **kwargs):
+        pass
 
     def _get_split_data(self, split='train'):
         x, y, wt, names, n_items = [], [], [], [], []
