@@ -68,13 +68,13 @@ case: 0
 machine: laptop
 module_path:
   cc: /home/rahulpat/scratch/smac_runner
-  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/python
-  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/python
+  desktop: /home/rahul/Documents/projects/multiobjective-bdd-vo/python
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective-bdd-vo/python
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources
-  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
-  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/resources
+  desktop: /home/rahul/Documents/projects/multiobjective-bdd-vo/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective-bdd-vo/resources
 
 # Customize hydra output directory creation
 hydra:

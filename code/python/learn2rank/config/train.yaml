@@ -19,13 +19,13 @@ val_tau:
 
 out_path:
   cc: /home/rahulpat/scratch/l2o_resources
-  desktop: /home/rahul/Documents/projects/multiobjective_cp2016
-  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016
+  desktop: /home/rahul/Documents/projects/multiobjective-bdd-vo
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective-bdd-vo
 
 res_path:
   cc: /home/rahulpat/scratch/l2o_resources/
-  desktop: /home/rahul/Documents/projects/multiobjective_cp2016/resources
-  laptop: /home/rahul/Documents/PhD/projects/multiobjective_cp2016/resources
+  desktop: /home/rahul/Documents/projects/multiobjective-bdd-vo/resources
+  laptop: /home/rahul/Documents/PhD/projects/multiobjective-bdd-vo/resources
 
 machine: desktop
 

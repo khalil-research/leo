@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 CURR_FILE_PATH = Path(__file__)
 RES_PATH = {
     'cc': Path('/home/rahulpat/scratch/l2o_resources'),
-    'desktop': '/home/rahul/Documents/projects/multiobjective_cp2016/python/learn2rank/resources',
+    'desktop': '/home/rahul/Documents/projects/multiobjective-bdd-vo/python/learn2rank/resources',
     'laptop': CURR_FILE_PATH.parent.parent / 'resources'
 }
 
