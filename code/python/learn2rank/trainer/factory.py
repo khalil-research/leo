@@ -7,6 +7,7 @@ from .trainer_smac_all import SmacAllTrainer
 from .trainer_svmrank import SVMRankTrainer
 from .trainer_xgb import XGBoostTrainer
 from .trainer_heuristic_order import HeuristicOrderTrainer
+from .trainer_random import RandomTrainer
 
 # Factory to hold trainers
 trainer_factory = Factory()
@@ -18,3 +19,4 @@ trainer_factory.register_member('SmacOneTrainer', SmacOneTrainer)
 trainer_factory.register_member('SmacAllTrainer', SmacAllTrainer)
 trainer_factory.register_member('LexTrainer', LexTrainer)
 trainer_factory.register_member('HeuristicOrderTrainer', HeuristicOrderTrainer)
+trainer_factory.register_member('RandomTrainer', RandomTrainer)

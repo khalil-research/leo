@@ -51,3 +51,15 @@ class Lex:
     @property
     def id(self):
         return hashit(str(self))
+
+
+class Random:
+    def __init__(self, cfg=None):
+        self.cfg = cfg
+
+    def __str__(self):
+        return f'rand_{self.cfg.seed}'
+
+    @property
+    def id(self):
+        return hashit(str(self))

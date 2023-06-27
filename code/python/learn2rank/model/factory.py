@@ -4,6 +4,7 @@ from .model_baseline import Lex
 from .model_baseline import SmacAll
 from .model_baseline import SmacOne
 from .model_baseline import HeuristicOrder
+from .model_baseline import Random
 from .model_rank import GradientBoostingRanker
 from .model_rank import SVMRank
 from .model_sklearn import DecisionTreeRegressor
@@ -27,3 +28,4 @@ model_factory.register_member('HeuristicValueByWeight', HeuristicOrder)
 model_factory.register_member('SmacOne', SmacOne)
 model_factory.register_member('SmacAll', SmacAll)
 model_factory.register_member('Lex', Lex)
+model_factory.register_member('Random', Random)
