@@ -8,6 +8,7 @@ from learn2rank.model.factory import model_factory
 from learn2rank.trainer.factory import trainer_factory
 from learn2rank.utils import set_seed, set_machine
 from learn2rank.utils.data import load_dataset
+from learn2rank.utils.data import save_model_config
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -42,11 +43,7 @@ def main(cfg: DictConfig):
     trainer.run()
     cfg.val_tau = float(trainer.val_tau)
 
-    model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model.id}.yaml'
-    if not model_cfg_path.exists():
-        model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(model_cfg_path, "w") as fp:
-            OmegaConf.save(cfg.model, fp)
+    save_model_config(cfg, model.id)
 
     print('val_tau: ', trainer.val_tau)
 

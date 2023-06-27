@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from sklearn.datasets import load_svmlight_file
 from torch.utils.data.dataset import Dataset
+from omegaconf import OmegaConf
 
 ROOT_PATH = Path(__file__).parent.parent
 
@@ -303,3 +304,11 @@ feat_names = {'inst': ['n_objs',
                         'rk_asc_value.min',
                         'rk_des_value.mean/wt',
                         'rk_des_value.max/wt']}
+
+
+def save_model_config(cfg, model_id):
+    model_cfg_path = Path(cfg.res_path[cfg.machine]) / 'model_cfg' / f'{model_id}.yaml'
+    if not model_cfg_path.exists():
+        model_cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(model_cfg_path, "w") as fp:
+            OmegaConf.save(cfg.model, fp)
