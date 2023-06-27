@@ -1,24 +1,24 @@
 from learn2rank.utils import hashit
 
 
-class SmacOne:
+class SmacI:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
     def __str__(self):
-        return 'smac'
+        return 'smac_inst'
 
     @property
     def id(self):
         return hashit(str(self))
 
 
-class SmacAll:
+class SmacD:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
     def __str__(self):
-        return 'smac_all'
+        return 'smac_dataset'
 
     @property
     def id(self):

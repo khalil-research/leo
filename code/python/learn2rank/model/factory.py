@@ -1,8 +1,8 @@
 from learn2rank.utils import Factory
 from .ann import NeuralRankingMachine
 from .model_baseline import Lex
-from .model_baseline import SmacAll
-from .model_baseline import SmacOne
+from .model_baseline import SmacD
+from .model_baseline import SmacI
 from .model_baseline import HeuristicOrder
 from .model_baseline import Random
 from .model_rank import GradientBoostingRanker
@@ -25,7 +25,7 @@ model_factory.register_member('SVMRank', SVMRank)
 model_factory.register_member('HeuristicWeight', HeuristicOrder)
 model_factory.register_member('HeuristicValue', HeuristicOrder)
 model_factory.register_member('HeuristicValueByWeight', HeuristicOrder)
-model_factory.register_member('SmacOne', SmacOne)
-model_factory.register_member('SmacAll', SmacAll)
+model_factory.register_member('SmacI', SmacI)
+model_factory.register_member('SmacD', SmacD)
 model_factory.register_member('Lex', Lex)
 model_factory.register_member('Random', Random)

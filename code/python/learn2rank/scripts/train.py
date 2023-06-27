@@ -13,7 +13,7 @@ from learn2rank.utils.data import load_dataset
 log = logging.getLogger(__name__)
 
 
-@hydra.main(version_base='1.1', config_path='../config', config_name='train.yaml')
+@hydra.main(version_base='1.2', config_path='../config', config_name='train.yaml')
 def main(cfg: DictConfig):
     set_machine(cfg)
 

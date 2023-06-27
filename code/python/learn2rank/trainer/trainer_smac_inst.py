@@ -4,13 +4,13 @@ from pathlib import Path
 import pandas as pd
 
 from learn2rank.utils.data import read_data_from_file
-from learn2rank.utils.order import get_variable_order_from_weights
+from learn2rank.utils.order import get_variable_order
 from .trainer import Trainer
 
 
-class SmacOneTrainer(Trainer):
-    def __init__(self, data=None, model=None, cfg=None):
-        super(SmacOneTrainer, self).__init__(data, model, cfg)
+class SmacITrainer(Trainer):
+    def __init__(self, data=None, model=None, cfg=None, ps=None, rs=None):
+        super(SmacITrainer, self).__init__(data, model, cfg, ps, rs)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         self.inst_root_path = self.res_path / 'instances' / cfg.problem.name
@@ -60,7 +60,7 @@ class SmacOneTrainer(Trainer):
                     incb = ast.literal_eval(df1.iloc[0]['incb'])
                 else:
                     incb = self.min_weight_incb
-                y_pred, _ = get_variable_order_from_weights(data, incb)
+                y_pred = get_variable_order(data=data, property_weights=incb, reverse=True)[0]
                 y_pred_lst.append(y_pred)
 
         return y_pred_lst

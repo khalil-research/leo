@@ -2,13 +2,13 @@ import ast
 from pathlib import Path
 
 from learn2rank.utils.data import read_data_from_file
-from learn2rank.utils.order import get_variable_order_from_weights
+from learn2rank.utils.order import get_variable_order
 from .trainer import Trainer
 
 
-class SmacAllTrainer(Trainer):
+class SmacDTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None, rs=None, ps=None):
-        super(SmacAllTrainer, self).__init__(data, model, cfg, ps, rs)
+        super(SmacDTrainer, self).__init__(data, model, cfg, ps, rs)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
         self.inst_root_path = self.res_path / 'instances' / cfg.problem.name
@@ -60,7 +60,7 @@ class SmacAllTrainer(Trainer):
 
                 inst = self.inst_root_path / size / split / f'{name}.dat'
                 data = read_data_from_file(acronym, inst)
-                y_pred, _ = get_variable_order_from_weights(data, self.incb)
+                y_pred = get_variable_order(data=data, property_weights=self.incb, reverse=True)
                 y_pred_lst.append(y_pred)
 
         return y_pred_lst
