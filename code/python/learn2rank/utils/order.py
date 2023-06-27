@@ -275,7 +275,8 @@ def get_variable_order(data=None, property_weights=None, scores=None, reverse=Fa
     return orders
 
 
-def get_variable_rank(data=None, property_weights=None, scores=None, reverse=False, high_to_low=False, normalized=True):
+def get_variable_rank(data=None, property_weights=None, scores=None, reverse=False, high_to_low=False,
+                      normalized=False):
     """
     Get the variable rank by providing either `data` and `property_weights` or `scores`.
     If `data` and `property_weights` are provided, we first calculate the scores of that instance and put it in a list.

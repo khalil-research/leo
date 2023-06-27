@@ -50,12 +50,13 @@ class HeuristicOrderTrainer(Trainer):
         # Eval learning metrics
         log.info(f"* {self.cfg.model.name} Results")
         log.info("** Train learning metrics:")
-        self.rs['train']['learning'] = eval_learning_metrics(get_variable_rank(scores=self.dtrain['y']),
-                                                             self.ps['train']['score'],
+        y_train_rank, y_val_rank = get_variable_rank(scores=self.dtrain['y']), get_variable_rank(scores=self.dval['y'])
+        self.rs['train']['learning'] = eval_learning_metrics(y_train_rank,
+                                                             self.ps['train']['rank'],
                                                              sample_weight=self.dtrain['wt'])
         log.info("** Validation learning metrics:")
-        self.rs['val']['learning'] = eval_learning_metrics(get_variable_rank(scores=self.dval['y']),
-                                                           self.ps['val']['score'],
+        self.rs['val']['learning'] = eval_learning_metrics(y_val_rank,
+                                                           self.ps['val']['rank'],
                                                            sample_weight=self.dval['wt'])
 
         # Eval rank predictions
@@ -64,7 +65,7 @@ class HeuristicOrderTrainer(Trainer):
         self.rs['train']['ranking'].extend(eval_order_metrics(y_order,
                                                               self.ps['train']['order'],
                                                               self.ps['train']['n_items']))
-        self.rs['train']['ranking'].extend(eval_rank_metrics(y_order,
+        self.rs['train']['ranking'].extend(eval_rank_metrics(y_train_rank,
                                                              self.ps['train']['rank'],
                                                              self.ps['train']['n_items']))
         df_train = pd.DataFrame(self.rs['train']['ranking'],
@@ -76,7 +77,7 @@ class HeuristicOrderTrainer(Trainer):
         self.rs['val']['ranking'].extend(eval_order_metrics(y_order,
                                                             self.ps['val']['order'],
                                                             self.ps['val']['n_items']))
-        self.rs['val']['ranking'].extend(eval_rank_metrics(y_order,
+        self.rs['val']['ranking'].extend(eval_rank_metrics(y_val_rank,
                                                            self.ps['val']['rank'],
                                                            self.ps['val']['n_items']))
         df_val = pd.DataFrame(self.rs['val']['ranking'],
