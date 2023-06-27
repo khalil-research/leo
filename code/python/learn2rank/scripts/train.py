@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 @hydra.main(version_base='1.2', config_path='../config', config_name='train.yaml')
 def main(cfg: DictConfig):
     set_machine(cfg)
-
+    print()
     log.info(f'* Learn2rank BDD: problem {cfg.problem.name}')
     log.info(f'* Script: train.py')
-    log.info(f'* Task: {cfg.task}, Fused: {cfg.dataset.fused}')
+    log.info(f'* Task: {cfg.task}, Model: {cfg.model.name}, Fused: {cfg.dataset.fused}')
     if not cfg.dataset.fused:
         log.info(f'* Size: {cfg.problem.size}')
 
