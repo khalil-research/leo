@@ -96,22 +96,6 @@ class HeuristicOrderTrainer(Trainer):
         self._save_predictions()
         self._save_results()
 
-    def _get_split_data(self, split='train'):
-        x, y, wt, names, n_items = [], [], [], [], []
-
-        size = self.cfg.problem.size
-        # for size in self.cfg.dataset.size:
-        for v in self.data[size][split]:
-            _x, _y = v['x'], v['y']
-            x.append(_x)
-            y.append(_y)
-            n_items.append(self.cfg.problem.n_vars)
-            names.append(v['name'])
-
-        sample_weights = [1] * len(y)
-
-        return {'x': x, 'y': y, 'names': names, 'n_items': n_items, 'wt': sample_weights}
-
     def _get_split_rank(self, split):
         if self.cfg.model.name == 'HeuristicWeight':
             index = feat_names['vrank'].index('rk_{}_weight'.format(self.cfg.model.sort))

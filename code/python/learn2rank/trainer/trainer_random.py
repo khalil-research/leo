@@ -97,25 +97,9 @@ class RandomTrainer(Trainer):
         self._save_predictions()
         self._save_results()
 
-    def _get_split_data(self, split='train'):
-        x, y, wt, names, n_items = [], [], [], [], []
-
-        size = self.cfg.problem.size
-        # for size in self.cfg.dataset.size:
-        for v in self.data[size][split]:
-            _x, _y = v['x'], v['y']
-            x.append(_x)
-            y.append(_y)
-            n_items.append(self.cfg.problem.n_vars)
-            names.append(v['name'])
-
-        sample_weights = [1] * len(y)
-
-        return {'x': x, 'y': y, 'names': names, 'n_items': n_items, 'wt': sample_weights}
-
     def _get_split_order(self, n_samples):
         random_order = list(range(self.cfg.problem.n_vars))
-        random.seed(self.seeds[self.cfg.seed])
+        random.seed(self.seeds[self.cfg.model.seed])
         random.shuffle(random_order)
         orders = [random_order for _ in range(n_samples)]
 
