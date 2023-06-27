@@ -5,8 +5,8 @@ import pandas as pd
 
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
-from learn2rank.utils.order import pred_score2order
-from learn2rank.utils.order import pred_score2rank
+from learn2rank.utils.order import get_variable_order
+from learn2rank.utils.order import get_variable_rank
 from .trainer import Trainer
 
 log = logging.getLogger(__name__)
@@ -71,26 +71,23 @@ class XGBoostTrainer(Trainer):
         log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
 
         # Train pred
-        for x in self.x_train_uf:
-            self.ps['train']['score'].append(self.model.predict(x))
-
+        self.ps['train']['score'] = [self.model.predict(x) for x in self.x_train_uf]
         # Val pred
         self.rs['time']['val'] = time.time()
-        for x in self.x_val_uf:
-            self.ps['val']['score'].append(self.model.predict(x))
+        self.ps['val']['score'] = [self.model.predict(x) for x in self.x_val_uf]
         self.rs['time']['val'] = time.time() - self.rs['time']['val']
 
         # Score to order
-        train_order = pred_score2order(self.y_train_uf, reverse=True)
-        self.ps['train']['order'] = pred_score2order(self.ps['train']['score'], reverse=True)
-        val_order = pred_score2order(self.y_val_uf, reverse=True)
-        self.ps['val']['order'] = pred_score2order(self.ps['val']['score'], reverse=True)
+        train_order = get_variable_order(scores=self.y_train_uf, reverse=True)
+        self.ps['train']['order'] = get_variable_order(scores=self.ps['train']['score'], reverse=True)
+        val_order = get_variable_order(scores=self.y_val_uf, reverse=True)
+        self.ps['val']['order'] = get_variable_order(scores=self.ps['val']['score'], reverse=True)
 
         # Score to rank
-        train_rank = pred_score2rank(self.y_train_uf, reverse=True)
-        self.ps['train']['rank'] = pred_score2rank(self.ps['train']['score'], reverse=True)
-        val_rank = pred_score2rank(self.y_val_uf, reverse=True)
-        self.ps['val']['rank'] = pred_score2rank(self.ps['val']['score'], reverse=True)
+        train_rank = get_variable_rank(scores=self.y_train_uf, reverse=True, high_to_low=True)
+        self.ps['train']['rank'] = get_variable_rank(scores=self.ps['train']['score'], reverse=True, high_to_low=True)
+        val_rank = get_variable_rank(scores=self.y_val_uf, reverse=True, high_to_low=True)
+        self.ps['val']['rank'] = get_variable_rank(scores=self.ps['val']['score'], reverse=True, high_to_low=True)
 
         # Eval rank predictions
         log.info('** Train metrics:')
@@ -102,7 +99,7 @@ class XGBoostTrainer(Trainer):
                                                              self.ps['train']['n_items']))
         df_train = pd.DataFrame(self.rs['train']['ranking'],
                                 columns=['id', 'metric_type', 'metric_value'])
-        self.print_rank_rank(df_train)
+        self.print_rank_metrics(df_train)
 
         log.info('** Val metrics:')
         self.rs['val']['ranking'].extend(eval_order_metrics(val_order,
@@ -113,7 +110,7 @@ class XGBoostTrainer(Trainer):
                                                            self.ps['val']['n_items']))
 
         df_val = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
-        self.print_rank_rank(df_train)
+        self.print_rank_metrics(df_train)
 
         self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
         if self.cfg.save:
@@ -121,18 +118,18 @@ class XGBoostTrainer(Trainer):
             self._save_predictions()
             self._save_results()
 
-    def predict(self, *args, **kwargs):
-        split = kwargs['split']
+    def predict(self, split):
+        if split == 'test':
+            assert self.x_test is not None
+        log.info('Predicting on the {} set...'.format(split))
 
         self.rs['time'][split] = time.time()
         for x in getattr(self, f'x_{split}_uf'):
             self.ps[split]['score'].append(self.model.predict(x))
         self.rs['time'][split] = time.time() - self.rs['time'][split]
 
-        if split == 'test' and self.x_test is not None:
-            log.info('Predicting on the test set...')
-            self.ps['test']['order'] = pred_score2order(self.ps['test']['score'], reverse=True)
-            self.ps['test']['rank'] = pred_score2rank(self.ps['test']['score'], reverse=True)
+        self.ps['test']['order'] = get_variable_order(scores=self.ps[split]['score'], reverse=True)
+        self.ps['test']['rank'] = get_variable_rank(scores=self.ps['test']['score'], reverse=True, high_to_low=True)
 
         if self.cfg.save:
             log.info('Saving...')
