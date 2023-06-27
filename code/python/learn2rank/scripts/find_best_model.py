@@ -85,7 +85,7 @@ def main(cfg):
             ])
         elif result['model_name'] == 'SmacOne' or \
                 result['model_name'] == 'SmacAll' or \
-                result['model_name'] == 'Canonical':
+                result['model_name'] == 'Lex':
             result_summary.append([
                 result['task'],
                 result['model_name'],

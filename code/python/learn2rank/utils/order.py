@@ -356,7 +356,7 @@ def get_baseline_order(data, cfg, resource_path, pid):
         order = get_static_orders(data, order_type='max_weight')
         orders.append(order['max_weight'])
 
-    elif cfg.order_type == 'canonical':
+    elif cfg.order_type == 'lex':
         orders.append(list(range(len(data['weight']))))
 
     elif cfg.order_type == 'rand':

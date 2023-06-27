@@ -41,12 +41,12 @@ class HeuristicOrder:
         return hashit(str(self))
 
 
-class Canonical:
+class Lex:
     def __init__(self, cfg=None):
         self.cfg = cfg
 
     def __str__(self):
-        return 'canonical'
+        return 'lex'
 
     @property
     def id(self):

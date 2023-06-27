@@ -3,9 +3,9 @@ from pathlib import Path
 from .trainer import Trainer
 
 
-class CanonicalTrainer(Trainer):
+class LexTrainer(Trainer):
     def __init__(self, data=None, model=None, cfg=None, ps=None, rs=None):
-        super(CanonicalTrainer, self).__init__(data, model, cfg, ps, rs)
+        super(LexTrainer, self).__init__(data, model, cfg, ps, rs)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
 

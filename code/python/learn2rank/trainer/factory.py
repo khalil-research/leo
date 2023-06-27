@@ -1,5 +1,5 @@
 from learn2rank.utils import Factory
-from .trainer_canonical import CanonicalTrainer
+from .trainer_lex import LexTrainer
 from .trainer_pytorch import PyTorchTrainer
 from .trainer_sklearn import SklearnTrainer
 from .trainer_smac import SmacOneTrainer
@@ -16,5 +16,5 @@ trainer_factory.register_member('XGBoostTrainer', XGBoostTrainer)
 trainer_factory.register_member('SVMRankTrainer', SVMRankTrainer)
 trainer_factory.register_member('SmacOneTrainer', SmacOneTrainer)
 trainer_factory.register_member('SmacAllTrainer', SmacAllTrainer)
-trainer_factory.register_member('CanonicalTrainer', CanonicalTrainer)
+trainer_factory.register_member('LexTrainer', LexTrainer)
 trainer_factory.register_member('HeuristicOrderTrainer', HeuristicOrderTrainer)

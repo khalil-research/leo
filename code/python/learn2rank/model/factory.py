@@ -1,6 +1,6 @@
 from learn2rank.utils import Factory
 from .ann import NeuralRankingMachine
-from .model_baseline import Canonical
+from .model_baseline import Lex
 from .model_baseline import SmacAll
 from .model_baseline import SmacOne
 from .model_baseline import HeuristicOrder
@@ -26,4 +26,4 @@ model_factory.register_member('HeuristicValue', HeuristicOrder)
 model_factory.register_member('HeuristicValueByWeight', HeuristicOrder)
 model_factory.register_member('SmacOne', SmacOne)
 model_factory.register_member('SmacAll', SmacAll)
-model_factory.register_member('Canonical', Canonical)
+model_factory.register_member('Lex', Lex)
