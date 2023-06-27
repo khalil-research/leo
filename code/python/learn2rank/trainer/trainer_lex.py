@@ -1,6 +1,16 @@
+import logging
+import pandas as pd
+
 from pathlib import Path
 
 from .trainer import Trainer
+from learn2rank.utils.metrics import eval_learning_metrics
+from learn2rank.utils.metrics import eval_rank_metrics
+from learn2rank.utils.metrics import eval_order_metrics
+from learn2rank.utils.order import get_variable_rank
+from learn2rank.utils.order import get_variable_order
+
+log = logging.getLogger(__name__)
 
 
 class LexTrainer(Trainer):
@@ -8,6 +18,9 @@ class LexTrainer(Trainer):
         super(LexTrainer, self).__init__(data, model, cfg, ps, rs)
 
         self.res_path = Path(self.cfg.res_path[self.cfg.machine])
+        self.dtrain = self._get_split_data(split='train')
+        self.dval = self._get_split_data(split='val')
+        self.dtest = self._get_split_data(split='test')
 
         if self.rs is None:
             self.rs = self._get_results_store()
@@ -17,42 +30,65 @@ class LexTrainer(Trainer):
         if self.ps is None:
             self.ps = self._get_preds_store()
 
-            names_tr, n_items_tr, wt_tr = self._get_split_data(split='train')
-            self.ps['train']['names'] = names_tr
-            self.ps['train']['n_items'] = n_items_tr
+            self.ps['train']['names'] = self.dtrain['names']
+            self.ps['train']['n_items'] = self.dtrain['n_items']
 
-            names_val, n_items_val, wt_val = self._get_split_data(split='val')
-            self.ps['val']['names'] = names_val
-            self.ps['val']['n_items'] = n_items_val
+            self.ps['val']['names'] = self.dval['names']
+            self.ps['val']['n_items'] = self.dval['n_items']
 
-            names_test, n_items_test, wt_test = self._get_split_data(split='test')
-            self.ps['test']['names'] = names_test
-            self.ps['test']['n_items'] = n_items_test
+            self.ps['test']['names'] = self.dtest['names']
+            self.ps['test']['n_items'] = self.dtest['n_items']
 
     def run(self):
         self.ps['train']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['train']['names']]
         self.ps['val']['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['val']['names']]
-        self.val_tau = -1
+
+        self.ps['train']['rank'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['train']['names']]
+        self.ps['val']['rank'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps['val']['names']]
+
+        log.info(f"* {self.cfg.model.name} Results")
+        log.info("** Train learning metrics:")
+        y_train_rank, y_val_rank = get_variable_rank(scores=self.dtrain['y']), get_variable_rank(scores=self.dval['y'])
+        self.rs['train']['learning'] = eval_learning_metrics(y_train_rank,
+                                                             self.ps['train']['rank'],
+                                                             sample_weight=self.dtrain['wt'])
+        log.info("** Validation learning metrics:")
+        self.rs['val']['learning'] = eval_learning_metrics(y_val_rank,
+                                                           self.ps['val']['rank'],
+                                                           sample_weight=self.dval['wt'])
+
+        # Eval rank predictions
+        log.info("** Train order metrics:")
+        y_order = get_variable_order(scores=self.dtrain['y'])
+        self.rs['train']['ranking'].extend(eval_order_metrics(y_order,
+                                                              self.ps['train']['order'],
+                                                              self.ps['train']['n_items']))
+        self.rs['train']['ranking'].extend(eval_rank_metrics(y_train_rank,
+                                                             self.ps['train']['rank'],
+                                                             self.ps['train']['n_items']))
+        df_train = pd.DataFrame(self.rs['train']['ranking'],
+                                columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_metrics(df_train)
+
+        log.info("** Val order metrics:")
+        y_order = get_variable_order(scores=self.dval['y'])
+        self.rs['val']['ranking'].extend(eval_order_metrics(y_order,
+                                                            self.ps['val']['order'],
+                                                            self.ps['val']['n_items']))
+        self.rs['val']['ranking'].extend(eval_rank_metrics(y_val_rank,
+                                                           self.ps['val']['rank'],
+                                                           self.ps['val']['n_items']))
+        df_val = pd.DataFrame(self.rs['val']['ranking'],
+                              columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_metrics(df_val)
+        self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
 
         self._save_predictions()
         self._save_results()
 
     def predict(self, split='test'):
         self.ps[split]['order'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps[split]['names']]
+        self.ps[split]['rank'] = [list(range(self.cfg.problem.n_vars)) for _ in self.ps[split]['names']]
+
         self._save_predictions()
         self._save_results()
-
-    def _get_split_data(self, split='train'):
-        x, y, wt, names, n_items = [], [], [], [], []
-
-        size = self.cfg.problem.size
-        # for size in self.cfg.dataset.size:
-        for v in self.data[size][split]:
-            _y = v['y']
-            n_items.append(self.cfg.problem.n_vars)
-            names.append(v['name'])
-            y.append(_y)
-
-        sample_weights = [1] * len(y)
-
-        return names, n_items, sample_weights
