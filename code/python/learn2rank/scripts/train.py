@@ -41,10 +41,7 @@ def main(cfg: DictConfig):
     log.info(f'* Starting trainer...')
     trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg)
     trainer.run()
-    cfg.val_tau = float(trainer.val_tau)
-
     save_model_config(cfg, model.id)
-
     print('val_tau: ', trainer.val_tau)
 
 

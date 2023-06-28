@@ -133,12 +133,15 @@ def create_knapsack_table(args):
             all_lines.append(f"{case} {base} {l} task=pair_rank")
             case += 1
 
-    base = f"python -m learn2rank.scripts.train problem=knapsack task=pair_rank_all dataset.fused=1"
-    all_lines.append(f"{case} {base}")
-    case += 1
+    lines = create_xgb_rank_models()
+    base = f"python -m learn2rank.scripts.train problem=knapsack"
+    for l in lines:
+        all_lines.append(f"{case} {base} {l} task=pair_rank_all dataset.fused=1")
+        case += 1
 
-    base = f"python -m learn2rank.scripts.train problem=knapsack task=pair_rank_all_context dataset.fused=1"
-    all_lines.append(f"{case} {base}")
+    for l in lines:
+        all_lines.append(f"{case} {base} {l} task=pair_rank_all_context dataset.fused=1")
+        case += 1
 
     return all_lines
 
