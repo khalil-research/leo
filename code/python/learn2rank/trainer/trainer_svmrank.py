@@ -1,14 +1,15 @@
+import logging
 import os
+import time
 from pathlib import Path
+
+import pandas as pd
 
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
 from learn2rank.utils.order import get_variable_order
 from learn2rank.utils.order import get_variable_rank
 from .trainer import Trainer
-import logging
-
-import time
 
 log = logging.getLogger(__name__)
 
@@ -20,17 +21,17 @@ class SVMRankTrainer(Trainer):
 
         self.data = Path(data)
 
-        self.train_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_train.dat'
-        self.val_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_val.dat'
-        self.test_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_test.dat'
+        self.train_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_train.dat'
+        self.val_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_val.dat'
+        self.test_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_test.dat'
 
-        self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_train.dat'
-        self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_val.dat'
-        self.test_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_svmrank_test.dat'
+        self.train_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_rank_train.dat'
+        self.val_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_rank_val.dat'
+        self.test_n_items_file = self.data / f'{self.cfg.problem.size}_n_items_pair_rank_test.dat'
 
-        self.train_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_train.dat'
-        self.val_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_val.dat'
-        self.test_names_file = self.data / f'{self.cfg.problem.size}_names_pair_svmrank_test.dat'
+        self.train_names_file = self.data / f'{self.cfg.problem.size}_names_pair_rank_train.dat'
+        self.val_names_file = self.data / f'{self.cfg.problem.size}_names_pair_rank_val.dat'
+        self.test_names_file = self.data / f'{self.cfg.problem.size}_names_pair_rank_test.dat'
 
         if self.rs is None:
             self.rs = self._get_results_store()
@@ -81,12 +82,15 @@ class SVMRankTrainer(Trainer):
         self.ps['val']['rank'] = get_variable_rank(scores=self.ps['val']['score'], reverse=True, high_to_low=True)
 
         # Train set
+        log.info('** Train metrics:')
         self.rs['train']['ranking'].extend(eval_order_metrics(train_order,
                                                               self.ps['train']['order'],
                                                               train_n_items))
         self.rs['train']['ranking'].extend(eval_rank_metrics(train_rank,
                                                              self.ps['train']['rank'],
                                                              train_n_items))
+        df_train = pd.DataFrame(self.rs['train']['ranking'], columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_metrics(df_train)
 
         # Validation set
         self.rs['val']['ranking'].extend(eval_order_metrics(val_order,
@@ -95,6 +99,10 @@ class SVMRankTrainer(Trainer):
         self.rs['val']['ranking'].extend(eval_rank_metrics(val_rank,
                                                            self.ps['val']['rank'],
                                                            val_n_items))
+        df_val = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
+        self.print_rank_metrics(df_train)
+
+        self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
 
         self._save_predictions()
         self._save_results()
@@ -121,7 +129,7 @@ class SVMRankTrainer(Trainer):
         model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
         model = model_path / f'svm_rank_c-{self.cfg.model.c}.dat'
 
-        data = self.data / f'{self.cfg.problem.size}_dataset_pair_svmrank_{split}.dat'
+        data = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_{split}.dat'
         predictions = self.pred_path / f'svm_rank_c-{self.cfg.model.c}_{split}.dat'
         os.system(f'{classify} {data} {model} {predictions}')
 

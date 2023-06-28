@@ -88,7 +88,7 @@ def load_svmlight_data(files, split_types, file_types):
 def load_dataset(cfg):
     dp = Path(cfg.dataset.path)
     data = pkl.load(open(dp, 'rb')) if dp.suffix == '.pkl' else None
-    if data is None and 'rank' in cfg.task:
+    if data is None and 'rank' in cfg.task and cfg.model.name == 'GradientBoostingRanker':
         split_types = ['train', 'val', 'test']
         file_types = ['dataset', 'n_items', 'names']
 
@@ -104,6 +104,8 @@ def load_dataset(cfg):
             files_prefix = [f'{cfg.problem.size}_{fp}' for fp in files_prefix]
         files = [dp / fp for fp in files_prefix]
         data = load_svmlight_data(files, split_types, file_types)
+    elif data is None and 'rank' in cfg.task and cfg.model.name == 'SVMRank':
+        data = cfg.dataset.path
 
     return data
 
