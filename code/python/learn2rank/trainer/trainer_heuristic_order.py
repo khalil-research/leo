@@ -53,11 +53,11 @@ class HeuristicOrderTrainer(Trainer):
         y_train_rank, y_val_rank = get_variable_rank(scores=self.dtrain['y']), get_variable_rank(scores=self.dval['y'])
         self.rs['train']['learning'] = eval_learning_metrics(y_train_rank,
                                                              self.ps['train']['rank'],
-                                                             sample_weight=self.dtrain['wt'])
+                                                             sample_weight=self.dtrain['sample_weight'])
         log.info("** Validation learning metrics:")
         self.rs['val']['learning'] = eval_learning_metrics(y_val_rank,
                                                            self.ps['val']['rank'],
-                                                           sample_weight=self.dval['wt'])
+                                                           sample_weight=self.dval['sample_weight'])
 
         # Eval rank predictions
         log.info("** Train order metrics:")

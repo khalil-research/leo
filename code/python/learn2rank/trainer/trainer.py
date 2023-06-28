@@ -66,7 +66,7 @@ class Trainer(ABC):
             names.append(v['name'])
         sample_weights = [1] * len(y)
 
-        return {'x': x, 'y': y, 'names': names, 'n_items': n_items, 'wt': sample_weights}
+        return {'x': x, 'y': y, 'names': names, 'n_items': n_items, 'sample_weight': sample_weights}
 
     def _get_preds_store(self):
         return {
@@ -146,6 +146,16 @@ class Trainer(ABC):
         log.info(f"Kendall Correlation     : {df[df['metric_type'] == 'kendall-coeff']['metric_value'].mean()} +/- "
                  f"{df[df['metric_type'] == 'kendall-coeff']['metric_value'].std()}")
 
+    @staticmethod
+    def unflatten_data(x, group):
+        x_unflat = []
+
+        i = 0
+        for g in group:
+            x_unflat.append(x[i: i + g])
+            i += g
+
+        return x_unflat
     # @staticmethod
     # def _get_results_store():
     #     return {

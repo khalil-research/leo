@@ -7,7 +7,7 @@ import pandas as pd
 
 # from learn2rank.utils.data import flatten_data, unflatten_data
 # from learn2rank.utils.data import get_n_items, get_sample_weight
-from learn2rank.utils.data import get_sample_weight, unflatten_data
+from learn2rank.utils.data import get_sample_weight
 from learn2rank.utils.metrics import eval_learning_metrics
 from learn2rank.utils.metrics import eval_order_metrics
 from learn2rank.utils.metrics import eval_rank_metrics
@@ -46,15 +46,28 @@ class SklearnTrainer(Trainer):
     def run(self):
         # Train
         _time = time.time()
-        self.model.fit(self.dtrain['x'], self.dtrain['y'], sample_weight=self.dtrain['wt'])
+        self.model.fit(self.dtrain['x'], self.dtrain['y'], sample_weight=self.dtrain['sample_weight'])
         _time = time.time() - _time
         self.rs['time']['train'] = _time
 
         # Predict scores
+        # (n_samples x n_vars) x 1
         self.ps['train']['score'] = self.model.predict(self.dtrain['x'])
         self.ps['val']['score'] = self.model.predict(self.dval['x'])
+
+        # Eval learning metrics
+        log.info(f"* {self.cfg.model.name} Results")
+        log.info("** Train learning metrics:")
+        self.rs['train']['learning'] = eval_learning_metrics(self.dtrain['y'],
+                                                             self.ps['train']['score'],
+                                                             sample_weight=self.dtrain['sample_weight'])
+        log.info("** Validation learning metrics:")
+        self.rs['val']['learning'] = eval_learning_metrics(self.dval['y'],
+                                                           self.ps['val']['score'],
+                                                           sample_weight=self.dval['sample_weight'])
+
         # Unflatten data
-        unflattened = list(map(unflatten_data,
+        unflattened = list(map(self.unflatten_data,
                                (self.dtrain['y'],
                                 self.ps['train']['score'],
                                 self.dval['y'],
@@ -72,17 +85,6 @@ class SklearnTrainer(Trainer):
         # Get rank
         self.ps['train']['rank'] = get_variable_rank(scores=self.ps['train']['score'])
         self.ps['val']['rank'] = get_variable_rank(scores=self.ps['val']['score'])
-
-        # Eval learning metrics
-        log.info(f"* {self.cfg.model.name} Results")
-        log.info("** Train learning metrics:")
-        self.rs['train']['learning'] = eval_learning_metrics(self.dtrain['y'],
-                                                             self.ps['train']['score'],
-                                                             sample_weight=self.dtrain['wt'])
-        log.info("** Validation learning metrics:")
-        self.rs['val']['learning'] = eval_learning_metrics(self.dval['y'],
-                                                           self.ps['val']['score'],
-                                                           sample_weight=self.dval['wt'])
 
         # Eval rank predictions
         log.info("** Train order metrics:")
@@ -116,12 +118,7 @@ class SklearnTrainer(Trainer):
     def predict(self, split='test'):
         dsplit = getattr(self, f'd{split}')
         self.ps[split]['score'] = self.model.predict(dsplit['x'])
-        unflattened = list(map(unflatten_data,
-                               (dsplit['y'],
-                                self.ps[split]['score']),
-                               (self.ps[split]['n_items'],
-                                self.ps[split]['n_items'])))
-        dsplit['y'], self.ps[split]['score'] = unflattened[0], unflattened[1]
+        self.ps[split]['score'] = list(map(self.unflatten_data, (self.ps[split]['score']), (self.ps[split]['n_items'])))
 
         self.ps[split]['order'] = get_variable_order(scores=self.ps[split]['score'])
         self.ps[split]['rank'] = get_variable_rank(scores=self.ps[split]['score'])
@@ -154,4 +151,4 @@ class SklearnTrainer(Trainer):
                 wt.extend(list(weights[0]))
 
         return {'x': np.asarray(x), 'y': np.asarray(y), 'names': names, 'n_items': n_items,
-                'wt': np.asarray(wt)}
+                'sample_weight': np.asarray(wt)}

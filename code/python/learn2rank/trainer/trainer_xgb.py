@@ -136,17 +136,6 @@ class XGBoostTrainer(Trainer):
             self._save_predictions()
             self._save_results()
 
-    @staticmethod
-    def unflatten_data(x, group):
-        x_unflat = []
-
-        i = 0
-        for g in group:
-            x_unflat.append(x[i: i + g])
-            i += g
-
-        return x_unflat
-
     def eval_learning_metrics(self, split="train"):
         pass
 
