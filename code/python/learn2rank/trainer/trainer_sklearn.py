@@ -118,7 +118,7 @@ class SklearnTrainer(Trainer):
     def predict(self, split='test'):
         dsplit = getattr(self, f'd{split}')
         self.ps[split]['score'] = self.model.predict(dsplit['x'])
-        self.ps[split]['score'] = list(map(self.unflatten_data, (self.ps[split]['score']), (self.ps[split]['n_items'])))
+        self.ps[split]['score'] = self.unflatten_data(self.ps[split]['score'], self.ps[split]['n_items'])
 
         self.ps[split]['order'] = get_variable_order(scores=self.ps[split]['score'])
         self.ps[split]['rank'] = get_variable_rank(scores=self.ps[split]['score'])
