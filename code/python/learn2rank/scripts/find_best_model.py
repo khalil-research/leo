@@ -41,7 +41,17 @@ def main2(cfg):
     print(best_cfg)
 
 
-@hydra.main(version_base='1.1', config_path='../config', config_name='find_best_model.yaml')
+def get_metric(df, metric_name):
+    metric = None
+    if df.query("name == '{}'".format(metric_name)).shape[0]:
+        values = df[df['name'] == metric_name]['value'].values
+        if None not in values:
+            metric = np.mean(values)
+
+    return metric
+
+
+@hydra.main(version_base='1.2', config_path='../config', config_name='find_best_model.yaml')
 def main(cfg):
     set_machine(cfg)
     output_path = Path(cfg.output_dir)
@@ -59,80 +69,118 @@ def main(cfg):
         result_tr = pd.DataFrame(ranking_tr, columns=['id', 'name', 'value'])
         result_val = pd.DataFrame(ranking_val, columns=['id', 'name', 'value'])
 
-        if result['task'] == 'pair_rank':
-            result_summary.append([
-                result['task'],
-                result['model_name'],
-                result_path.parent.stem,
-                np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
-                np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                None,
-                None,
-                None,
-                np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
-                None,
-                None,
-                None,
-                result['model_params'],
-                model_id
-            ])
-        elif result['model_name'] == 'SmacOne' or \
-                result['model_name'] == 'SmacAll' or \
-                result['model_name'] == 'Lex':
-            result_summary.append([
-                result['task'],
-                result['model_name'],
-                result_path.parent.stem,
-                1,
-                1,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                1,
-                1,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                result['model_params'],
-                model_id
-            ])
-        else:
-            result_summary.append([
-                result['task'],
-                result['model_name'],
-                result_path.parent.stem,
-                np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
-                np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-                np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-                result['val']['learning']['mse'],
-                result['val']['learning']['mae'],
-                result['val']['learning']['r2'],
-                np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
-                np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
-                result['train']['learning']['mse'],
-                result['train']['learning']['mae'],
-                result['train']['learning']['r2'],
-                result['model_params'],
-                model_id
-            ])
+        _row = []
+        _row.append(result['task'])
+        _row.append(result['model_name'])
+        _row.append(result_path.parent.stem)
+        _row.append(get_metric(result_val, 'kendall-coeff'))
+        _row.append(get_metric(result_val, 'spearman-coeff'))
+        _row.append(get_metric(result_val, 'top_10_same'))
+        _row.append(get_metric(result_val, 'top_10_common'))
+        _row.append(get_metric(result_val, 'top_10_penalty'))
+        _row.append(result['val']['learning']['mse']
+                    if 'learning' in result['val'] and 'mse' in result['val']['learning']
+                    else None)
+        _row.append(result['val']['learning']['mae']
+                    if 'learning' in result['val'] and 'mae' in result['val']['learning']
+                    else None)
+        _row.append(result['val']['learning']['r2']
+                    if 'learning' in result['val'] and 'r2' in result['val']['learning']
+                    else None)
+
+        _row.append(get_metric(result_tr, 'kendall-coeff'))
+        _row.append(get_metric(result_tr, 'spearman-coeff'))
+        _row.append(get_metric(result_tr, 'top_10_same'))
+        _row.append(get_metric(result_tr, 'top_10_common'))
+        _row.append(get_metric(result_tr, 'top_10_penalty'))
+        _row.append(result['train']['learning']['mse']
+                    if 'learning' in result['train'] and 'mse' in result['train']['learning']
+                    else None)
+        _row.append(result['train']['learning']['mae']
+                    if 'learning' in result['train'] and 'mae' in result['train']['learning']
+                    else None)
+        _row.append(result['train']['learning']['r2']
+                    if 'learning' in result['train'] and 'r2' in result['train']['learning']
+                    else None)
+        _row.append(result['model_params'])
+        _row.append(model_id)
+
+        result_summary.append(_row)
+
+        # if result['task'] == 'pair_rank':
+        #     result_summary.append([
+        #         result['task'],
+        #         result['model_name'],
+        #         result_path.parent.stem,
+        #         np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
+        #         None,
+        #         None,
+        #         None,
+        #         np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
+        #         None,
+        #         None,
+        #         None,
+        #         result['model_params'],
+        #         model_id
+        #     ])
+        # elif result['model_name'] == 'SmacI' or \
+        #         result['model_name'] == 'SmacD' or \
+        #         result['model_name'] == 'Lex':
+        #     result_summary.append([
+        #         result['task'],
+        #         result['model_name'],
+        #         result_path.parent.stem,
+        #         1,
+        #         1,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         1,
+        #         1,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         None,
+        #         result['model_params'],
+        #         model_id
+        #     ])
+        # else:
+        #     result_summary.append([
+        #         result['task'],
+        #         result['model_name'],
+        #         result_path.parent.stem,
+        #         np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
+        #         np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
+        #         result['val']['learning']['mse'],
+        #         result['val']['learning']['mae'],
+        #         result['val']['learning']['r2'],
+        #         np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
+        #         np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
+        #         result['train']['learning']['mse'],
+        #         result['train']['learning']['mae'],
+        #         result['train']['learning']['r2'],
+        #         result['model_params'],
+        #         model_id
+        #     ])
 
     # Create summary data frame
     summary_df = pd.DataFrame(result_summary, columns=[
@@ -170,7 +218,7 @@ def main(cfg):
             summary_task.to_csv(summary_path, index=False)
 
             best_model_df = pd.DataFrame(columns=summary_df.columns)
-            for mn in summary_task['model_name']:
+            for mn in set(summary_task['model_name']):
                 _df = summary_task[(summary_task.model_name == mn)]
                 if _df.shape[0]:
                     best_model_df = pd.concat(
