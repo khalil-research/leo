@@ -1,44 +1,11 @@
-import pathlib
 import pickle as pkl
-import shutil
 from pathlib import Path
 
 import hydra
 import numpy as np
 import pandas as pd
-from omegaconf import OmegaConf
 
 from learn2rank.utils import set_machine
-
-
-def main2(cfg):
-    # Best params tracking
-    best_path = None
-    best_loss = np.infty
-    best_epoch = 0
-    best_cfg = None
-
-    # Iterate and find experiment with best validation loss
-    output_path = pathlib.Path(cfg.output_dir)
-    for i, f in enumerate(output_path.rglob('*/results.pkl')):
-        print(i, f)
-        result = pkl.load(open(f, 'rb'))
-        cfg = OmegaConf.load(f.parent.joinpath('.hydra/config.yaml'))
-        cfg_yaml = OmegaConf.to_yaml(cfg)
-        if result['best']['loss']['total'] < best_loss:
-            best_path = f
-            best_loss = result['best']['loss']['total']
-            best_epoch = result['best']['epoch']
-            best_cfg = cfg_yaml
-
-    # Copy the best experiment to the pretrained_dir
-    shutil.copytree(best_path.parent,
-                    f'learn2rank/resources/pretrained/{cfg.pretrained_dir}',
-                    dirs_exist_ok=True)
-
-    print(f'Best loss: {best_loss:.4f}')
-    print(f'Best epoch: {best_epoch}')
-    print(best_cfg)
 
 
 def get_metric(df, metric_name):
@@ -87,7 +54,6 @@ def main(cfg):
         _row.append(result['val']['learning']['r2']
                     if 'learning' in result['val'] and 'r2' in result['val']['learning']
                     else None)
-
         _row.append(get_metric(result_tr, 'kendall-coeff'))
         _row.append(get_metric(result_tr, 'spearman-coeff'))
         _row.append(get_metric(result_tr, 'top_10_same'))
@@ -104,83 +70,7 @@ def main(cfg):
                     else None)
         _row.append(result['model_params'])
         _row.append(model_id)
-
         result_summary.append(_row)
-
-        # if result['task'] == 'pair_rank':
-        #     result_summary.append([
-        #         result['task'],
-        #         result['model_name'],
-        #         result_path.parent.stem,
-        #         np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-        #         None,
-        #         None,
-        #         None,
-        #         np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
-        #         None,
-        #         None,
-        #         None,
-        #         result['model_params'],
-        #         model_id
-        #     ])
-        # elif result['model_name'] == 'SmacI' or \
-        #         result['model_name'] == 'SmacD' or \
-        #         result['model_name'] == 'Lex':
-        #     result_summary.append([
-        #         result['task'],
-        #         result['model_name'],
-        #         result_path.parent.stem,
-        #         1,
-        #         1,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         1,
-        #         1,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         None,
-        #         result['model_params'],
-        #         model_id
-        #     ])
-        # else:
-        #     result_summary.append([
-        #         result['task'],
-        #         result['model_name'],
-        #         result_path.parent.stem,
-        #         np.mean(result_val[result_val['name'] == 'kendall-coeff']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'spearman-coeff']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_same']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_common']['value'].values),
-        #         np.mean(result_val[result_val['name'] == 'top_10_penalty']['value'].values),
-        #         result['val']['learning']['mse'],
-        #         result['val']['learning']['mae'],
-        #         result['val']['learning']['r2'],
-        #         np.mean(result_tr[result_tr['name'] == 'kendall-coeff']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'spearman-coeff']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_same']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_common']['value'].values),
-        #         np.mean(result_tr[result_tr['name'] == 'top_10_penalty']['value'].values),
-        #         result['train']['learning']['mse'],
-        #         result['train']['learning']['mae'],
-        #         result['train']['learning']['r2'],
-        #         result['model_params'],
-        #         model_id
-        #     ])
 
     # Create summary data frame
     summary_df = pd.DataFrame(result_summary, columns=[
