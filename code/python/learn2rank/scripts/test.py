@@ -14,20 +14,6 @@ from learn2rank.utils.data import load_dataset
 # A logger for this file
 log = logging.getLogger(__name__)
 
-model_prefix = {
-    'NeuralRankingMachine': 'nrm',
-    'LinearRegression': 'lr',
-    'Ridge': 'ridge',
-    'Lasso': 'lasso',
-    'DecisionTreeRegressor': 'dtree',
-    'GradientBoostingRegressor': 'gbr',
-    'GradientBoostingRanker': 'xgb',
-    'SVMRank': 'svmrank',
-    'MinWeight': 'minwt',
-    'SmacOne': 'smac',
-    'SmacAll': 'smac_all',
-    'Canonical': 'canonical',
-}
 
 model_ext = {
     'NeuralRankingMachine': '.pkl',
@@ -38,21 +24,24 @@ model_ext = {
     'GradientBoostingRegressor': '.pkl',
     'GradientBoostingRanker': '.txt',
     'SVMRank': '.dat',
-    'MinWeight': None,
-    'SmacOne': None,
-    'SmacAll': None,
-    'Canonical': None,
+    'HeuristicWeight': None,
+    'HeuristicValue': None,
+    'HeuristicValueByWeight': None,
+    'SmacI': None,
+    'SmacD': None,
+    'Lex': None
 }
 
 
-def load_model(cfg, model_path_prefix, model_id, model_name):
+def load_model(model_cfg, model_path_prefix, model_id, model_name):
     ext = model_ext.get(model_name)
     model_path = model_path_prefix / f"model_{model_id}{ext}"
-    model = model_factory.create(cfg.model.name, cfg=cfg.model)
+    model = model_factory.create(model_cfg.name, cfg=model_cfg)
+
     if ext is not None:
         if ext == '.pkl':
             model = pkl.load(open(model_path, 'rb'))
-        elif ext == '.txt' and 'Ranker' in cfg.model.name:
+        elif ext == '.txt' and 'Ranker' in model_cfg.name:
             model.load_model(model_path)
 
     return model
@@ -88,9 +77,9 @@ def main(cfg: DictConfig):
     model_ids, model_names = [], []
     if cfg.mode == 'all':
         # path_suffix = path_suffix.parent / f'{path_suffix}.csv'
-        summary_path = resource_path / 'model_summary' / cfg.problem.name / f'{path_suffix}.csv'
+        summary_path = resource_path / 'model_summary' / cfg.problem.name / f'{path_suffix.stem}.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
-        df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}'")
+        df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}' & model_name != 'SmacI'")
 
         model_ids = df_summary.model_id.values
         model_names = df_summary.model_name.values
@@ -101,6 +90,8 @@ def main(cfg: DictConfig):
         summary_path = resource_path / 'model_summary' / cfg.problem.name / 'summary.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
         df_summary = df_summary.query(f"model_id == '{cfg.model_id}'")
+        assert df_summary.iloc[0]['model_name'] != 'SmacI'
+
         cfg.task = df_summary.iloc[0]['task']
 
         model_ids = [cfg.model_id]
@@ -111,7 +102,7 @@ def main(cfg: DictConfig):
         # path_suffix = path_suffix.parent / f'best_model_{path_suffix.stem}.csv'
         summary_path = resource_path / 'model_summary' / cfg.problem.name / f'best_model_{path_suffix.stem}.csv'
         df_summary = pd.read_csv(summary_path, index_col=False)
-        df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}'")
+        df_summary = df_summary if cfg.task is None else df_summary.query(f"task == '{cfg.task}' & model_name != 'SmacI'")
 
         model_ids = df_summary.model_id.values
         model_names = df_summary.model_name.values
@@ -120,9 +111,6 @@ def main(cfg: DictConfig):
     counter = 1
     model_cfg_path_prefix = resource_path / 'model_cfg'
     # for task in set(tasks):
-
-    # Load data
-    data = load_dataset(cfg)
 
     # Select models to run
     # _selected = [(x, y) for x, y, z in zip(model_ids, model_names, tasks) if z == task]
@@ -136,8 +124,11 @@ def main(cfg: DictConfig):
         # Load model conf to conf
         cfg_dict = OmegaConf.to_container(cfg)
         model_cfg_dict = OmegaConf.to_container(model_cfg)
-        cfg_dict['model'] = model_cfg_dict['model']
+        cfg_dict['model'] = model_cfg_dict
         cfg = OmegaConf.create(cfg_dict)
+
+        # Load data
+        data = load_dataset(cfg)
 
         # Load model
         model = load_model(model_cfg, model_path_prefix, model_id, model_name)

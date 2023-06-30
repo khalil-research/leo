@@ -19,7 +19,7 @@ class SVMRankTrainer(Trainer):
         super().__init__(data, model, cfg, ps, rs)
         self.bin_path = self.res_path / 'svm_rank_bin'
 
-        self.data = Path(data)
+        self.data = Path(str(data))
 
         self.train_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_train.dat'
         self.val_data_file = self.data / f'{self.cfg.problem.size}_dataset_pair_rank_val.dat'
@@ -114,9 +114,8 @@ class SVMRankTrainer(Trainer):
 
         data_file, n_items_file = getattr(self, '{}_data_file'.format(split)), \
             getattr(self, '{}_n_items_file'.format(split))
-        split_score, split_n_items = self.unflatten_data_from_file(data_file, n_items_file)
-        self.ps[split]['score'], _ = self.unflatten_data_from_file(pred_file, n_items_file)
 
+        self.ps[split]['score'], _ = self.unflatten_data_from_file(pred_file, n_items_file)
         self.ps[split]['order'] = get_variable_order(scores=self.ps[split]['score'], reverse=True)
         self.ps[split]['rank'] = get_variable_rank(scores=self.ps[split]['score'], reverse=True, high_to_low=True)
 
