@@ -69,7 +69,7 @@ def generate_dataset_point_regress(cfg):
                         incb_dict = ast.literal_eval(label_row['incb'].values[0])
                     else:
                         print(f'Missing incumbent. Using min_weight for {str(inst)}')
-                    sample['y'] = get_variable_rank(data=data, property_weights=incb_dict,
+                    sample['y'] = get_variable_rank(data=data, property_weights=incb_dict, reverse=True,
                                                     normalized=bool(cfg.normalize_rank))[0]
 
                 end_time = time.time() - start_time
@@ -149,7 +149,7 @@ def generate_dataset_multitask(cfg):
 
                     # Save rank of the incumbent configuration
                     sample['y'][-1]['rank'] = get_variable_rank(data=data, property_weights=run['incumbent'],
-                                                                normalized=bool(cfg.normalize_rank))[0]
+                                                                reverse=True, normalized=bool(cfg.normalize_rank))[0]
                 end_time = time.time() - start_time
                 time_dataset.append([size, pid, best_seed, split, end_time])
 
@@ -219,7 +219,7 @@ def generate_dataset_pair_rank(cfg):
                     # A lower ranks means the variable is used higher up in the DD construction
                     # However, SVMRank needs rank to be higher for the variable to be used higher in DD construction
                     # Hence, modified_rank = n_items - original_rank
-                    ranks = get_variable_rank(data=data, property_weights=incb_dict,
+                    ranks = get_variable_rank(data=data, property_weights=incb_dict, reverse=True,
                                               normalized=bool(cfg.normalize_rank))[0]
                 # For the test set
                 ranks = [n_items] * n_items if ranks is None else ranks
