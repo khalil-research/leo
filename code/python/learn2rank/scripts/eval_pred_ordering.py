@@ -4,6 +4,7 @@ import pickle as pkl
 from pathlib import Path
 
 import hydra
+import numpy as np
 import pandas as pd
 from omegaconf import DictConfig
 
@@ -65,6 +66,8 @@ def main(cfg: DictConfig):
         status, result = run_bdd_builder(str(dat_path), _order[:_n_item], bin_path=str(resource_path),
                                          prob_id=str(cfg.problem.id), preprocess=str(cfg.problem.preprocess),
                                          time_limit=cfg.bdd.timelimit, mem_limit=cfg.bdd.memlimit)
+        log.info(f'Time : {np.sum(result[-4: -1])}')
+
         results.append(make_result_column(cfg.problem.name,
                                           cfg.problem.size,
                                           cfg.split,
