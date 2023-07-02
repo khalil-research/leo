@@ -269,6 +269,13 @@ def get_variable_order(data=None, property_weights=None, scores=None, reverse=Fa
     A list of list containing the order of items of different instances.
     If the function was invoked using `data` and `property_weights`, the parent list will contain only one child list.
     """
+    if scores is None:
+        assert data is not None and property_weights is not None
+        # Always sort items based on the decreasing order of property scores
+        reverse = True
+    elif data is None and property_weights is None:
+        assert scores is not None
+
     scores = [get_variable_score_from_weights(data, property_weights)] if scores is None else scores
     orders = _score2order(scores, reverse=reverse)
 
@@ -307,6 +314,13 @@ def get_variable_rank(data=None, property_weights=None, scores=None, reverse=Fal
     A list of list containing the rank of items of different instances.
     If the function was invoked using `data` and `property_weights`, the parent list will contain only one child list.
     """
+    if scores is None:
+        assert data is not None and property_weights is not None
+        # Always sort items based on the decreasing order of property scores
+        reverse = True
+    elif data is None and property_weights is None:
+        assert scores is not None
+
     scores = [get_variable_score_from_weights(data, property_weights)] if scores is None else scores
     ranks = _score2rank(scores, reverse=reverse, high_to_low=high_to_low, normalized=normalized)
 
