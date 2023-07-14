@@ -1,0 +1,27 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - model: GradientBoostingRanker
+  - run: default
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+
+# Use optuna to tune the hyperparameters of the XGBoost model
+# Save models, predictions and results
+save: 1
+
+task: pair_rank
+context: 0
+fused: 0
+
+# Load configs from this path
+tuned_model:
+
+case: 0
+#output_dir: ${hydra:runtime.output_dir}
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

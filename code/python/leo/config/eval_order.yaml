@@ -1,0 +1,31 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+
+context: 1
+fused: 0
+
+# train | val | test
+split: test
+from_pid: 1100
+to_pid: 1101
+
+# best: select the best model based on the name
+# one: select the model based on model id
+mode: best
+task: pair_rank
+model_name: GradientBoostingRanker
+model_id:
+
+bdd:
+  timelimit: 1800
+  memlimit: 16
+
+case: 0
+hydra:
+  output_subdir: null
+  run:
+    dir: .

@@ -1,0 +1,44 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+n_train: 1000
+n_val: 100
+n_test: 100
+
+all_cutoff:
+  '5_40': 300
+  '6_40': 1200
+  '7_40': 1200
+  '4_50': 300
+  '3_60': 300
+  '3_70': 1200
+  '3_80': 1200
+cutoff: ${all_cutoff[${problem.size}]}
+
+all_wallclock:
+  '5_40': 300
+  '6_40': 1200
+  '7_40': 1200
+  '4_50': 300
+  '3_60': 300
+  '3_70': 1200
+  '3_80': 1200
+wallclock: ${all_wallclock[${problem.size}]}
+
+
+SmacD_avg:
+  '5_40': 23
+  '6_40': 82
+  '7_40': 211
+  '4_50': 56
+  '3_60': 29
+  '3_70': 89
+  '3_80': 305
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

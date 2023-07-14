@@ -1,0 +1,26 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - run: default
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+
+# Dataset
+fused: 0
+context: 0
+# Mode
+# all: Get the predictions for all the models in the summary files
+# best: Get the predictions for the best models
+# one: Get the predictions for a specific model. Needs a model_id and task
+mode: best
+# To be set when `mode` is one
+model_id:
+# point_regress, pair_rank
+task: pair_rank
+case: 0
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

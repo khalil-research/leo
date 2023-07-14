@@ -1,0 +1,41 @@
+defaults:
+  - _self_
+  - featurizer: knapsack
+  - problem: knapsack
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+# Task for which you want to generate the dataset
+# Options:
+# 1. point_regress: Generates dataset to do pointwise regression
+# 2. pair_rank: Generates pairwise ranking dataset for a fixed size
+task: point_regress
+# Flag to decide if we want to create a single dataset
+# for all sizes
+fused: 0
+# Use context features
+context: 0
+
+padding: False
+
+size:
+  - '5_40'
+  - '6_40'
+  - '7_40'
+  - '4_50'
+  - '3_60'
+  - '3_70'
+  - '3_80'
+split:
+  - 'train'
+  - 'val'
+  - 'test'
+normalize_rank: 0
+
+# Initial incumbent
+iinc: min_weight
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

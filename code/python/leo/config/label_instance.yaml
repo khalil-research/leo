@@ -1,0 +1,47 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+
+################################################
+# SMAC parameters
+################################################
+# Name of the binary to use
+bin_name: multiobj
+verbose: 1
+# Mode to run smac
+# SmacI: Use SMAC for generating property-weight labels
+# SmacD: Use SMAC as a baseline
+mode: SmacI
+# Seed for SMAC. Impacts the SMAC trajectory
+seed: 777
+# Number of jobs
+n_jobs: 1
+# Maximum time to evaluate one config
+cutoff_time: 60
+# Total time limit
+wallclock_limit: 300
+
+################################################
+# BDD parameters
+################################################
+# Memory limit for the target algorithm
+mem_limit: 16
+# Helps to set the property value range [-width, width]
+width: 1.0
+
+################################################
+# Dataset parameters
+################################################
+split: train
+from_pid: 0
+num_instances: 1
+case: 0
+
+# Customize hydra output directory creation
+hydra:
+  output_subdir: null
+  run:
+    dir: .
