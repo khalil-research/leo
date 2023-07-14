@@ -1,0 +1,23 @@
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+# Phase 1
+get_smac_inst_cmd: 1
+get_smac_dataset_cmd: 1
+get_best_label_cmd: 1
+
+# Phase 2
+get_dataset_cmd: 1
+get_train_cmd: 1
+
+# Phase 3
+get_best_model_cmd: 1
+get_test_cmd: 1
+get_eval_order_cmd: 1
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

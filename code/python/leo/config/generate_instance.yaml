@@ -1,0 +1,25 @@
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+    
+name: knapsack
+seed: 7
+max_obj: 1000
+n_train: 1000
+n_val: 100
+n_test: 100
+size:
+  - '5_40'
+  - '6_60'
+  - '7_40'
+  - '4_50'
+  - '3_60'
+  - '3_70'
+  - '3_80'
+
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

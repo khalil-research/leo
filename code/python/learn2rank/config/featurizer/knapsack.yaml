@@ -1,5 +1,0 @@
-name: knapsack
-
-n_max_vars: 100
-n_max_objs: 7
-norm_const: 1000

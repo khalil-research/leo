@@ -1,0 +1,12 @@
+defaults:
+  - _self_
+  - problem: knapsack
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+model_selection: k-tau
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
