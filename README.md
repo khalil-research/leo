@@ -1,5 +1,6 @@
 # LEO: Learning Efficient Orderings for Multiobjective Binary Decision Diagrams
 *Official implementation* 
+
 Full paper: https://arxiv.org/abs/2307.03171
 
 **Abstract**: Approaches based on Binary decision diagrams (BDDs) have recently achieved state-of-the-art results for multiobjective integer programming problems. The variable ordering used in constructing BDDs can have a significant impact on their size and on the quality of bounds derived from relaxed/restricted BDDs for single-objective optimization problems. We first showcase a similar impact for variable ordering on the Pareto frontier enumeration time for the multiobjective knapsack problem, suggesting the need for deriving VO methods that improve the scalability of the multiobjective BDD approach. To that end, we derive a novel parameter configuration space based on variable scoring functions which are linear in a small set of interpretable and easy-to-compute variable features. We show how the configuration space can be efficiently explored using black-box optimization, circumventing the curse of dimensionality (in the number of variables/objectives), and finding good orderings that reduce the Pareto frontier enumeration time. However, black-box optimization approaches incur a computational overhead that outweighs the reduction in time due to good variable ordering. To alleviate this issue, we propose `LEO`, a supervised learning approach for finding efficient variable orderings that reduce the enumeration time. Results on benchmark sets from the knapsack problem with 3-7 objectives and up to 80 variables show that the learning-based method can significantly reduce the Pareto frontier enumeration time compared to common ordering strategies and algorithm configuration.
@@ -11,20 +12,19 @@ LEO is structured as follows:
 ```
 
 |-- code
-    |-- leo
-        |-- cpp
-        |-- python
-            |-- leo
+    |-- cpp
+    |-- python
+        |-- leo
 |-- resources
     |-- instances
     |-- bin
 ```
 
-The `code/leo/cpp` folder contains the code for BDD Manager, which is based on the implementation of [1] available at https://www.andrew.cmu.edu/user/vanhoeve/mdd/. Once the binary is successfully built, run the code in `code/leo/python/leo` package for executing different phases of LEO. 
+The `code/cpp` folder contains the code for BDD Manager, which is based on the implementation of [1] available at https://www.andrew.cmu.edu/user/vanhoeve/mdd/. Once the binary is successfully built, run the code in `code/python/leo` package for executing different phases of LEO. 
 
 ## Building the C++ code
 
-Building the C++ code is straightforward, thanks to Andre and David. Go to `code/leo/cpp` and correctly set the following items based on your system in `makefile`.
+Building the C++ code is straightforward, thanks to Andre and David. Go to `code/cpp` and correctly set the following items based on your system in `makefile`.
 
 ```
 SYSTEM     = x86-64_linux
@@ -38,7 +38,7 @@ Once everything is set execute `make`. If it ran correctly then there should be 
 
 ## Running the Python code
 
-Hence forth we will assume that you are `code/leo/python` folder. All the scripts named `leo/<filename>.py` have a corresponding config file in `leo/config/<filename>.yaml`. 
+Hence forth we will assume that you are `code/python` folder. All the scripts named `leo/<filename>.py` have a corresponding config file in `leo/config/<filename>.yaml`. 
 
 To get a list of all the commands to run, execute
 
