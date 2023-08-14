@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	{
 		// Usage instructions
 		cout << '\n';
-		cout << "Usage: multiobj [input file] [problem type] [preprocess] [num_items] [item_1] ... [item_<num_items>]\n";
+		cout << "Usage: multiobj [input file] [problem type] [preprocess] [bdd_type] [max_width] [num_items] [item_1] ... [item_<num_items>]\n";
 
 		cout << "\n\twhere:\n";
 		cout << "\t\tproblem_type = 1: knapsack\n";
@@ -48,6 +48,13 @@ int main(int argc, char *argv[])
 		cout << "\n";
 		cout << "\t\tpreprocess = 0: no preprocessing\n";
 		cout << "\t\tpreprocess = 1: minimize bandwidth (only setpack/setcover)\n";
+
+		cout << "\n";
+		cout << "\t\tbdd_type = 0: Generate exact BDD\n";
+		cout << "\t\tbdd_type = 1: Generate restricted BDD\n";
+
+		cout << "\n";
+		cout << "\t\tmax_width : Width of restricted BDD.\n";
 
 		cout << "\n";
 	}
@@ -64,15 +71,20 @@ int main(int argc, char *argv[])
 	// catch preprocess
 	bool preprocess = (atoi(argv[3]) == 1);
 
+	// 0: Exact, 1: Restricted, 2: Relaxed
+	int bdd_type = atoi(argv[4]);
+
+	int maxwidth = atoi(argv[5]);
+
 	// Catch number of variables
-	int num_items = atoi(argv[4]);
+	int num_items = atoi(argv[6]);
 	bool new_order_provided = (num_items > 0);
 
 	// Catch order
 	vector<int> new_order;
 	for (int i = 0; i < num_items; i++)
 	{
-		new_order.push_back(atoi(argv[5 + i]));
+		new_order.push_back(atoi(argv[7 + i]));
 	}
 
 	// -------------------------------------------------
@@ -113,10 +125,18 @@ int main(int argc, char *argv[])
 
 		// Construct BDD
 		KnapsackInstance *inst_so = new KnapsackInstance(inst->n_vars, inst->obj_coeffs[0], inst->coeffs, inst->rhs);
-		KnapsackBDDConstructor bddConstructor(inst_so, 0);
 
 		// Get BDD and objective function coefficients
-		bdd = bddConstructor.generate_exact();
+		if (bdd_type == 0)
+		{
+			KnapsackBDDConstructor bddConstructor(inst_so, 0);
+			bdd = bddConstructor.generate_exact();
+		}
+		else
+		{
+			KnapsackBDDConstructor bddConstructor(inst_so, maxwidth);
+			bdd = bddConstructor.generate_restricted();
+		}
 		obj_coefficients = inst->obj_coeffs;
 	}
 
