@@ -131,6 +131,7 @@ def generate_dataset_pair_rank(cfg):
 
             df_label = None
             if split != 'test':
+                # TODO: Check if the label file exists before loading. Continue gracefully if it doesn't.
                 df_label = pd.read_csv(path.label / cfg.problem.name / size / f'label_{size}_{split}.csv')
                 print(f'\t\tLabels shape: {df_label.shape}')
 

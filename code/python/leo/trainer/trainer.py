@@ -111,8 +111,12 @@ class Trainer(ABC):
                 'ranking': []
             },
             'time': {
-                'train': 0.0,
-                'test': 0.0,
+                'training': 0.0,
+                'prediction': {
+                    'train': 0.0,
+                    'test': 0.0,
+                    'val': 0.0,
+                },
                 'eval': 0.0
             }
         }

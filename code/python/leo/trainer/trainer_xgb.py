@@ -55,7 +55,7 @@ class XGBoostTrainer(Trainer):
                                                                             self.ps['test']['n_items'])
 
     def run(self):
-        self.rs['time']['train'] = time.time()
+        self.rs['time']['training'] = time.time()
         # Train
         # feature_weights = self._get_feature_importance(self.cfg.model.feature_importance,
         #                                                self.x_train.shape[1])
@@ -66,16 +66,18 @@ class XGBoostTrainer(Trainer):
             eval_set=[(self.x_val, self.y_val)],
             eval_group=[self.ps['val']['n_items']]
         )
-
-        self.rs['time']['train'] = time.time() - self.rs['time']['train']
-        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
+        self.rs['time']['training'] = time.time() - self.rs['time']['training']
+        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['training']} \n")
 
         # Train pred
+        self.rs['time']['prediction']['train'] = time.time()
         self.ps['train']['score'] = [self.model.predict(x) for x in self.x_train_uf]
+        self.rs['time']['prediction']['train'] = time.time() - self.rs['time']['prediction']['train']
+
         # Val pred
-        self.rs['time']['val'] = time.time()
+        self.rs['time']['prediction']['val'] = time.time()
         self.ps['val']['score'] = [self.model.predict(x) for x in self.x_val_uf]
-        self.rs['time']['val'] = time.time() - self.rs['time']['val']
+        self.rs['time']['prediction']['val'] = time.time() - self.rs['time']['prediction']['val']
 
         # Score to order
         train_order = get_variable_order(scores=self.y_train_uf, reverse=True)

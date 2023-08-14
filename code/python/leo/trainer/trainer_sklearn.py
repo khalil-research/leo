@@ -43,15 +43,20 @@ class SklearnTrainer(Trainer):
 
     def run(self):
         # Train
-        _time = time.time()
+        self.rs['time']['training'] = time.time()
         self.model.fit(self.dtrain['x'], self.dtrain['y'], sample_weight=self.dtrain['sample_weight'])
-        _time = time.time() - _time
-        self.rs['time']['train'] = _time
+        self.rs['time']['training'] = time.time() - self.rs['time']['training']
 
         # Predict scores
         # (n_samples x n_vars) x 1
+        # Predict on train set
+        self.rs['time']['prediction']['train'] = time.time()
         self.ps['train']['score'] = self.model.predict(self.dtrain['x'])
+        self.rs['time']['prediction']['train'] = time.time() - self.rs['time']['prediction']['train']
+        # Predict on val set
+        self.rs['time']['prediction']['val'] = time.time()
         self.ps['val']['score'] = self.model.predict(self.dval['x'])
+        self.rs['time']['prediction']['val'] = time.time() - self.rs['time']['prediction']['val']
 
         # Eval learning metrics
         log.info(f"* {self.cfg.model.name} Results")
@@ -115,7 +120,10 @@ class SklearnTrainer(Trainer):
 
     def predict(self, split='test'):
         dsplit = getattr(self, f'd{split}')
+        self.rs['time']['prediction'][split] = time.time()
         self.ps[split]['score'] = self.model.predict(dsplit['x'])
+        self.rs['time']['prediction'][split] = time.time() - self.rs['time']['prediction'][split]
+
         self.ps[split]['score'] = self.unflatten_data(self.ps[split]['score'], self.ps[split]['n_items'])
 
         self.ps[split]['order'] = get_variable_order(scores=self.ps[split]['score'])
