@@ -46,22 +46,28 @@ class SVMRankTrainer(Trainer):
             self.ps['test']['n_items'] = list(map(int, self.test_n_items_file.read_text().strip().split('\n')))
 
     def run(self):
-        self.rs['time']['train'] = time.time()
         # Train
         learn = path.bin / 'svm_rank_learn'
         # model_path = self.res_path / f'pretrained/{self.cfg.problem.name}/{self.cfg.problem.size}'
         model_path = self._get_path('pretrained')
         model_path.mkdir(parents=True, exist_ok=True)
         model = model_path / f'svm_rank_c-{self.cfg.model.c}.dat'
+
+        self.rs['time']['training'] = time.time()
         os.system(f'{learn} -c {self.cfg.model.c} {self.train_data_file} {model}')
+        self.rs['time']['training'] = time.time() - self.rs['time']['training']
 
-        self.rs['time']['train'] = time.time() - self.rs['time']['train']
-        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
+        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['training']} \n")
 
+        # Predict on train set
+        self.rs['time']['prediction']['train'] = time.time()
         train_pred_file = self._get_split_score(split='train')
-        self.rs['time']['val'] = time.time()
+        self.rs['time']['prediction']['train'] = time.time() - self.rs['time']['prediction']['train']
+
+        # Predict on val set
+        self.rs['time']['prediction']['val'] = time.time()
         val_pred_file = self._get_split_score(split='val')
-        self.rs['time']['val'] = time.time() - self.rs['time']['val']
+        self.rs['time']['prediction']['val'] = time.time() - self.rs['time']['prediction']['val']
 
         train_score, train_n_items = self.unflatten_data_from_file(self.train_data_file, self.train_n_items_file)
         self.ps['train']['score'], _ = self.unflatten_data_from_file(train_pred_file, self.train_n_items_file)
@@ -106,9 +112,9 @@ class SVMRankTrainer(Trainer):
         self._save_results()
 
     def predict(self, split='test'):
-        self.rs['time'][split] = time.time()
+        self.rs['time']['prediction'][split] = time.time()
         pred_file = self._get_split_score(split=split)
-        self.rs['time'][split] = self.rs['time'][split] - time.time()
+        self.rs['time']['prediction'][split] = time.time() - self.rs['time']['prediction'][split]
 
         data_file, n_items_file = getattr(self, '{}_data_file'.format(split)), \
             getattr(self, '{}_n_items_file'.format(split))
