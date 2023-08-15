@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from attrdict import AttrDict
+from omegaconf import OmegaConf
 
 res_path = Path(__file__).parent.parent.parent.parent / 'resources'
 
-path = AttrDict({
+path = OmegaConf.create({
     'module': Path(__file__).parent.parent,
     'resources': res_path,
     'instances': res_path / 'instances',
@@ -17,5 +17,4 @@ path = AttrDict({
     'prediction': res_path / 'predictions',
     'pretrained': res_path / 'pretrained',
     'eval_order': res_path / 'eval_order',
-    'model_summary': res_path / 'model_summary'
-})
+    'model_summary': res_path / 'model_summary'})

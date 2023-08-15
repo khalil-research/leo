@@ -69,39 +69,40 @@ def main(cfg: DictConfig):
     cached_dataset = {'pair_rank': None, 'point_regress': None}
     counter = 1
     for model_id, model_name, task in zip(model_ids, model_names, tasks):
-        print(counter, model_name, model_id)
-        counter += 1
+        if cfg.task is not None and cfg.task == task:
+            print(counter, model_name, model_id)
+            counter += 1
 
-        # Load model conf to conf and load model
-        model_path_prefix = path.pretrained / cfg.problem.name / dataset_name
-        model_cfg = OmegaConf.load(path.model_cfg / f"{model_id}.yaml")
-        cfg_dict = OmegaConf.to_container(cfg)
-        model_cfg_dict = OmegaConf.to_container(model_cfg)
-        cfg_dict['model'] = model_cfg_dict
-        cfg = OmegaConf.create(cfg_dict)
-        cfg.task = task
-        # Load model
-        model = load_model(model_cfg, model_path_prefix, model_id, model_name)
+            # Load model conf to conf and load model
+            model_path_prefix = path.pretrained / cfg.problem.name / dataset_name
+            model_cfg = OmegaConf.load(path.model_cfg / f"{model_id}.yaml")
+            cfg_dict = OmegaConf.to_container(cfg)
+            model_cfg_dict = OmegaConf.to_container(model_cfg)
+            cfg_dict['model'] = model_cfg_dict
+            cfg = OmegaConf.create(cfg_dict)
+            cfg.task = task
+            # Load model
+            model = load_model(model_cfg, model_path_prefix, model_id, model_name)
 
-        # Load dataset
-        if cached_dataset[cfg.task] is None:
-            data = load_dataset(cfg)
-            cached_dataset[cfg.task] = data
-        else:
-            data = cached_dataset[cfg.task]
+            # Load dataset
+            if cached_dataset[cfg.task] is None:
+                data = load_dataset(cfg)
+                cached_dataset[cfg.task] = data
+            else:
+                data = cached_dataset[cfg.task]
 
-        # Load previous predictions and result
-        pred_path_prefix = path.prediction / cfg.problem.name / dataset_name
-        prediction_path = pred_path_prefix / f"prediction_{model_id}.pkl"
-        pred_store = pkl.load(open(prediction_path, 'rb'))
-        result_path = pred_path_prefix / f"results_{model_id}.pkl"
-        result_store = pkl.load(open(result_path, 'rb'))
+            # Load previous predictions and result
+            pred_path_prefix = path.prediction / cfg.problem.name / dataset_name
+            prediction_path = pred_path_prefix / f"prediction_{model_id}.pkl"
+            pred_store = pkl.load(open(prediction_path, 'rb'))
+            result_path = pred_path_prefix / f"results_{model_id}.pkl"
+            result_store = pkl.load(open(result_path, 'rb'))
 
-        # Predict on test set
-        log.info(f'* Starting trainer...')
-        trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg,
-                                         ps=pred_store, rs=result_store)
-        trainer.predict(split='test')
+            # Predict on test set
+            log.info(f'* Starting trainer...')
+            trainer = trainer_factory.create(cfg.model.trainer, model=model, data=data, cfg=cfg,
+                                             ps=pred_store, rs=result_store)
+            trainer.predict(split='test')
 
 
 if __name__ == '__main__':

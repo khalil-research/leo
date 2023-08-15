@@ -314,26 +314,34 @@ def get_test_cmd():
     return table_str
 
 
-def get_eval_order_cmd():
+def get_eval_order_cmd(split='test', n_items=10):
     global case
     table_str = ''
+    if split == 'train':
+        start, end = 0, 1000
+    elif split == 'val':
+        start, end = 1000, 1100
+    else:
+        start, end = 1100, 1200
 
-    for s in sizes:
-        table_str += f'{case} python -m leo.eval_order problem=knapsack problem.n_objs={s[0]} problem.n_vars={s[1]} ' \
-                     f'mode=best task=pair_rank model=GradientBoostingRanker fused=0 context=0\n'
+    for i in range(start, end, n_items):
+        for s in sizes:
+            table_str += f'{case} python -m leo.eval_order problem=knapsack problem.n_objs={s[0]} problem.n_vars={s[1]} ' \
+                         f'mode=best task=pair_rank model=GradientBoostingRanker fused=0 context=0\n'
+            case += 1
+
+            table_str += f'{case} python -m leo.eval_order problem=knapsack problem.n_objs={s[0]} ' \
+                         f'problem.n_vars={s[1]} split={split} from_pid={i} to_pid={i + n_items} ' \
+                         f'mode=best task=pair_rank model_name=GradientBoostingRanker fused=0 context=1\n'
+            case += 1
+
+        table_str += f'{case} python -m leo.eval_order problem=knapsack mode=best task=pair_rank ' \
+                     f'model=GradientBoostingRanker fused=1 context=0\n'
         case += 1
 
-        table_str += f'{case} python -m leo.eval_order problem=knapsack problem.n_objs={s[0]} problem.n_vars={s[1]} ' \
-                     f'mode=best task=pair_rank model=GradientBoostingRanker fused=0 context=1\n'
+        table_str += f'{case} python -m leo.eval_order problem=knapsack mode=best task=pair_rank ' \
+                     f'model=GradientBoostingRanker fused=1 context=1\n'
         case += 1
-
-    table_str += f'{case} python -m leo.eval_order problem=knapsack mode=best task=pair_rank ' \
-                 f'model=GradientBoostingRanker fused=1 context=0\n'
-    case += 1
-
-    table_str += f'{case} python -m leo.eval_order problem=knapsack mode=best task=pair_rank ' \
-                 f'model=GradientBoostingRanker fused=1 context=1\n'
-    case += 1
 
     return table_str
 
@@ -361,8 +369,11 @@ def main(cfg):
         cmds += get_best_model_cmd()
     if cfg.get_test_cmd:
         cmds += get_test_cmd()
+
+    split = 'test'
+    n_items = 5
     if cfg.get_eval_order_cmd:
-        cmds += get_eval_order_cmd()
+        cmds += get_eval_order_cmd(split=split, n_items=n_items)
 
     Path('cmds.txt').write_text(cmds)
 

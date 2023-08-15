@@ -125,10 +125,10 @@ class XGBoostTrainer(Trainer):
             assert self.x_test is not None
         log.info('Predicting on the {} set...'.format(split))
 
-        self.rs['time'][split] = time.time()
+        self.rs['time']['prediction'][split] = time.time()
         for x in getattr(self, f'x_{split}_uf'):
             self.ps[split]['score'].append(self.model.predict(x))
-        self.rs['time'][split] = time.time() - self.rs['time'][split]
+        self.rs['time']['prediction'][split] = time.time() - self.rs['time']['prediction'][split]
 
         self.ps['test']['order'] = get_variable_order(scores=self.ps[split]['score'], reverse=True)
         self.ps['test']['rank'] = get_variable_rank(scores=self.ps['test']['score'], reverse=True, high_to_low=True)

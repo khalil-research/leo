@@ -88,7 +88,7 @@ class SmacDTrainer(Trainer):
                                                            self.ps['val']['n_items']))
         df_val = pd.DataFrame(self.rs['val']['ranking'], columns=['id', 'metric_type', 'metric_value'])
         self.print_rank_metrics(df_val)
-        log.info(f"  {self.cfg.model.name} train time: {self.rs['time']['train']} \n")
+        log.info(f"  {self.cfg.model.name} \n")
         self.val_tau = df_val.query("metric_type == 'kendall-coeff'")['metric_value'].mean()
 
         self._save_predictions()

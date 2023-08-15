@@ -124,7 +124,7 @@ def main(cfg):
                 [best_model_df,
                  _df[_df[f"{cfg.model_selection}_val"] == _df[f"{cfg.model_selection}_val"].max()]],
                 ignore_index=True)
-        best_model_df.to_csv(f'{path.model_summary / cfg.problem.name}/best_model_{dname}.csv', index=False)
+        best_model_df.to_csv(f'{path.model_summary / cfg.problem.name}/best_{dname}.csv', index=False)
 
 
 if __name__ == '__main__':

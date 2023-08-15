@@ -29,7 +29,7 @@ def main(cfg: DictConfig):
     elif cfg.mode == 'best':
         assert cfg.model_name is not None
 
-        model_summary_path = path.model_summary / cfg.problem.name / f'best_model_{dataset_name}.csv'
+        model_summary_path = path.model_summary / cfg.problem.name / f'best_{dataset_name}.csv'
         df_summary = pd.read_csv(model_summary_path, index_col=False)
         row = df_summary[(df_summary.model_name == cfg.model_name) & (df_summary.task == cfg.task)]
     else:
