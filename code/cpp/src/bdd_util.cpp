@@ -891,6 +891,15 @@ MultiobjResult *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coef
 	int width = bdd->get_width();
 	int num_objs = obj_coeffs.size();
 
+	// for (int i = 0; i < 3; i++)
+	// {
+	// 	for (int j = 0; j < 3; j++)
+	// 	{
+	// 		cout << obj_coeffs[i][j] << " ";
+	// 	}
+	// 	cout << endl;
+	// }
+
 	// pre-allocate vectors for efficient sets
 	// cout << "\tallocating..." << endl;
 	vector<ParetoSet *> sets[2];
@@ -1204,177 +1213,177 @@ ParetoSet *BDDAlg::pareto_set_delayed(BDD *bdd, const vector<vector<int>> &obj_c
 // Create flow model from BDD
 //
 
-void BDDAlg::flow_model(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer)
-{
-	bdd->repair_node_indices();
-	IloEnv env = model.getEnv();
+// void BDDAlg::flow_model(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer)
+// {
+// 	bdd->repair_node_indices();
+// 	IloEnv env = model.getEnv();
 
-	// create one expression for node
-	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
-	for (int l = 0; l < bdd->num_layers; ++l)
-	{
-		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
-		{
-			flow_nodes[l].push_back(IloExpr(env));
-		}
-	}
+// 	// create one expression for node
+// 	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
+// 	for (int l = 0; l < bdd->num_layers; ++l)
+// 	{
+// 		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
+// 		{
+// 			flow_nodes[l].push_back(IloExpr(env));
+// 		}
+// 	}
 
-	// create one expression for variable
-	vector<IloExpr> var_expr(x.getSize());
-	for (int v = 0; v < x.getSize(); ++v)
-	{
-		var_expr[v] = IloExpr(env);
-	}
+// 	// create one expression for variable
+// 	vector<IloExpr> var_expr(x.getSize());
+// 	for (int v = 0; v < x.getSize(); ++v)
+// 	{
+// 		var_expr[v] = IloExpr(env);
+// 	}
 
-	// root node
-	flow_nodes[0][0] += 1;
+// 	// root node
+// 	flow_nodes[0][0] += 1;
 
-	// terminal node
-	flow_nodes[bdd->num_layers - 1][0] += -1;
+// 	// terminal node
+// 	flow_nodes[bdd->num_layers - 1][0] += -1;
 
-	// add expression constraints
-	for (int l = 0; l < bdd->num_layers - 1; ++l)
-	{
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
-		{
-			Node *node = bdd->layers[l][u];
+// 	// add expression constraints
+// 	for (int l = 0; l < bdd->num_layers - 1; ++l)
+// 	{
+// 		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+// 		{
+// 			Node *node = bdd->layers[l][u];
 
-			if (node->zero_arc != NULL)
-			{
-				IloNumVar zero_arc(env, 0, 1);
-				// IloIntVar zero_arc(env, 0, 1);
-				flow_nodes[l][u] -= zero_arc;
-				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
-			}
+// 			if (node->zero_arc != NULL)
+// 			{
+// 				IloNumVar zero_arc(env, 0, 1);
+// 				// IloIntVar zero_arc(env, 0, 1);
+// 				flow_nodes[l][u] -= zero_arc;
+// 				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
+// 			}
 
-			if (node->one_arc != NULL)
-			{
-				IloNumVar one_arc(env, 0, 1);
-				// IloIntVar one_arc(env, 0, 1);
-				flow_nodes[l][u] -= one_arc;
-				flow_nodes[l + 1][node->one_arc->index] += one_arc;
+// 			if (node->one_arc != NULL)
+// 			{
+// 				IloNumVar one_arc(env, 0, 1);
+// 				// IloIntVar one_arc(env, 0, 1);
+// 				flow_nodes[l][u] -= one_arc;
+// 				flow_nodes[l + 1][node->one_arc->index] += one_arc;
 
-				var_expr[var_layer[l]] += one_arc;
-			}
-		}
-	}
+// 				var_expr[var_layer[l]] += one_arc;
+// 			}
+// 		}
+// 	}
 
-	// add balance constraints
-	for (int l = 0; l < bdd->num_layers - 1; ++l)
-	{
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
-		{
-			model.add(flow_nodes[l][u] == 0);
-		}
-	}
+// 	// add balance constraints
+// 	for (int l = 0; l < bdd->num_layers - 1; ++l)
+// 	{
+// 		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+// 		{
+// 			model.add(flow_nodes[l][u] == 0);
+// 		}
+// 	}
 
-	// add variable constraints
-	for (int v = 0; v < x.getSize(); ++v)
-	{
-		model.add(x[v] == var_expr[v]);
-	}
-}
+// 	// add variable constraints
+// 	for (int v = 0; v < x.getSize(); ++v)
+// 	{
+// 		model.add(x[v] == var_expr[v]);
+// 	}
+// }
 
-//
-// Create flow model from BDD. Amount of flow is controlled by a variable f
-//
-void BDDAlg::flow_model_f(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer,
-						  IloNumVar &z)
-{
-	bdd->repair_node_indices();
-	IloEnv env = model.getEnv();
+// //
+// // Create flow model from BDD. Amount of flow is controlled by a variable f
+// //
+// void BDDAlg::flow_model_f(BDD *bdd, IloModel &model, IloBoolVarArray &x, vector<int> &var_layer,
+// 						  IloNumVar &z)
+// {
+// 	bdd->repair_node_indices();
+// 	IloEnv env = model.getEnv();
 
-	char varname[256];
+// 	char varname[256];
 
-	// create one expression for node
-	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
-	for (int l = 0; l < bdd->num_layers; ++l)
-	{
-		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
-		{
-			flow_nodes[l].push_back(IloExpr(env));
-		}
-	}
+// 	// create one expression for node
+// 	vector<vector<IloExpr>> flow_nodes(bdd->num_layers);
+// 	for (int l = 0; l < bdd->num_layers; ++l)
+// 	{
+// 		for (size_t i = 0; i < bdd->layers[l].size(); ++i)
+// 		{
+// 			flow_nodes[l].push_back(IloExpr(env));
+// 		}
+// 	}
 
-	// create one expression for variable
-	vector<IloExpr> var_expr(x.getSize());
-	for (int v = 0; v < x.getSize(); ++v)
-	{
-		var_expr[v] = IloExpr(env);
-	}
+// 	// create one expression for variable
+// 	vector<IloExpr> var_expr(x.getSize());
+// 	for (int v = 0; v < x.getSize(); ++v)
+// 	{
+// 		var_expr[v] = IloExpr(env);
+// 	}
 
-	// root node
-	flow_nodes[0][0] += z;
+// 	// root node
+// 	flow_nodes[0][0] += z;
 
-	// terminal node
-	flow_nodes[bdd->num_layers - 1][0] -= z;
+// 	// terminal node
+// 	flow_nodes[bdd->num_layers - 1][0] -= z;
 
-	// negative terminal node
-	// IloExpr negflow(env);
-	// negflow -= (1-z);
+// 	// negative terminal node
+// 	// IloExpr negflow(env);
+// 	// negflow -= (1-z);
 
-	// add expression constraints
-	for (int l = 0; l < bdd->num_layers - 1; ++l)
-	{
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
-		{
-			Node *node = bdd->layers[l][u];
+// 	// add expression constraints
+// 	for (int l = 0; l < bdd->num_layers - 1; ++l)
+// 	{
+// 		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+// 		{
+// 			Node *node = bdd->layers[l][u];
 
-			if (node->zero_arc != NULL)
-			{
-				sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
-				IloNumVar zero_arc(env, 0, 1, varname);
-				// IloIntVar zero_arc(env, 0, 1);
-				flow_nodes[l][u] -= zero_arc;
-				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
-			}
-			else
-			{
-				/*sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
-				IloNumVar zero_arc(env, 0, 1, varname);
-				flow_nodes[l][u] -= zero_arc;
-				negflow += zero_arc;*/
-			}
+// 			if (node->zero_arc != NULL)
+// 			{
+// 				sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
+// 				IloNumVar zero_arc(env, 0, 1, varname);
+// 				// IloIntVar zero_arc(env, 0, 1);
+// 				flow_nodes[l][u] -= zero_arc;
+// 				flow_nodes[l + 1][node->zero_arc->index] += zero_arc;
+// 			}
+// 			else
+// 			{
+// 				/*sprintf(varname, "f[%d][%d][%d]", l, node->index, 0);
+// 				IloNumVar zero_arc(env, 0, 1, varname);
+// 				flow_nodes[l][u] -= zero_arc;
+// 				negflow += zero_arc;*/
+// 			}
 
-			if (node->one_arc != NULL)
-			{
-				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
-				IloNumVar one_arc(env, 0, 1, varname);
-				// IloIntVar one_arc(env, 0, 1);
-				flow_nodes[l][u] -= one_arc;
-				flow_nodes[l + 1][node->one_arc->index] += one_arc;
+// 			if (node->one_arc != NULL)
+// 			{
+// 				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
+// 				IloNumVar one_arc(env, 0, 1, varname);
+// 				// IloIntVar one_arc(env, 0, 1);
+// 				flow_nodes[l][u] -= one_arc;
+// 				flow_nodes[l + 1][node->one_arc->index] += one_arc;
 
-				// cout << "l = " << l << " " << bdd->num_layers << " --> " << var_layer.size() << endl;
+// 				// cout << "l = " << l << " " << bdd->num_layers << " --> " << var_layer.size() << endl;
 
-				var_expr[var_layer[l]] += one_arc;
-			}
-			else
-			{
-				/*
-				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
-				IloNumVar one_arc(env, 0, 1, varname);
-				//IloIntVar one_arc(env, 0, 1);
-				flow_nodes[l][u] -= one_arc;
-				negflow += one_arc;
-				var_expr[var_layer[l]] += one_arc;
-				 */
-			}
-		}
-	}
+// 				var_expr[var_layer[l]] += one_arc;
+// 			}
+// 			else
+// 			{
+// 				/*
+// 				sprintf(varname, "f[%d][%d][%d]", l, node->index, 1);
+// 				IloNumVar one_arc(env, 0, 1, varname);
+// 				//IloIntVar one_arc(env, 0, 1);
+// 				flow_nodes[l][u] -= one_arc;
+// 				negflow += one_arc;
+// 				var_expr[var_layer[l]] += one_arc;
+// 				 */
+// 			}
+// 		}
+// 	}
 
-	// add balance constraints
-	for (int l = 0; l < bdd->num_layers; ++l)
-	{
-		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
-		{
-			model.add(flow_nodes[l][u] == 0);
-		}
-	}
-	// model.add( negflow == 0 );
+// 	// add balance constraints
+// 	for (int l = 0; l < bdd->num_layers; ++l)
+// 	{
+// 		for (size_t u = 0; u < bdd->layers[l].size(); ++u)
+// 		{
+// 			model.add(flow_nodes[l][u] == 0);
+// 		}
+// 	}
+// 	// model.add( negflow == 0 );
 
-	// add variable constraints
-	for (int v = 0; v < x.getSize(); ++v)
-	{
-		model.add(x[v] >= var_expr[v]);
-	}
-}
+// 	// add variable constraints
+// 	for (int v = 0; v < x.getSize(); ++v)
+// 	{
+// 		model.add(x[v] >= var_expr[v]);
+// 	}
+// }
