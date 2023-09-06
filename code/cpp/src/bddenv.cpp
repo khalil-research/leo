@@ -158,7 +158,7 @@ void BDDEnv::compute_pareto_frontier()
     get_pareto_sols();
 }
 
-void BDDEnv::compute_pareto_frontier_with_pruning(vector<vector<int>> statesToPrune)
+void BDDEnv::compute_pareto_frontier_with_pruning(vector<vector<int>> paretoStates)
 {
     vector<vector<int>> obj_coefficients;
     ofstream output;
@@ -218,7 +218,7 @@ void BDDEnv::compute_pareto_frontier_with_pruning(vector<vector<int>> statesToPr
 
     // -------------------------------------------------
     // Prune BDD
-    bdd->prune_non_pareto_state(statesToPrune);
+    bdd->prune_non_pareto_states(paretoStates);
 
     // -------------------------------------------------
     // Reduce BDD

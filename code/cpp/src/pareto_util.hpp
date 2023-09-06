@@ -28,14 +28,14 @@ struct Solution
 	// Print solution
 	void print(ostream &out)
 	{
-		out << "(";
+		// out << "(";
 		for (size_t i = 0; i < x.size(); ++i)
 		{
-			if (i > 0)
-				out << ", ";
-			out << x[i];
+			// if (i > 0)
+			// out << ", ";
+			out << x[i] << " ";
 		}
-		out << ") --> ";
+		// out << ") --> ";
 		print_objective(out);
 	}
 
@@ -141,6 +141,50 @@ struct ParetoSet
 			it->print_objective(cout);
 			cout << endl;
 		}
+	}
+
+	void print_sols()
+	{
+		SolutionComparator solcomp;
+		sols.sort(solcomp);
+		for (SolutionList::iterator it = sols.begin(); it != sols.end(); ++it)
+		{
+			it->print(cout);
+			cout << endl;
+		}
+	}
+
+	void print_sols(string filename)
+	{
+		SolutionComparator solcomp;
+		sols.sort(solcomp);
+		ofstream out(filename.c_str(), ios_base::app);
+		for (SolutionList::iterator it = sols.begin(); it != sols.end(); ++it)
+		{
+			it->print(out);
+			out << endl;
+		}
+		out.close();
+	}
+
+	vector<vector<int>> get_x_sols()
+	{
+		vector<vector<int>> x_sols;
+		for (SolutionList::iterator it = sols.begin(); it != sols.end(); ++it)
+		{
+			x_sols.push_back(it->x);
+		}
+		return x_sols;
+	}
+
+	vector<vector<int>> get_z_sols()
+	{
+		vector<vector<int>> z_sols;
+		for (SolutionList::iterator it = sols.begin(); it != sols.end(); ++it)
+		{
+			z_sols.push_back(it->obj);
+		}
+		return z_sols;
 	}
 
 	//

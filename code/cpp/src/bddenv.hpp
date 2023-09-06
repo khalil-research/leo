@@ -80,5 +80,5 @@ public:
 
     void compute_pareto_frontier();
 
-    void compute_pareto_frontier_with_pruning(vector<vector<int>> statesToPrune);
+    void compute_pareto_frontier_with_pruning(vector<vector<int>> paretoStates);
 };
