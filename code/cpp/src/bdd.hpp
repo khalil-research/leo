@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <bits/stdc++.h>
 #include "pareto_util.hpp"
 
 #define INF_D std::numeric_limits<int>::max()
@@ -96,6 +97,9 @@ struct BDD
 	// Get number of nodes
 	int get_num_nodes();
 
+	// Get number of nodes per layer
+	vector<int> get_num_nodes_per_layer();
+
 	// Get number of arcs
 	int get_num_arcs();
 
@@ -107,6 +111,8 @@ struct BDD
 
 	// // get number of arcs per layer
 	// int *get_num_arcs_per_layer();
+
+	void prune_non_pareto_states(vector<vector<int>>);
 
 	// Print BDD
 	void print();
@@ -370,6 +376,19 @@ inline int BDD::get_num_nodes()
 }
 
 //
+// Get number of nodes per layer the BDD
+//
+inline vector<int> BDD::get_num_nodes_per_layer()
+{
+	vector<int> num_nodes_per_layer;
+	for (int l = 0; l < num_layers; ++l)
+	{
+		num_nodes_per_layer.push_back(layers[l].size());
+	}
+	return num_nodes_per_layer;
+}
+
+//
 // Get number of arcs of the BDD
 //
 inline int BDD::get_num_arcs()
@@ -433,6 +452,72 @@ inline void BDD::merge_nodes(Node *nodeA, Node *nodeB)
 			nodeA->one_prev.push_back(*it);
 		}
 		(*it)->one_arc = nodeA;
+	}
+}
+
+inline void BDD::prune_non_pareto_states(vector<vector<int>> statesToPrune)
+{
+	for (int l = 1; l < statesToPrune.size(); l++)
+	{
+		// For each state to prune in layer l
+		for (int s = 0; s < statesToPrune[l].size(); s++)
+		{
+			// For each node in layer l
+			for (vector<Node *>::iterator nodeIt = layers[l].begin(); nodeIt != layers[l].end(); ++nodeIt)
+			{
+				if ((*nodeIt)->intState == statesToPrune[l][s])
+				{
+					// Remove incoming one-arcs
+					for (vector<Node *>::iterator it = (*nodeIt)->one_prev.begin();
+						 it != (*nodeIt)->one_prev.end();
+						 it++)
+					{
+						(*it)->one_arc = NULL;
+					}
+					(*nodeIt)->one_prev.clear();
+
+					// Remove incoming zero-arcs
+					for (vector<Node *>::iterator it = (*nodeIt)->zero_prev.begin();
+						 it != (*nodeIt)->zero_prev.end();
+						 it++)
+					{
+						(*it)->zero_arc = NULL;
+					}
+					(*nodeIt)->zero_prev.clear();
+
+					// Remove reference to the current node from the one_prev of node reached by one_arc
+					if ((*nodeIt)->one_arc != NULL)
+					{
+						for (size_t i = 0; i < (*nodeIt)->one_arc->one_prev.size(); ++i)
+						{
+							if ((*nodeIt)->one_arc->one_prev[i] == (*nodeIt))
+							{
+								(*nodeIt)->one_arc->one_prev[i] = (*nodeIt)->one_arc->one_prev.back();
+								(*nodeIt)->one_arc->one_prev.pop_back();
+								break;
+							}
+						}
+					}
+
+					// Remove reference to the current node from the zero_prev of node reached by zero_arc
+					if ((*nodeIt)->zero_arc != NULL)
+					{
+						for (size_t i = 0; i < (*nodeIt)->zero_arc->zero_prev.size(); ++i)
+						{
+							if ((*nodeIt)->zero_arc->zero_prev[i] == (*nodeIt))
+							{
+								(*nodeIt)->zero_arc->zero_prev[i] = (*nodeIt)->zero_arc->zero_prev.back();
+								(*nodeIt)->zero_arc->zero_prev.pop_back();
+								break;
+							}
+						}
+					}
+
+					delete *nodeIt;
+					layers[l].erase(nodeIt);
+				}
+			}
+		}
 	}
 }
 
