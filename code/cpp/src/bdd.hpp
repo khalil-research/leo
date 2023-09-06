@@ -457,66 +457,73 @@ inline void BDD::merge_nodes(Node *nodeA, Node *nodeB)
 
 inline void BDD::prune_non_pareto_states(vector<vector<int>> statesToPrune)
 {
-	for (int l = 1; l < statesToPrune.size(); l++)
+	int n;
+	Node *node;
+	for (int l = 1; l < statesToPrune.size(); ++l)
 	{
 		// For each state to prune in layer l
-		for (int s = 0; s < statesToPrune[l].size(); s++)
+		for (int s = 0; s < statesToPrune[l].size(); ++s)
 		{
-			// For each node in layer l
-			for (vector<Node *>::iterator nodeIt = layers[l].begin(); nodeIt != layers[l].end(); ++nodeIt)
-			{
-				if ((*nodeIt)->intState == statesToPrune[l][s])
+			n=0;
+			while(n<layer[l].size()){
+				node = layers[l][n];
+				if (node->intState == statesToPrune[l][s])
 				{
 					// Remove incoming one-arcs
-					for (vector<Node *>::iterator it = (*nodeIt)->one_prev.begin();
-						 it != (*nodeIt)->one_prev.end();
-						 it++)
+					for (vector<Node *>::iterator it = node->one_prev.begin();
+						 it != node->one_prev.end();
+						 ++it)
 					{
 						(*it)->one_arc = NULL;
 					}
-					(*nodeIt)->one_prev.clear();
+					node->one_prev.clear();
 
 					// Remove incoming zero-arcs
-					for (vector<Node *>::iterator it = (*nodeIt)->zero_prev.begin();
-						 it != (*nodeIt)->zero_prev.end();
-						 it++)
+					for (vector<Node *>::iterator it = node->zero_prev.begin();
+						 it != node->zero_prev.end();
+						 ++it)
 					{
 						(*it)->zero_arc = NULL;
 					}
-					(*nodeIt)->zero_prev.clear();
+					node->zero_prev.clear();
 
 					// Remove reference to the current node from the one_prev of node reached by one_arc
-					if ((*nodeIt)->one_arc != NULL)
+					if (node->one_arc != NULL)
 					{
-						for (size_t i = 0; i < (*nodeIt)->one_arc->one_prev.size(); ++i)
+						for (size_t i = 0; i < node->one_arc->one_prev.size(); ++i)
 						{
-							if ((*nodeIt)->one_arc->one_prev[i] == (*nodeIt))
+							if (node->one_arc->one_prev[i] == node)
 							{
-								(*nodeIt)->one_arc->one_prev[i] = (*nodeIt)->one_arc->one_prev.back();
-								(*nodeIt)->one_arc->one_prev.pop_back();
+								node->one_arc->one_prev[i] = node->one_arc->one_prev.back();
+								node->one_arc->one_prev.pop_back();
 								break;
 							}
 						}
 					}
 
 					// Remove reference to the current node from the zero_prev of node reached by zero_arc
-					if ((*nodeIt)->zero_arc != NULL)
+					if (node->zero_arc != NULL)
 					{
-						for (size_t i = 0; i < (*nodeIt)->zero_arc->zero_prev.size(); ++i)
+						for (size_t i = 0; i < node->zero_arc->zero_prev.size(); ++i)
 						{
-							if ((*nodeIt)->zero_arc->zero_prev[i] == (*nodeIt))
+							if (node->zero_arc->zero_prev[i] == node)
 							{
-								(*nodeIt)->zero_arc->zero_prev[i] = (*nodeIt)->zero_arc->zero_prev.back();
-								(*nodeIt)->zero_arc->zero_prev.pop_back();
+								node->zero_arc->zero_prev[i] = node->zero_arc->zero_prev.back();
+								node->zero_arc->zero_prev.pop_back();
 								break;
 							}
 						}
 					}
 
-					delete *nodeIt;
-					layers[l].erase(nodeIt);
+					layers[l][n] = layers[l][n].back();
+					layers[l][n].pop_back();
+					delete node;					
 				}
-			}
+				else{
+					++n;
+				}
+
+			}					
 		}
 	}
 }
