@@ -1387,3 +1387,318 @@ ParetoSet *BDDAlg::pareto_set_delayed(BDD *bdd, const vector<vector<int>> &obj_c
 // 		model.add(x[v] >= var_expr[v]);
 // 	}
 // }
+
+// ---------------------------------------------------------------- Buggy
+//
+// Compute pareto-set solution of BDD given 'n' objective functions
+// Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
+//
+// ParetoSet *BDDAlg::pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs)
+// MultiobjResult *BDDAlg::pareto_set_anytime(BDD *bdd, const vector<vector<int>> &obj_coeffs)
+// {
+// 	cout << "Start" << endl;
+// 	// cout << "\nComputing Pareto Set Iteratively...\n";
+// 	int width = bdd->get_width();
+// 	int num_objs = obj_coeffs.size();
+
+// 	// Root node is covered
+// 	bdd->layers[0][0]->isCovered = true;
+
+// 	// Initialize each prev node and arcs as un/covered
+// 	for (int l = 1; l < bdd->num_layers; ++l)
+// 	{
+// 		for (vector<Node *>::iterator it = bdd->layers[l].begin(); it != bdd->layers[l].end(); ++it)
+// 		{
+// 			(*it)->one_prev_ac.resize((*it)->one_prev.size());
+// 			fill((*it)->one_prev_ac.begin(), (*it)->one_prev_ac.end(), false);
+
+// 			(*it)->zero_prev_ac.resize((*it)->zero_prev.size());
+// 			fill((*it)->zero_prev_ac.begin(), (*it)->zero_prev_ac.end(), false);
+// 		}
+// 	}
+
+// 	// partial sets for each node
+// 	vector<vector<ParetoSet *>> partial_sets(bdd->num_layers);
+// 	for (int l = 0; l < bdd->num_layers; ++l)
+// 	{
+// 		partial_sets[l].resize(bdd->layers[l].size());
+// 		for (size_t w = 0; w < bdd->layers[l].size(); ++w)
+// 		{
+// 			partial_sets[l][w] = new ParetoSet(num_objs);
+// 		}
+// 	}
+
+// 	// Objective shift vectors
+// 	vector<int> shift_zero(num_objs, 0);
+// 	vector<int> shift_one(num_objs, 0);
+
+// 	// double avg_size = 0;
+// 	// Save number of comparisons to enumerate the Pareto frontier
+// 	size_t num_comparisons = 0;
+
+// 	// root node
+// 	vector<int> x;
+// 	Solution rootSolution(x, shift_zero);
+// 	partial_sets[0][0]->add(rootSolution);
+
+// 	// Anytime Pareto Front enumeration
+// 	int b = 2, start_layer = 1, id, prev_id, pid;
+// 	bool bddIsExplored = false, nodeIsCovered = false;
+// 	Node *prev;
+// 	cout << "Loop begin" << endl;
+// 	while (!bddIsExplored)
+// 	{
+// 		cout << b << " " << start_layer << endl;
+// 		// Extract Pareto solutions for the current beam width
+// 		for (int l = start_layer; l < bdd->num_layers; ++l)
+// 		{
+// 			// cout << "\tLayer " << l << endl;
+// 			cout << "\tLayer " << l << " - size = " << bdd->layers[l].size();
+// 			// cout << " - avg-pareto-size = " << avg_size << endl;
+
+// 			// set shift one
+// 			for (int o = 0; o < num_objs; ++o)
+// 			{
+// 				shift_one[o] = obj_coeffs[o][l - 1];
+// 			}
+
+// 			// avg_size = 0;
+
+// 			for (vector<Node *>::iterator it = bdd->layers[l].begin(); it != bdd->layers[l].end(); ++it)
+// 			{
+// 				if (!(*it)->isCovered)
+// 				{
+
+// 					// Index of the current node
+// 					id = (*it)->index;
+// 					cout << id << " not covered" << endl;
+// 					// Only process the first b nodes on a given layer
+// 					if (id < b)
+// 					{
+// 						// clear efficient set of this node
+// 						// sets[cur][id]->clear();
+
+// 						// add one arc prev
+// 						for (pid = 0; pid < (*it)->one_prev.size(); ++pid)
+// 						{
+// 							// Index of the node in the previous layer
+// 							prev = (*it)->one_prev[pid];
+// 							prev_id = prev->index;
+// 							// Process if prev node is not covered or prev arc is not covered or prev node has partial solutions
+// 							if (!((*it)->one_prev_ac[pid] && prev->isCovered))
+// 							{
+// 								if (l == 1 || partial_sets[l - 1][prev_id]->sols.size())
+// 								{
+// 									// num_comparisons += partial_sets[l][id]->merge(*(partial_sets[l - 1][(*prev)->index]), 0, shift_zero);
+// 									num_comparisons += partial_sets[l][id]->merge(*(partial_sets[l - 1][prev_id]), 1, shift_one);
+// 									(*it)->one_prev_ac[pid] = true;
+// 								}
+// 							}
+// 						}
+
+// 						// add zero arc prev
+// 						for (pid = 0; pid < (*it)->zero_prev.size(); ++pid)
+// 						{
+// 							// Index of the node in the previous layer
+// 							prev = (*it)->zero_prev[pid];
+// 							prev_id = prev->index;
+// 							// Process if prev node is not covered or prev arc is not covered or prev node has partial solutions
+// 							if (!((*it)->zero_prev_ac[pid] && prev->isCovered))
+// 							{
+// 								if (l == 1 || partial_sets[l - 1][prev_id]->sols.size())
+// 								{
+// 									num_comparisons += partial_sets[l][id]->merge(*(partial_sets[l - 1][prev_id]), 0, shift_zero);
+// 									(*it)->zero_prev_ac[pid] = true;
+// 								}
+// 							}
+// 						}
+
+// 						// Check if current node is covered
+// 						nodeIsCovered = true;
+// 						for (pid = 0; pid < (*it)->one_prev.size(); ++pid)
+// 						{
+// 							prev = (*it)->one_prev[pid];
+// 							prev_id = prev->index;
+
+// 							if (!(prev->isCovered && (*it)->one_prev_ac[pid]))
+// 							{
+// 								nodeIsCovered = false;
+// 								break;
+// 							}
+// 						}
+// 						if (nodeIsCovered)
+// 						{
+// 							for (pid = 0; pid < (*it)->zero_prev.size(); ++pid)
+// 							{
+// 								prev = (*it)->zero_prev[pid];
+// 								prev_id = prev->index;
+
+// 								if (!(prev->isCovered && (*it)->zero_prev_ac[pid]))
+// 								{
+// 									nodeIsCovered = false;
+// 									break;
+// 								}
+// 							}
+// 						}
+
+// 						(*it)->isCovered = nodeIsCovered;
+// 					}
+// 				}
+
+// 				// avg_size += sets[cur][id]->sols.size();
+// 			}
+// 			// Record the number of pareto solutions at layer l
+// 			// mo_result->num_pareto_sol[l] = (unsigned long int)avg_size;
+
+// 			// mo_result->num_comparisons = num_comparisons;
+
+// 			// Find average number of pareto solutions at layer l
+// 			// avg_size /= bdd->layers[l].size();
+
+// 			// swap sets
+// 			// bef = !bef;
+// 			// cur = !cur;
+// 		}
+
+// 		// Record the pareto set result for the current beam width
+// 		// MultiobjResult *mo_result = new MultiobjResult(bdd->num_layers);
+// 		// mo_result->pareto_set = partial_sets[bdd->layers.size() - 1][0];
+// 		// mo_results.push_back(mo_result);
+
+// 		cout << "Bandwidth: " << b << ", # Sols " << partial_sets[bdd->layers.size() - 1][0]->sols.size() << endl;
+
+// 		// If the last explored beam width is greater than bdd width then exit
+// 		if (b >= width)
+// 		{
+// 			bddIsExplored = true;
+// 		}
+// 		// Increase beam width by a factor of 2
+// 		b *= 2;
+// 		++start_layer;
+// 	}
+
+// 	// Clean pareto sets
+// 	for (int l = 0; l < bdd->num_layers - 1; ++l)
+// 	{
+// 		for (size_t w = 0; w < bdd->layers[l].size(); ++w)
+// 		{
+// 			delete partial_sets[l][w];
+// 		}
+// 	}
+
+// 	MultiobjResult *mo_result = new MultiobjResult(bdd->num_layers);
+// 	mo_result->pareto_set = partial_sets[bdd->layers.size() - 1][0];
+// 	return mo_result;
+// }
+
+// ---------------------------------------------------------------- Naive
+// Compute pareto-set solution of BDD given 'n' objective functions
+// Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
+MultiobjResult *BDDAlg::pareto_set_anytime(BDD *bdd, const vector<vector<int>> &obj_coeffs)
+{
+	// cout << "\nComputing Pareto Set Iteratively...\n";
+	int width = bdd->get_width();
+	int num_objs = obj_coeffs.size();
+
+	vector<MultiobjResult *> mo_results;
+
+	// partial sets for each node
+	vector<vector<ParetoSet *>> partial_sets(bdd->num_layers);
+	for (int l = 0; l < bdd->num_layers; ++l)
+	{
+		partial_sets[l].resize(bdd->layers[l].size());
+		for (size_t w = 0; w < bdd->layers[l].size(); ++w)
+		{
+			partial_sets[l][w] = new ParetoSet(num_objs);
+		}
+	}
+
+	// Objective shift vectors
+	vector<int> shift_zero(num_objs, 0);
+	vector<int> shift_one(num_objs, 0);
+
+	// root node
+	vector<int> x;
+	Solution rootSolution(x, shift_zero);
+	partial_sets[0][0]->add(rootSolution);
+
+	// Anytime Pareto Front enumeration
+	int b = 2, start_layer = 1, id, prev_id, pid;
+	bool bddIsExplored = false;
+	Node *prev;
+	while (!bddIsExplored)
+	{
+		// Extract Pareto solutions for the current beam width
+		for (int l = start_layer; l < bdd->num_layers; ++l)
+		{
+			// cout << "\tLayer " << l << " - size = " << bdd->layers[l].size() << endl;
+			// cout << " - avg-pareto-size = " << avg_size << endl;
+
+			// set shift one
+			for (int o = 0; o < num_objs; ++o)
+			{
+				shift_one[o] = obj_coeffs[o][l - 1];
+			}
+
+			// avg_size = 0;
+
+			for (vector<Node *>::iterator it = bdd->layers[l].begin(); it != bdd->layers[l].end(); ++it)
+			{
+
+				// Index of the current node
+				id = (*it)->index;
+				// Only process the first b nodes on a given layer
+				if (id < b)
+				{
+					// add one arc prev
+					for (pid = 0; pid < (*it)->one_prev.size(); ++pid)
+					{
+						// Index of the node in the previous layer
+						prev = (*it)->one_prev[pid];
+						prev_id = prev->index;
+						partial_sets[l][id]->merge(*(partial_sets[l - 1][prev_id]), 1, shift_one);
+					}
+
+					// add zero arc prev
+					for (pid = 0; pid < (*it)->zero_prev.size(); ++pid)
+					{
+						// Index of the node in the previous layer
+						prev = (*it)->zero_prev[pid];
+						prev_id = prev->index;
+						partial_sets[l][id]->merge(*(partial_sets[l - 1][prev_id]), 0, shift_zero);
+					}
+				}
+			}
+		}
+
+		// Record the pareto set result for the current beam width
+		MultiobjResult *mo_result = new MultiobjResult(bdd->num_layers);
+		ParetoSet *currParetoSet = new ParetoSet(num_objs);
+		currParetoSet->copy((*partial_sets[bdd->layers.size() - 1][0]));
+
+		mo_result->pareto_set = partial_sets[bdd->layers.size() - 1][0];
+		mo_results.push_back(mo_result);
+
+		// If the last explored beam width is greater than bdd width then exit
+		if (b >= width)
+		{
+			bddIsExplored = true;
+		}
+		// Increase beam width by a factor of 2
+		b *= 2;
+		++start_layer;
+	}
+
+	// Clean pareto sets
+	for (int l = 0; l < bdd->num_layers - 1; ++l)
+	{
+		for (size_t w = 0; w < bdd->layers[l].size(); ++w)
+		{
+			delete partial_sets[l][w];
+		}
+	}
+
+	MultiobjResult *mo_result = new MultiobjResult(bdd->num_layers);
+	mo_result->pareto_set = partial_sets[bdd->layers.size() - 1][0];
+	return mo_result;
+}

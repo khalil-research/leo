@@ -88,6 +88,10 @@ public:
 	// Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
 	static MultiobjResult *pareto_set(BDD *bdd, const vector<vector<int>> &obj_coeffs);
 
+	// Compute pareto-set solution of BDD given 'n' objective functions
+	// Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
+	static MultiobjResult *pareto_set_anytime(BDD *bdd, const vector<vector<int>> &obj_coeffs);
+
 	// Compute pareto-set solution of BDD given 'n' objective functions, with delayed states
 	// Assume zero-arc lenghts are zero and one-arc lenghts are fixed per layer
 	static ParetoSet *pareto_set_delayed(BDD *bdd,

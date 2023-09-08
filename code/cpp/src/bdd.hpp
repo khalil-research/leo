@@ -455,75 +455,86 @@ inline void BDD::merge_nodes(Node *nodeA, Node *nodeB)
 	}
 }
 
-inline void BDD::prune_non_pareto_states(vector<vector<int>> statesToPrune)
+inline void BDD::prune_non_pareto_states(vector<vector<int>> paretoStates)
 {
+	assert(paretoStates.size() == layers.size() - 2);
 	int n;
 	Node *node;
-	for (int l = 1; l < statesToPrune.size(); ++l)
+	bool isPareto;
+	// For each layer [1, size(layers)-1)
+	for (int l = 1; l < layers.size() - 1; ++l)
 	{
-		// For each state to prune in layer l
-		for (int s = 0; s < statesToPrune[l].size(); ++s)
+		n = 0;
+		// For each node in layer l
+		while (n < layers[l].size())
 		{
-			n=0;
-			while(n<layer[l].size()){
-				node = layers[l][n];
-				if (node->intState == statesToPrune[l][s])
+			node = layers[l][n];
+			isPareto = false;
+			// For each state to prune in layer l
+			for (int s = 0; s < paretoStates[l - 1].size(); ++s)
+			{
+				// If the current Node is a Pareto state, don't do anything and process the next node
+				if (node->intState == paretoStates[l - 1][s])
 				{
-					// Remove incoming one-arcs
-					for (vector<Node *>::iterator it = node->one_prev.begin();
-						 it != node->one_prev.end();
-						 ++it)
-					{
-						(*it)->one_arc = NULL;
-					}
-					node->one_prev.clear();
-
-					// Remove incoming zero-arcs
-					for (vector<Node *>::iterator it = node->zero_prev.begin();
-						 it != node->zero_prev.end();
-						 ++it)
-					{
-						(*it)->zero_arc = NULL;
-					}
-					node->zero_prev.clear();
-
-					// Remove reference to the current node from the one_prev of node reached by one_arc
-					if (node->one_arc != NULL)
-					{
-						for (size_t i = 0; i < node->one_arc->one_prev.size(); ++i)
-						{
-							if (node->one_arc->one_prev[i] == node)
-							{
-								node->one_arc->one_prev[i] = node->one_arc->one_prev.back();
-								node->one_arc->one_prev.pop_back();
-								break;
-							}
-						}
-					}
-
-					// Remove reference to the current node from the zero_prev of node reached by zero_arc
-					if (node->zero_arc != NULL)
-					{
-						for (size_t i = 0; i < node->zero_arc->zero_prev.size(); ++i)
-						{
-							if (node->zero_arc->zero_prev[i] == node)
-							{
-								node->zero_arc->zero_prev[i] = node->zero_arc->zero_prev.back();
-								node->zero_arc->zero_prev.pop_back();
-								break;
-							}
-						}
-					}
-
-					layers[l][n] = layers[l][n].back();
-					layers[l][n].pop_back();
-					delete node;					
-				}
-				else{
+					isPareto = true;
 					++n;
+					break;
+				}
+			}
+
+			// If the current Node is not a Pareto State then remove it
+			if (!isPareto)
+			{
+				// Remove incoming one-arcs
+				for (vector<Node *>::iterator it = node->one_prev.begin();
+					 it != node->one_prev.end();
+					 ++it)
+				{
+					(*it)->one_arc = NULL;
+				}
+				node->one_prev.clear();
+
+				// Remove incoming zero-arcs
+				for (vector<Node *>::iterator it = node->zero_prev.begin();
+					 it != node->zero_prev.end();
+					 ++it)
+				{
+					(*it)->zero_arc = NULL;
+				}
+				node->zero_prev.clear();
+
+				// Remove reference to the current node from the one_prev of node reached by one_arc
+				if (node->one_arc != NULL)
+				{
+					for (size_t i = 0; i < node->one_arc->one_prev.size(); ++i)
+					{
+						if (node->one_arc->one_prev[i] == node)
+						{
+							node->one_arc->one_prev[i] = node->one_arc->one_prev.back();
+							node->one_arc->one_prev.pop_back();
+							break;
+						}
+					}
 				}
 
-			}					
+				// Remove reference to the current node from the zero_prev of node reached by zero_arc
+				if (node->zero_arc != NULL)
+				{
+					for (size_t i = 0; i < node->zero_arc->zero_prev.size(); ++i)
+					{
+						if (node->zero_arc->zero_prev[i] == node)
+						{
+							node->zero_arc->zero_prev[i] = node->zero_arc->zero_prev.back();
+							node->zero_arc->zero_prev.pop_back();
+							break;
+						}
+					}
+				}
+
+				layers[l][n] = layers[l].back();
+				layers[l].pop_back();
+				delete node;
+			}
 		}
 	}
 }
