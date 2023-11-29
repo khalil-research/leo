@@ -28,6 +28,28 @@
 
 using namespace std;
 
+string adv_tokenizer(string s, char del, bool getLast, int maxwidth)
+{
+	stringstream ss(s);
+	vector<string> chunks;
+	string word;
+	while (!ss.eof())
+	{
+		getline(ss, word, del);
+		chunks.push_back(word);
+		// cout << word << endl;
+	}
+
+	if (getLast)
+	{
+		return chunks.back();
+	}
+	else
+	{
+		return to_string(maxwidth) + '_' + chunks[2] + '_' + chunks[3] + '_' + chunks[4];
+	}
+}
+
 //
 // Main function
 //
@@ -87,6 +109,11 @@ int main(int argc, char *argv[])
 		new_order.push_back(atoi(argv[7 + i]));
 	}
 
+	string lastToken = adv_tokenizer(input_file, '/', true, maxwidth);
+	string psFilename = adv_tokenizer(lastToken, '_', false, maxwidth);
+	string prefix = "paretoSol_";
+	psFilename = prefix + psFilename;
+
 	// -------------------------------------------------
 	// Initialize timers (for stats)
 	Stats timers;
@@ -97,6 +124,7 @@ int main(int argc, char *argv[])
 	size_t initial_width, initial_node_count, initial_arcs_count;
 	size_t reduced_width, reduced_node_count, reduced_arcs_count;
 	double initial_avg_in_degree, reduced_avg_in_degree;
+	vector<int> initial_num_nodes_per_layer;
 
 	// BDD and objective function coefficients
 	BDD *bdd = NULL;
@@ -191,7 +219,7 @@ int main(int argc, char *argv[])
 		SetCoveringInstance setcover(argv[1]);
 
 		// Reset instances based on new order
-		if (new_order_provided)
+		if (new_order_provided) // -------------------------------------------------
 		{
 			setcover.reset_order(new_order);
 		}
@@ -232,6 +260,7 @@ int main(int argc, char *argv[])
 	initial_node_count = bdd->get_num_nodes();
 	initial_arcs_count = bdd->get_num_arcs();
 	initial_avg_in_degree = bdd->get_average_in_degree();
+	initial_num_nodes_per_layer = bdd->get_num_nodes_per_layer();
 
 	// -------------------------------------------------
 	// Reduce BDD
@@ -258,6 +287,16 @@ int main(int argc, char *argv[])
 	timers.start_timer(bdd_pareto_time);
 	mo_result = BDDAlg::pareto_set(bdd, obj_coefficients);
 	timers.end_timer(bdd_pareto_time);
+
+	// mo_result->pareto_set->print_objectives(objfile);
+	std::ofstream outfile(psFilename);
+	for (int i = 0; i < initial_num_nodes_per_layer.size(); i++)
+	{
+		outfile << initial_num_nodes_per_layer[i] << " ";
+	}
+	outfile << endl;
+	outfile.close();
+	mo_result->pareto_set->print_sols(psFilename);
 
 	// -------------------------------------------------
 	// Output

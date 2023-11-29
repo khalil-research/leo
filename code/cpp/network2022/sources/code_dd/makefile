@@ -2,20 +2,28 @@
 
 SYSTEM     = x86-64_linux
 LIBFORMAT  = static_pic
-BASISDIR    = /opt
+BASISDIR    = /home/rahul/opt
+PLATFORM   = linux64
+
 
 # --- DIRECTORIES ---
 
 CCC = g++
+
 BASISILOG  = $(BASISDIR)/ibm/ILOG/CPLEX_Studio1210
 CPOPTDIR   = $(BASISILOG)/cpoptimizer
 CONCERTDIR = $(BASISILOG)/concert
 CPLEXDIR   = $(BASISILOG)/cplex
 BOOSTDIR   = $(BASISDIR)/boost
 
+GUROBIDIR = /opt/gurobi/$(PLATFORM)
+GUROBIINCDIR = $(GUROBIDIR)/include
+GUROBILIBDIR = $(GUROBIDIR)/lib
+
+
 # --- FLAGS ---
 
-CCOPT = -m64 -fPIC -fno-strict-aliasing -fexceptions -DIL_STD -Wno-deprecated-declarations -std=c++17
+CCOPT = -std=c++11 -m64 -fPIC -fno-strict-aliasing -fexceptions -DIL_STD -Wno-deprecated-declarations -Wno-ignored-attributes
 CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 CONCERTLIBDIR = $(CONCERTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 CPOPTLIBDIR = $(CPOPTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
@@ -28,14 +36,29 @@ CPOPTINCDIR   = $(CPOPTDIR)/include
 
 DEBUG_OPT = -DNDEBUG -O3
 #DEBUG_OPT = -g3 -O0
+
 #PROF = -pg
 PROF =
 
-CFLAGS += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
-# CFLAGS += $(CCOPT) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
 
-LDFLAGS = -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -lm -ldl -pthread 
-# LDFLAGS = -lm -pthread 
+# Flags
+CFLAGS  = -I$(BOOSTDIR)/include -c $(PROF) $(DEBUG_OPT)
+LDFLAGS = -lm -pthread
+
+# Uncomment if using CPLEX/CPOPTIMIZER
+CFLAGS  += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) -I./include $(DEBUG_OPT) -I$(BOOSTDIR)/include -c $(PROF)
+LDFLAGS += -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -ldl
+
+# Uncomment if using Gurobi
+#CFLAGS += -I$(GUROBIINCDIR)
+#LDFLAGS += -L$(GUROBILIBDIR) -lgurobi_c++ -lgurobi75 -lm 
+
+
+# --- APPLICATION-SPECIFIC OPTIONS ---
+
+# number of objective functions
+NUM_OBJS=3
+CFLAGS += -DNOBJS=$(NUM_OBJS)
 
 
 # ---- COMPILE  ----
