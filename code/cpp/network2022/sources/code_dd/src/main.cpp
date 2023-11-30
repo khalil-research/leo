@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
         clock_t frontier_tsp = clock();
 
         // cout << "\nGenerating frontier..." << endl;
-        MultiObjectiveStats *statsMultiObj = new MultiObjectiveStats;
+        MultiObjectiveStats *statsMultiObj = new MultiObjectiveStats();
         ParetoFrontier *pareto_frontier = BDDMultiObj::pareto_frontier_dynamic_layer_cutset(mdd, statsMultiObj);
         assert(pareto_frontier != NULL);
 
@@ -343,14 +343,15 @@ int main(int argc, char *argv[])
     // cout << "\tReduced number of nodes: " << reduced_num_nodes << endl;
     // cout << "\n\tBDD compilation total time: " << timers.get_time(bdd_compilation_time) << endl;
 
+    // --------------------
+
     // Initialize multiobjective stats
-    MultiObjectiveStats *statsMultiObj = new MultiObjectiveStats;
+    MultiObjectiveStats *statsMultiObj = new MultiObjectiveStats();
 
     // Compute pareto frontier based on methodology
     // cout << "\n\nComputing pareto frontier..." << endl;
     ParetoFrontier *pareto_frontier = NULL;
     timers.start_timer(pareto_time);
-    cout << method << endl;
     if (method == 1)
     {
         // -- Optimal BFS algorithm: top-down --
@@ -375,7 +376,8 @@ int main(int argc, char *argv[])
 
     timers.end_timer(pareto_time);
 
-    double total_time = (timers.get_time(bdd_compilation_time) + timers.get_time(approx_time) + timers.get_time(pareto_time));
+    // // double total_time = (timers.get_time(bdd_compilation_time) + timers.get_time(approx_time) + timers.get_time(pareto_time));
+    // --------------------
 
     // cout << "\nPareto frontier: " << endl;
     // cout << "\tNumber of solutions: " << pareto_frontier->get_num_sols() << endl;
@@ -432,13 +434,22 @@ int main(int argc, char *argv[])
     cout << reduced_width << ", ";
     cout << original_num_nodes << ", ";
     cout << reduced_num_nodes << ", ";
-    cout << "-1, ";
-    cout << "-1, ";
+    cout << statsMultiObj->num_comparisons << ", ";
+    cout << statsMultiObj->total_sol << ", ";
     // cout << "\t" << ((double)statsMultiObj->pareto_dominance_time) / CLOCKS_PER_SEC;
     cout << timers.get_time(bdd_compilation_time) << ", ";
     cout << "0, ";
-    cout << timers.get_time(pareto_time);
-    cout << " # ";
+    cout << timers.get_time(pareto_time) << " ";
+
+    if (method == 1 || method == 3)
+    {
+        statsMultiObj->print_sol_per_layer(statsMultiObj->total_sol_per_layer_topdown);
+    }
+    if (method == 2 || method == 3)
+    {
+        statsMultiObj->print_sol_per_layer(statsMultiObj->total_sol_per_layer_bottomup);
+    }
+
     cout << endl;
 
     return 0;
