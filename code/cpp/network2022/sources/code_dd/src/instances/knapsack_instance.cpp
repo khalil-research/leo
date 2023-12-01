@@ -66,22 +66,26 @@ void KnapsackInstance::print()
     cout << "\tnum objs: " << num_objs << endl;
     cout << endl;
 
-    // for (int o = 0; o < num_objs; ++o) {
-    //     cout << "Objective " << o << endl;
-    //     cout << "\t";
-    //     for (int i = 0; i < n_vars; ++i) {
-    //         cout << obj_coeffs[i][o] << " ";
-    //     }
-    //     cout << endl;
-    // }
-    // for (int c = 0; c < n_cons; ++c) {
-    //     cout << "Constraint " << c << endl;
-    //     cout << "\t";
-    //     for (int i = 0; i < n_vars; ++i) {
-    //         cout << coeffs[c][i] << " ";
-    //     }
-    //     cout << " <= " << rhs[c] << endl;
-    // }
+    for (int o = 0; o < num_objs; ++o)
+    {
+        cout << "Objective " << o << endl;
+        cout << "\t";
+        for (int i = 0; i < n_vars; ++i)
+        {
+            cout << obj_coeffs[i][o] << " ";
+        }
+        cout << endl;
+    }
+    for (int c = 0; c < n_cons; ++c)
+    {
+        cout << "Constraint " << c << endl;
+        cout << "\t";
+        for (int i = 0; i < n_vars; ++i)
+        {
+            cout << coeffs[c][i] << " ";
+        }
+        cout << " <= " << rhs[c] << endl;
+    }
 }
 
 //
@@ -165,9 +169,10 @@ void KnapsackInstance::reorder_coefficients()
 
 void KnapsackInstance::reset_order(vector<int> new_order)
 {
+    order = new_order;
     for (int c = 0; c < n_cons; ++c)
     {
-        for (int i = 0; i < n_vars; i++)
+        for (int i = 0; i < n_vars; ++i)
         {
             coeffs[c][i] = coeffs_canonical[c][new_order[i]];
         }
@@ -175,7 +180,7 @@ void KnapsackInstance::reset_order(vector<int> new_order)
 
     for (int i = 0; i < n_vars; i++)
     {
-        order[i] = new_order[i];
+
         for (int o = 0; o < num_objs; o++)
         {
             obj_coeffs[i][o] = obj_coeffs_canonical[new_order[i]][o];
